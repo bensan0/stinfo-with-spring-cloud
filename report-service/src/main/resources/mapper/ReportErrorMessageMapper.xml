@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.personal.project.reportservice.mapper.ReportErrorMessageMapper">
+    <resultMap id="BaseResultMap" type="com.personal.project.reportservice.model.entity.ReportErrorMessageDO">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="reportName" column="stock_id" jdbcType="VARCHAR"/>
+        <result property="date" column="date" jdbcType="VARCHAR"/>
+        <result property="errorMessage" column="error_message" jdbcType="VARCHAR"/>
+        <result property="exception" column="exception" jdbcType="VARCHAR"/>
+        <result property="exceptionMessage" column="exception_message" jdbcType="VARCHAR"/>
+        <result property="extra" column="extra" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id
+        ,report_name,date,error_message,exception,exception_message,
+        extra
+    </sql>
+</mapper>
