@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: crawler-service
+  threads:
+    virtual:
+      enabled: true
+  profiles:
+    active: test
+server:
+  port: 8090
