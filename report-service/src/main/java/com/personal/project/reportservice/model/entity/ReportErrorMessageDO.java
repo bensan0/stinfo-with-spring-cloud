@@ -1,9 +1,11 @@
 package com.personal.project.reportservice.model.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.personal.project.reportservice.constant.StatusEnum;
+import com.personal.project.reportservice.typehandler.StatusEnumTypeHandler;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -12,7 +14,7 @@ import java.util.Optional;
 
 @ToString
 @Setter
-@TableName("report_error_message")
+@TableName(value = "report_error_message", autoResultMap = true)
 public class ReportErrorMessageDO {
 
     @Setter
@@ -47,6 +49,7 @@ public class ReportErrorMessageDO {
     @Getter
     private String extra;
 
+    @TableField(typeHandler = StatusEnumTypeHandler.class)
     private Integer status = StatusEnum.UNHANDLED.getCode();
 
     public void setStatus(StatusEnum status) {
