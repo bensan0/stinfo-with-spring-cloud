@@ -1,8 +1,11 @@
 package com.personal.project.scraperservice.scraper.webmagic.goofinfo;
 
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson2.JSON;
 import com.personal.project.scraperservice.constant.Term;
 import com.personal.project.scraperservice.model.dto.DailyStockInfoDto;
+import com.personal.project.scraperservice.model.entity.ScraperErrorMessageDO;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import us.codecraft.webmagic.ResultItems;
 import us.codecraft.webmagic.Task;
@@ -10,6 +13,7 @@ import us.codecraft.webmagic.pipeline.Pipeline;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -17,7 +21,12 @@ import java.util.List;
 @Slf4j
 public class GoodInfoPipeline implements Pipeline {
 
-    private List<DailyStockInfoDto> infos = Collections.synchronizedList(new ArrayList<>());
+    @Getter
+    private final List<DailyStockInfoDto> infos = Collections.synchronizedList(new ArrayList<>());
+
+    @Getter
+    private final List<ScraperErrorMessageDO> errors = Collections.synchronizedList(new ArrayList<>());
+
     private static final String Trillion = "兆";
     private static final String HundredMillion = "億";
     private static final String TenThousand = "萬";
@@ -29,17 +38,6 @@ public class GoodInfoPipeline implements Pipeline {
     @Override
     public void process(ResultItems resultItems, Task task) {
         DailyStockInfoDto info = new DailyStockInfoDto();
-        System.out.println("pppiiipppeee TODAY_CLOSING_PRICE:" + resultItems.get(Term.TODAY_CLOSING_PRICE.getFieldName()));
-        System.out.println("pppiiipppeee YESTERDAY_CLOSING_PRICE:" + resultItems.get(Term.YESTERDAY_CLOSING_PRICE.getFieldName()));
-        System.out.println("pppiiipppeee PRICE_GAP:" + resultItems.get(Term.PRICE_GAP.getFieldName()));
-        System.out.println("pppiiipppeee PRICE_GAP_PERCENT:" + resultItems.get(Term.PRICE_GAP_PERCENT.getFieldName()));
-        System.out.println("pppiiipppeee OPENING_PRICE:" + resultItems.get(Term.OPENING_PRICE.getFieldName()));
-        System.out.println("pppiiipppeee HIGHEST_PRICE:" + resultItems.get(Term.HIGHEST_PRICE.getFieldName()));
-        System.out.println("pppiiipppeee LOWEST_PRICE:" + resultItems.get(Term.LOWEST_PRICE.getFieldName()));
-        System.out.println("pppiiipppeee TODAY_TRADING_VOLUME_PIECE:" + resultItems.get(Term.TODAY_TRADING_VOLUME_PIECE.getFieldName()));
-        System.out.println("pppiiipppeee TODAY_TRADING_VOLUME_MONEY:" + resultItems.get(Term.TODAY_TRADING_VOLUME_MONEY.getFieldName()));
-        System.out.println("pppiiipppeee YESTERDAY_TRADING_VOLUME_PIECE:" + resultItems.get(Term.YESTERDAY_TRADING_VOLUME_PIECE.getFieldName()));
-        System.out.println("pppiiipppeee YESTERDAY_TRADING_VOLUME_MONEY:" + resultItems.get(Term.YESTERDAY_TRADING_VOLUME_MONEY.getFieldName()));
         try {
             info.setStockId(resultItems.get(Term.STOCK_ID.getFieldName()));
             info.setStockName(resultItems.get(Term.STOCK_NAME.getFieldName()));
@@ -56,15 +54,16 @@ public class GoodInfoPipeline implements Pipeline {
             info.setYesterdayTradingVolumePiece(Long.valueOf(resultItems.get(Term.YESTERDAY_TRADING_VOLUME_PIECE.getFieldName()).toString().replace(",", "")));
             info.setYesterdayTradingVolumeMoney(calculateChineseMoneyUnit(resultItems.get(Term.YESTERDAY_TRADING_VOLUME_MONEY.getFieldName()).toString().replace(",", "")));
             infos.add(info);
-            System.out.println("pipe line iiiinnnnfffoooss:" + JSON.toJSONString(infos));
         } catch (Exception e) {
             log.error("{} 當日股票資訊轉換錯誤, 原始資料:{}", LocalDate.now(), JSON.toJSONString(resultItems.getAll()), e);
-            //todo 錯誤入庫
+            ScraperErrorMessageDO error = new ScraperErrorMessageDO();
+            error.setDate(LocalDateTime.now().toString());
+            error.setErrorMessage(StrUtil.format("{} 當日股票資訊轉換錯誤, 原始資料:{}", LocalDate.now(), JSON.toJSONString(resultItems.getAll())));
+            error.setException(e.getClass().getSimpleName());
+            error.setScraperName("goodinfo pipeline");
+            error.setExceptionMessage(e.getMessage());
+            errors.add(error);
         }
-    }
-
-    public List<DailyStockInfoDto> getInfos() {
-        return infos;
     }
 
     private BigDecimal calculateChineseMoneyUnit(String str) {
@@ -126,7 +125,7 @@ public class GoodInfoPipeline implements Pipeline {
             }
         }
 
-        totalAmount = str.isEmpty() ?totalAmount:totalAmount.add(new BigDecimal(str));
+        totalAmount = str.isEmpty() ? totalAmount : totalAmount.add(new BigDecimal(str));
 
         return totalAmount;
     }
