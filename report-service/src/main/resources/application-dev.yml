@@ -7,7 +7,7 @@ spring:
 
 mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
-  type-aliases-package: com.personal.project.scraperservice.model.entity
+  type-aliases-package: com.personal.project.reportservice.model.entity
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
@@ -22,7 +22,7 @@ xxl:
     admin:
       addresses: http://127.0.0.1:8080/xxl-job-admin
     executor:
-      appName: scraper-job
+      appName: report-job
       address:
       ip:
       port:
