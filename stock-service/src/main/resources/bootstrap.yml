@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: stock-service
+  threads:
+    virtual:
+      enabled: true
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      config:
+        file-extension: yml
+        shared-configs:
+          - application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
+server:
+  port: 8082

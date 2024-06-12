@@ -1,7 +1,0 @@
-spring:
-  application:
-    name: report-service
-  profiles:
-    active: test
-server:
-  port: 8084

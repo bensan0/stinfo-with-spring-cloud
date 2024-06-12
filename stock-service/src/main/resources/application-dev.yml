@@ -1,21 +1,16 @@
 spring:
-#  cloud:
-#    nacos:
-#      discovery:
-#        server-addr: 127.0.0.1:8848
-
   datasource:
-    driver-class-name: org.h2.Driver
-    #    schema: classpath:db/schema-h2.sql #初始化建表
-    #    data: classpath:db/data-h2.sql #初始化数据
-    url: jdbc:h2:mem:db_user   #不持久化，放在内存中
-    #    url: jdbc:h2:~/test #持久化
+    url: jdbc:mysql://localhost:3306/playground?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Taipei
     username: root
-    password: test
-  h2:
-    console:
-      path: /h2-console
-      enabled: true #必须配置，不然无法访问
-      settings:
-        trace: true
-        web-allow-others: false
+    password:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.personal.project.stockservice.model.entity
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+logging:
+  level:
+    com.personal.project.stockservice.mapper: debug

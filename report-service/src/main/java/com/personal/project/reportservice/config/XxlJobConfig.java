@@ -1,4 +1,4 @@
-package com.personal.project.scraperservice.config;
+package com.personal.project.reportservice.config;
 
 import com.xxl.job.core.executor.impl.XxlJobSpringExecutor;
 import lombok.Data;
@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @Data
 public class XxlJobConfig {
+
 
     @Value("${xxl.job.admin.addresses}")
     private String address;
