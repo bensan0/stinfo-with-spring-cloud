@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: stock-service
+          uri: lb://stock-service
+          predicates:
+            - Path=/gateway/stock/**
+          filters:
+            - StripPrefix=2
+  profiles:
+    active: dev
+
+server:
+  port: 8999
