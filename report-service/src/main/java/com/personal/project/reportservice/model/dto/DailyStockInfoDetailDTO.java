@@ -18,6 +18,8 @@ public class DailyStockInfoDetailDTO {
 
     private Long date;
 
+    private BigDecimal todayClosingPrice;
+
     private BigDecimal upperShadow;
 
     private BigDecimal lowerShadow;
@@ -46,7 +48,7 @@ public class DailyStockInfoDetailDTO {
         //跌fall
         //平unchanged
 
-        //價格連Ｎ漲/跌/平, ex: 價格連2漲 ["2", "rise"]
+        //價格連Ｎ漲/跌/平, ex: 價格連2漲 ["2", "漲"]
         private String[] consecutivePrice;
 
         //交易量連Ｎ漲/跌/平
@@ -55,7 +57,7 @@ public class DailyStockInfoDetailDTO {
         //交易額連Ｎ漲/跌/平
         private String[] consecutiveTradingAmount;
 
-        //狀態：漲/跌/平/翻紅/翻綠
+        //狀態：昨->現 ex:漲->跌
         private String priceStatus;
 
         //對比3天前價格漲/跌 XX%

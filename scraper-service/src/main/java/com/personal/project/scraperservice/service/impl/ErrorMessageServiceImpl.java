@@ -8,9 +8,4 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class ErrorMessageServiceImpl extends ServiceImpl<ScraperErrorMessageMapper, ScraperErrorMessageDO> implements ErrorMessageService {
-
-    @Override
-    public void insert() {
-        baseMapper.insert();
-    }
 }

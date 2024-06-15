@@ -30,9 +30,9 @@ public class UtilController {
                 List.of(
                         CommonTerm.RISE,
                         CommonTerm.FALL,
-                        CommonTerm.UNCHANGED,
-                        CommonTerm.TURN_TO + CommonTerm.RISE,
-                        CommonTerm.TURN_TO + CommonTerm.FALL
+                        CommonTerm.UNCHANGED
+//                        CommonTerm.TURN_TO + CommonTerm.RISE,
+//                        CommonTerm.TURN_TO + CommonTerm.FALL
                 )
         );
 

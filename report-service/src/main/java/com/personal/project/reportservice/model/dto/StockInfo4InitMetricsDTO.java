@@ -5,7 +5,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 @Data
-public class PastClosingPriceDTO {
+public class StockInfo4InitMetricsDTO {
 
     private String stockId;
 
@@ -14,8 +14,5 @@ public class PastClosingPriceDTO {
     // yyyyMMdd
     private Long date;
 
-    private BigDecimal closingPrice;
-
-    //均線種類
-    private Integer ma;
+    private BigDecimal todayClosingPrice;
 }

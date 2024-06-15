@@ -27,94 +27,213 @@
         yesterday_trading_volume_money
     </sql>
 
-    <!--    考慮以快取替代-->
-    <!--    排除收盤價為空之資訊(當日未開盤)後,依照股票代號分組後排序,給予暫時序號 -->
-    <select id="getLastMaPriceInfo" parameterType="com.personal.project.stockservice.model.dto.Query4CalDTO" resultType="com.personal.project.stockservice.model.dto.PastClosingPriceDTO">
-        select T.*
+    <select id="query4CalMetrics" parameterType="com.personal.project.stockservice.model.dto.Query4CalDTO" resultType="com.personal.project.stockservice.model.dto.DailyStockInfoDTO">
+        select
+            T.id as id,
+            T.stock_id as stockId,
+            T.stock_name as stockName,
+            T.date as date,
+            T.today_closing_price as todayClosingPrice,
+            T.yesterday_closing_price as yesterdayClosingPrice,
+            T.price_gap as priceGap,
+            T.price_gap_percent as priceGapPercent,
+            T.opening_price as openingPrice,
+            T.highest_price as highestPrice,
+            T.lowest_price as lowestPrice,
+            T.today_trading_volume_piece as todayTradingVolumePiece,
+            T.today_trading_volume_money as todayTradingVolumeMoney,
+            T.yesterday_trading_volume_piece as yesterdayTradingVolumePiece,
+            T.yesterday_trading_volume_money as yesterdayTradingVolumeMoney
         from (
-            select tt.stock_id as stockId,
-                   tt.stock_name as stockName,
-                   tt.date as 'date',
-                   tt.today_closing_price as closingPrice,
-                   row_number() over (partition by stock_id order by 'date' desc) as 'sequence'
+            select
+                tt.*,
+                row_number() over (partition by stock_id order by 'date' desc) as 'sequence'
             from (
                 select *
                 from daily_stock_info
-                where today_closing_price is not null
-                and date &lt; #{date}
+                where date = #{date} or today_closing_price is not null
                  ) tt
              ) T
-        where T.sequence in (5, 10, 20, 60, 120, 240)
+        where T.sequence in (1, 5, 10, 20, 60, 120, 240)
     </select>
 
-    <select id="getLastMaPriceInfo4Manual" parameterType="com.personal.project.stockservice.model.dto.ManualCalDTO" resultType="com.personal.project.stockservice.model.dto.PastClosingPriceDTO">
-        select T.*
-        from (
-                 select tt.stock_id as stockId,
-                        tt.stock_name as stockName,
-                        tt.date as 'date',
-                         tt.today_closing_price as closingPrice,
-                        row_number() over (partition by stock_id order by 'date' desc) as 'sequence'
-                 from (
-                          select *
-                          from daily_stock_info
-                          where today_closing_price is not null
-                            and date &lt; #{date}
-                      ) tt
-             ) T
-        where T.sequence in (5, 10, 20, 60, 120, 240)
-    </select>
-
-    <select id="queryInfo4CalDetail" parameterType="com.personal.project.stockservice.model.dto.Query4CalDTO" resultType="com.personal.project.stockservice.model.dto.StockInfo4CalDetailDTO">
-        select T.*
+    <select id="queryInfo4CalDetail" parameterType="com.personal.project.stockservice.model.dto.Query4CalDTO" resultType="com.personal.project.stockservice.model.dto.DailyStockInfoDTO">
+        select
+            t.id as id,
+            t.stock_id as stockId,
+            t.stock_name as stockName,
+            t.date as 'date',
+            t.today_closing_price as todayClosingPrice,
+            t.yesterday_closing_price as yesterdayClosingPrice,
+            t.opening_price as openingPrice,
+            t.highest_price as highestPrice,
+            t.lowest_price as lowestPrice,
+            t.today_trading_volume_piece as todayTradingVolumePiece,
+            t.yesterday_trading_volume_piece as yesterdayTradingVolumePiece,
+            t.today_trading_volume_money as todayTradingVolumeMoney,
+            t.yesterday_trading_volume_money as yesterdayTradingVolumeMoney
+        from
+            daily_stock_info t
+        where
+            t.date = #{date}
+        union
+        select
+            T.id as id,
+            T.stock_id as stockId,
+            T.stock_name as stockName,
+            T.date as 'date',
+            T.today_closing_price as todayClosingPrice,
+            T.yesterday_closing_price as yesterdayClosingPrice,
+            T.opening_price as openingPrice,
+            T.highest_price as highestPrice,
+            T.lowest_price as lowestPrice,
+            T.today_trading_volume_piece as todayTradingVolumePiece,
+            T.yesterday_trading_volume_piece as yesterdayTradingVolumePiece,
+            T.today_trading_volume_money as todayTradingVolumeMoney,
+            T.yesterday_trading_volume_money as yesterdayTradingVolumeMoney
         from (
                  select
-                     tt.stock_id as stockId,
-                     tt.stock_name as stockName,
-                     tt.date as 'date',
-                     tt.today_closing_price as todayClosingPrice,
-                     tt.yesterday_closing_price as yesterdayClosingPrice,
-                     tt.opening_price as openingPrice,
-                     tt.highest_price as highestPrice,
-                     tt.lowest_price as lowestPrice,
-                     tt.today_trading_volume_piece as todayTradingVolumePiece,
-                     tt.yesterday_trading_volume_piece as yesterdayTradingVolumePiece,
-                     tt.today_trading_volume_money as todayTradingVolumeMoney,
-                     tt.yesterday_trading_volume_money as yesterdayTradingVolumeMoney,
+                     tt.*,
                      row_number() over (partition by stock_id order by 'date' desc) as 'sequence'
                  from (
                           select *
                           from daily_stock_info
-                          where 'date' = #{date} or today_closing_price is not null
+                          where 'date' != #{date} and today_closing_price is not null
                       ) tt
              ) T
-        where T.sequence in (1, 2, 3, 5)
+        where T.sequence in (1, 2, 4)
     </select>
 
-    <select id="queryInfo4CalDetail4Manual" parameterType="com.personal.project.stockservice.model.dto.ManualCalDTO"
-            resultType="com.personal.project.stockservice.model.dto.StockInfo4CalDetailDTO">
-        select T.*
+    <select id="queryFormer" resultType="com.personal.project.stockservice.model.entity.DailyStockInfoDO">
+        select
+            T.id as id,
+            T.stock_id as stockId,
+            T.stock_name as stockName,
+            T.date as 'date',
+            T.today_closing_price as todayClosingPrice,
+            T.yesterday_closing_price as yesterdayClosingPrice,
+            T.opening_price as openingPrice,
+            T.highest_price as highestPrice,
+            T.lowest_price as lowestPrice,
+            T.today_trading_volume_piece as todayTradingVolumePiece,
+            T.yesterday_trading_volume_piece as yesterdayTradingVolumePiece,
+            T.today_trading_volume_money as todayTradingVolumeMoney,
+            T.yesterday_trading_volume_money as yesterdayTradingVolumeMoney,
         from (
                  select
-                     tt.stock_id as stockId,
-                     tt.stock_name as stockName,
-                     tt.date as 'date',
-                     tt.today_closing_price as todayClosingPrice,
-                     tt.yesterday_closing_price as yesterdayClosingPrice,
-                     tt.opening_price as openingPrice,
-                     tt.highest_price as highestPrice,
-                     tt.lowest_price as lowestPrice,
-                     tt.today_trading_volume_piece as todayTradingVolumePiece,
-                     tt.yesterday_trading_volume_piece as yesterdayTradingVolumePiece,
-                     tt.today_trading_volume_money as todayTradingVolumeMoney,
-                     tt.yesterday_trading_volume_money as yesterdayTradingVolumeMoney,
+                     tt.*,
                      row_number() over (partition by stock_id order by 'date' desc) as 'sequence'
                  from (
-                          select *
-                          from daily_stock_info
-                          where 'date' = #{date} or today_closing_price is not null
+                        select *
+                        from daily_stock_info
+                        where today_closing_price is not null;
                       ) tt
              ) T
-        where T.sequence in (1, 2, 3, 5)
+        where T.sequence = 1
+    </select>
+
+    <select id="query4InitYesterdayMetrics"
+            resultType="com.personal.project.stockservice.model.dto.StockInfo4InitMetricsDTO">
+        select
+            T.id as id,
+            T.stock_id as stockId,
+            T.stock_name as stockName,
+            T.date as date,
+            T.today_closing_price as todayClosingPrice,
+            T.sequence as sequence
+        from (
+                select
+                    tt.stock_id,
+                    tt.stock_name,
+                    tt.date,
+                    tt.today_closing_price,
+                    row_number() over (partition by stock_id order by 'date' desc) as 'sequence'
+                from(
+                        select *
+                        from daily_stock_info
+                        where today_closing_price is not null
+                    )
+             ) T
+        where T.sequence &lt; 242
+    </select>
+
+    <select id="queryInfo4InitYesterdayDetail" resultType="com.personal.project.stockservice.model.dto.StockInfo4InitDetailDTO">
+        select
+            T.id as id,
+            T.stock_id   as stockId,
+            T.stock_name as stockName,
+            T.date as date,
+            T.opening_price as openingPrice,
+            T.highest_price as highestPrice,
+            T.lowest_price as lowestPrice,
+            T.today_closing_price as todayClosingPrice,
+            T.today_trading_volume_piece as todayTradingVolumePiece,
+            T.today_trading_volume_money as todayTradingVolumeMoney,
+            T.sequence as sequence
+        from (
+                select
+                    tt.*,
+                    row_number() over (partition by stock_id order by 'date' desc)
+                from (
+                        select *
+                        from daily_stock_info
+                        where today_closing_price is not null
+                     ) tt
+             ) T
+        where T.sequence &lt; 13;
+    </select>
+
+    <select id="query4InitTodayMetrics"
+            resultType="com.personal.project.stockservice.model.dto.StockInfo4InitMetricsDTO">
+        select
+            T.id as id,
+            T.stock_id as stockId,
+            T.stock_name as stockName,
+            T.date as date,
+            T.today_closing_price as todayClosingPrice
+        from (
+            select
+            tt.stock_id,
+            tt.stock_name,
+            tt.date,
+            tt.today_closing_price,
+            row_number() over (partition by stock_id order by 'date' desc) as 'sequence'
+            from(
+            select *
+            from daily_stock_info
+            where today_closing_price is not null
+            )
+            ) T
+        where T.sequence in (1, 5, 10, 20, 60, 120, 240);
+    </select>
+
+    <select id="query4InitTodayDetail" resultType="com.personal.project.stockservice.model.dto.DailyStockInfoDTO">
+        select
+            T.id as id,
+            T.stock_id as stockId,
+            T.stock_name as stockName,
+            T.date as date,
+            T.today_closing_price as todayClosingPrice,
+            T.yesterday_closing_price as yesterdayClosingPrice,
+            T.price_gap as priceGap,
+            T.price_gap_percent as priceGapPercent,
+            T.opening_price as openingPrice,
+            T.highest_price as highestPrice,
+            T.lowest_price as lowestPrice,
+            T.today_trading_volume_piece as todayTradingVolumePiece,
+            T.today_trading_volume_money as todayTradingVolumeMoney,
+            T.yesterday_trading_volume_piece as yesterdayTradingVolumePiece,
+            T.yesterday_trading_volume_money as yesterdayTradingVolumeMoney
+        from (
+            select
+            tt.*
+            row_number() over (partition by stock_id order by 'date' desc) as 'sequence'
+            from(
+            select *
+            from daily_stock_info
+            where today_closing_price is not null
+            )
+            ) T
+        where T.sequence in (1, 2, 3, 5);
     </select>
 </mapper>

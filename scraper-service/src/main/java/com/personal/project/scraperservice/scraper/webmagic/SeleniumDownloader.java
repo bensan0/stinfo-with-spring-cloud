@@ -4,6 +4,9 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedCondition;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import us.codecraft.webmagic.Page;
@@ -16,7 +19,10 @@ import us.codecraft.webmagic.selector.PlainText;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * 使用Selenium调用浏览器进行渲染。目前仅支持chrome。<br>
@@ -36,6 +42,10 @@ public class SeleniumDownloader extends AbstractDownloader implements Closeable 
 
     private int poolSize = 1;
 
+    private Duration waitTime = null;
+
+    private ExpectedCondition waitCondition = null;
+
     /**
      * 新建
      *
@@ -44,6 +54,15 @@ public class SeleniumDownloader extends AbstractDownloader implements Closeable 
     public SeleniumDownloader(String chromeDriverPath) {
         System.getProperties().setProperty("webdriver.chrome.driver",
                 chromeDriverPath);
+    }
+
+    public SeleniumDownloader(String chromeDriverPath, Duration waitTime, ExpectedCondition waitCondition) {
+        System.getProperties().setProperty("webdriver.chrome.driver",
+                chromeDriverPath);
+
+        this.waitTime = waitTime;
+
+        this.waitCondition = waitCondition;
     }
 
     /**
@@ -97,12 +116,10 @@ public class SeleniumDownloader extends AbstractDownloader implements Closeable 
              *
              * @author: bob.li.0718@gmail.com
              */
-//            new WebDriverWait(webDriver, Duration.of(5000, ChronoUnit.MILLIS)).until(new ExpectedCondition() {
-//                @Override
-//                public Object apply(Object input) {
-//                    return ((WebDriver)input).getTitle().toLowerCase().contains("個股市況總覽");
-//                }
-//            });
+            if(waitTime != null && waitCondition != null){
+                new WebDriverWait(webDriver, waitTime).until(waitCondition);
+            }
+
             WebElement webElement = webDriver.findElement(By.xpath("/html"));
             String content = webElement.getAttribute("outerHTML");
             page.setDownloadSuccess(true);

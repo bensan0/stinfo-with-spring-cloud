@@ -7,11 +7,6 @@
         <result property="stockName" column="stock_name" jdbcType="VARCHAR"/>
         <result property="todayClosingPrice" column="today_closing_price" jdbcType="DECIMAL"/>
         <result property="date" column="date" jdbcType="BIGINT"/>
-        <result property="rsi3" column="rsi_3" jdbcType="DECIMAL"/>
-        <result property="rsi5" column="rsi_5" jdbcType="DECIMAL"/>
-        <result property="rsi6" column="rsi_6" jdbcType="DECIMAL"/>
-        <result property="rsi10" column="rsi_10" jdbcType="DECIMAL"/>
-        <result property="rsi12" column="rsi_12" jdbcType="DECIMAL"/>
         <result property="ma5" column="ma_5" jdbcType="DECIMAL"/>
         <result property="lastMA5price" column="last_ma_5_price" jdbcType="DECIMAL"/>
         <result property="ma10" column="ma_10" jdbcType="DECIMAL"/>
@@ -33,17 +28,34 @@
         last_ma_120_price,ma_240,last_ma_240_price
     </sql>
 
-    <select id="query4CalMetrics" parameterType="com.personal.project.stockservice.model.dto.Query4CalDTO" resultType="com.personal.project.stockservice.model.dto.CalMetricsDTO">
+    <select id="query4CalMetrics" parameterType="com.personal.project.stockservice.model.dto.Query4CalDTO" resultType="com.personal.project.stockservice.model.dto.DailyStockMetricsDTO">
         select
             t.stock_id as stockId,
             t.date as date,
             t.stock_name as stockName,
             t.today_closing_price as todayClosingPrice,
-            t1.rsi_3 as rsi3,
-            t1.rsi_5 as rsi5,
-            t1.rsi_6 as rsi6,
-            t1.rsi_10 as rsi10,
-            t1.rsi_12 as rsi12,
+            t.ma_5 as ma5,
+            t.last_ma_5_price as lastMA5Price,
+            t.ma_10 as ma10,
+            t.last_ma_10_price as lastMA10Price,
+            t.ma_20 as ma20,
+            t.last_ma_20_price as lastMA20Price,
+            t.ma_60 as ma60,
+            t.last_ma_60_price as lastMA60Price,
+            t.ma_120 as ma120,
+            t.last_ma_120_price as lastMA120Price,
+            t.ma_240 as ma240,
+            t.last_ma_240_price as lastMA240Price
+        from
+            daily_stock_info t
+        where
+            t.date = #{date}
+        union
+        select
+            t1.stock_id as stockId,
+            t1.date as date,
+            t1.stock_name as stockName,
+            t1.today_closing_price as todayClosingPrice,
             t1.ma_5 as ma5,
             t1.last_ma_5_price as lastMA5Price,
             t1.ma_10 as ma10,
@@ -56,57 +68,48 @@
             t1.last_ma_120_price as lastMA120Price,
             t1.ma_240 as ma240,
             t1.last_ma_240_price as lastMA240Price
-        from
-            daily_stock_info t
-        left join
-            daily_stock_metrics t1
-        on
-            t.date = #{date} and t1.date = #{lastTradingDate} and t.stock_id = t1.stock_id
+        from(
+                select
+                    T.*,
+                    row_number() over (partition by stock_id order by date desc) as sequence
+                from (
+                        select *
+                        from daily_stock_metrics
+                        where date != #{date} and today_closing_price is not null
+                     ) T
+                where T.sequence = 1
+            ) t1
 
-    </select>
-
-    <select id="query4CalMetricsManual" parameterType="com.personal.project.stockservice.model.dto.ManualCalDTO" resultType="com.personal.project.stockservice.model.dto.CalMetricsDTO">
-        select
-            t.stock_id as stockId,
-            t.date as date,
-            t.stock_name as stockName,
-            t.today_closing_price as todayClosingPrice,
-            t1.rsi_3 as rsi3,
-            t1.rsi_5 as rsi5,
-            t1.rsi_6 as rsi6,
-            t1.rsi_10 as rsi10,
-            t1.rsi_12 as rsi12,
-            t1.ma_5 as ma5,
-            t1.last_ma_5_price as lastMA5Price,
-            t1.ma_10 as ma10,
-            t1.last_ma_10_price as lastMA10Price,
-            t1.ma_20 as ma20,
-            t1.last_ma_20_price as lastMA20Price,
-            t1.ma_60 as ma60,
-            t1.last_ma_60_price as lastMA60Price,
-            t1.ma_120 as ma120,
-            t1.last_ma_120_price as lastMA120Price,
-            t1.ma_240 as ma240,
-            t1.last_ma_240_price as lastMA240Price
-        from
-            daily_stock_info t
-            left join
-            daily_stock_metrics t1
-        on
-            t.date = #{date} and t1.date = #{lastTradingDate} and t.stock_id = t1.stock_id
     </select>
 
     <select id="query4CalDetail" parameterType="com.personal.project.stockservice.model.dto.Query4CalDTO" resultType="com.personal.project.stockservice.model.dto.DailyStockMetricsDTO">
+        select
+            t.stock_id as stockId,
+            t.date as date,
+            t.stock_name as stockName,
+            t.today_closing_price as todayClosingPrice,
+            t.ma_5 as ma5,
+            t.last_ma_5_price as lastMA5Price,
+            t.ma_10 as ma10,
+            t.last_ma_10_price as lastMA10Price,
+            t.ma_20 as ma20,
+            t.last_ma_20_price as lastMA20Price,
+            t.ma_60 as ma60,
+            t.last_ma_60_price as lastMA60Price,
+            t.ma_120 as ma120,
+            t.last_ma_120_price as lastMA120Price,
+            t.ma_240 as ma240,
+            t.last_ma_240_price as lastMA240Price
+        from
+            daily_stock_metrics t
+        where
+            date = #{date}
+        union
         select
             T.stock_id as stockId,
             T.date as date,
             T.stock_name as stockName,
             T.today_closing_price as todayClosingPrice,
-            T.rsi_3 as rsi3,
-            T.rsi_5 as rsi5,
-            T.rsi_6 as rsi6,
-            T.rsi_10 as rsi10,
-            T.rsi_12 as rsi12,
             T.ma_5 as ma5,
             T.last_ma_5_price as lastMA5Price,
             T.ma_10 as ma10,
@@ -118,8 +121,7 @@
             T.ma_120 as ma120,
             T.last_ma_120_price as lastMA120Price,
             T.ma_240 as ma240,
-            T.last_ma_240_price as lastMA240Price,
-            T.sequence
+            T.last_ma_240_price as lastMA240Price
         from (
                 select
                     tt.*,
@@ -128,10 +130,10 @@
                     (
                         select *
                         from daily_stock_metric
-                        where 'date' = #{date} or today_closing_price is not null
+                        where 'date' != #{date} or today_closing_price is not null
                     ) tt
              ) T
-        where T.sequence in (1,2)
+        where T.sequence = 1
     </select>
 
     <select id="query4ManualCalDetail" parameterType="com.personal.project.stockservice.model.dto.ManualCalDTO" resultType="com.personal.project.stockservice.model.dto.DailyStockMetricsDTO">
@@ -140,11 +142,6 @@
             T.date as date,
             T.stock_name as stockName,
             T.today_closing_price as todayClosingPrice,
-            T.rsi_3 as rsi3,
-            T.rsi_5 as rsi5,
-            T.rsi_6 as rsi6,
-            T.rsi_10 as rsi10,
-            T.rsi_12 as rsi12,
             T.ma_5 as ma5,
             T.last_ma_5_price as lastMA5Price,
             T.ma_10 as ma10,
@@ -169,5 +166,68 @@
             ) tt
             ) T
         where T.sequence in (1, 2)
+    </select>
+
+    <select id="query4CalInitTodayMetrics"
+            resultType="com.personal.project.stockservice.model.dto.DailyStockMetricsDTO">
+        select
+            T.stock_id as stockId,
+            T.date as date,
+            T.stock_name as stockName,
+            T.ma_5 as ma5,
+            T.last_ma_5_price as lastMA5Price,
+            T.ma_10 as ma10,
+            T.last_ma_10_price as lastMA10Price,
+            T.ma_20 as ma20,
+            T.last_ma_20_price as lastMA20Price,
+            T.ma_60 as ma60,
+            T.last_ma_60_price as lastMA60Price,
+            T.ma_120 as ma120,
+            T.last_ma_120_price as lastMA120Price,
+            T.ma_240 as ma240,
+            T.last_ma_240_price as lastMA240Price,
+        from (
+                select
+                    tt.*,
+                    row_number() over (partition by stock_id order by 'date' desc) as sequence
+                from
+                    (
+                        select *
+                        from daily_stock_metric
+                        where today_closing_price is not null
+                    ) tt
+            ) T
+        where T.sequence = 1;
+    </select>
+
+    <select id="query4CalInitTodayDetail" resultType="com.personal.project.stockservice.model.dto.DailyStockMetricsDTO">
+        select
+            T.stock_id as stockId,
+            T.date as date,
+            T.stock_name as stockName,
+            T.ma_5 as ma5,
+            T.last_ma_5_price as lastMA5Price,
+            T.ma_10 as ma10,
+            T.last_ma_10_price as lastMA10Price,
+            T.ma_20 as ma20,
+            T.last_ma_20_price as lastMA20Price,
+            T.ma_60 as ma60,
+            T.last_ma_60_price as lastMA60Price,
+            T.ma_120 as ma120,
+            T.last_ma_120_price as lastMA120Price,
+            T.ma_240 as ma240,
+            T.last_ma_240_price as lastMA240Price,
+        from (
+            select
+            tt.*,
+            row_number() over (partition by stock_id order by 'date' desc) as sequence
+            from
+            (
+            select *
+            from daily_stock_metric
+            where today_closing_price is not null
+            ) tt
+            ) T
+        where T.sequence in (1, 2);
     </select>
 </mapper>

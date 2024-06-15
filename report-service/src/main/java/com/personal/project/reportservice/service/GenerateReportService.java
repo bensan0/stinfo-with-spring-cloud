@@ -6,8 +6,11 @@ import org.apache.commons.lang3.ObjectUtils;
 
 public interface GenerateReportService {
 
-    InnerResponse<ObjectUtils.Null> generateMetricReport(ManualCalReportDTO dto);
+    InnerResponse<ObjectUtils.Null> generateInitYesterdayMetricReport();
 
-    InnerResponse<ObjectUtils.Null> generateDetailReport(ManualCalReportDTO dto);
+    InnerResponse<ObjectUtils.Null> generateInitYesterdayDetailReport();
 
+    InnerResponse<ObjectUtils.Null> generateInitTodayMetricReport();
+
+    InnerResponse<ObjectUtils.Null> generateInitTodayDetailReport();
 }

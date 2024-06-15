@@ -7,6 +7,8 @@ import java.math.BigDecimal;
 @Data
 public class DailyStockInfoDTO {
 
+    private Long id;
+
     private String stockId;
 
     private String stockName;

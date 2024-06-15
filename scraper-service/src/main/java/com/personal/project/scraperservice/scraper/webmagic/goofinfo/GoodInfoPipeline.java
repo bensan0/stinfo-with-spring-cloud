@@ -1,8 +1,5 @@
 package com.personal.project.scraperservice.scraper.webmagic.goofinfo;
 
-import cn.hutool.core.util.StrUtil;
-import com.alibaba.fastjson2.JSON;
-import com.personal.project.scraperservice.constant.Term;
 import com.personal.project.scraperservice.model.dto.DailyStockInfoDto;
 import com.personal.project.scraperservice.model.entity.ScraperErrorMessageDO;
 import lombok.Getter;
@@ -12,8 +9,6 @@ import us.codecraft.webmagic.Task;
 import us.codecraft.webmagic.pipeline.Pipeline;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -22,7 +17,7 @@ import java.util.List;
 public class GoodInfoPipeline implements Pipeline {
 
     @Getter
-    private final List<DailyStockInfoDto> infos = Collections.synchronizedList(new ArrayList<>());
+    private final List<DailyStockInfoDto> dtos = Collections.synchronizedList(new ArrayList<>());
 
     @Getter
     private final List<ScraperErrorMessageDO> errors = Collections.synchronizedList(new ArrayList<>());
@@ -37,33 +32,11 @@ public class GoodInfoPipeline implements Pipeline {
 
     @Override
     public void process(ResultItems resultItems, Task task) {
-        DailyStockInfoDto info = new DailyStockInfoDto();
-        try {
-            info.setStockId(resultItems.get(Term.STOCK_ID.getFieldName()));
-            info.setStockName(resultItems.get(Term.STOCK_NAME.getFieldName()));
-            info.setDate(resultItems.get(Term.DATE.getFieldName()));
-            info.setTodayClosingPrice(new BigDecimal(resultItems.get(Term.TODAY_CLOSING_PRICE.getFieldName()).toString().replace(",", "")));
-            info.setYesterdayClosingPrice(new BigDecimal(resultItems.get(Term.YESTERDAY_CLOSING_PRICE.getFieldName()).toString().replace(",", "")));
-            info.setPriceGap(new BigDecimal(resultItems.get(Term.PRICE_GAP.getFieldName()).toString()));
-            info.setPriceGapPercent(Double.valueOf(resultItems.get(Term.PRICE_GAP_PERCENT.getFieldName()).toString().replace("%", "")));
-            info.setOpeningPrice(new BigDecimal(resultItems.get(Term.OPENING_PRICE.getFieldName()).toString().replace(",", "")));
-            info.setHighestPrice(new BigDecimal(resultItems.get(Term.HIGHEST_PRICE.getFieldName()).toString().replace(",", "")));
-            info.setLowestPrice(new BigDecimal(resultItems.get(Term.LOWEST_PRICE.getFieldName()).toString().replace(",", "")));
-            info.setTodayTradingVolumePiece(Long.valueOf(resultItems.get(Term.TODAY_TRADING_VOLUME_PIECE.getFieldName()).toString().replace(",", "")));
-            info.setTodayTradingVolumeMoney(calculateChineseMoneyUnit(resultItems.get(Term.TODAY_TRADING_VOLUME_MONEY.getFieldName()).toString().replace(",", "")));
-            info.setYesterdayTradingVolumePiece(Long.valueOf(resultItems.get(Term.YESTERDAY_TRADING_VOLUME_PIECE.getFieldName()).toString().replace(",", "")));
-            info.setYesterdayTradingVolumeMoney(calculateChineseMoneyUnit(resultItems.get(Term.YESTERDAY_TRADING_VOLUME_MONEY.getFieldName()).toString().replace(",", "")));
-            infos.add(info);
-        } catch (Exception e) {
-            log.error("{} 當日股票資訊轉換錯誤, 原始資料:{}", LocalDate.now(), JSON.toJSONString(resultItems.getAll()), e);
-            ScraperErrorMessageDO error = new ScraperErrorMessageDO();
-            error.setDate(LocalDateTime.now().toString());
-            error.setErrorMessage(StrUtil.format("{} 當日股票資訊轉換錯誤, 原始資料:{}", LocalDate.now(), JSON.toJSONString(resultItems.getAll())));
-            error.setException(e.getClass().getSimpleName());
-            error.setScraperName("goodinfo pipeline");
-            error.setExceptionMessage(e.getMessage());
-            errors.add(error);
-        }
+
+        List<DailyStockInfoDto> dtos = resultItems.get("dtos");
+        List<ScraperErrorMessageDO> errors = resultItems.get("errors");
+        this.dtos.addAll(dtos);
+        this.errors.addAll(errors);
     }
 
     private BigDecimal calculateChineseMoneyUnit(String str) {

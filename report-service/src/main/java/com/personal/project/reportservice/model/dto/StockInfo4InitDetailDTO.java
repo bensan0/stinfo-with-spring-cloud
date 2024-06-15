@@ -5,7 +5,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 @Data
-public class StockInfo4CalDetailDTO {
+public class StockInfo4InitDetailDTO {
 
     private String stockId;
 
@@ -14,23 +14,15 @@ public class StockInfo4CalDetailDTO {
     // yyyyMMdd
     private Long date;
 
-    private BigDecimal todayClosingPrice;
-
-    private BigDecimal yesterdayClosingPrice;
-
     private BigDecimal openingPrice;
 
     private BigDecimal highestPrice;
 
     private BigDecimal lowestPrice;
 
-    private Long todayTradingVolumePiece;
+    private BigDecimal todayClosingPrice;
 
-    private Long yesterdayTradingVolumePiece;
+    private BigDecimal todayTradingVolumePiece;
 
     private BigDecimal todayTradingVolumeMoney;
-
-    private BigDecimal yesterdayTradingVolumeMoney;
-
-    private Integer sequence;
 }

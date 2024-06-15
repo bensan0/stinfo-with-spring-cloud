@@ -6,11 +6,13 @@ import com.personal.project.reportservice.model.dto.*;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.util.List;
+import java.util.Map;
 
 @FeignClient(contextId = "remoteStockService", value = ServiceNameConstants.STOCK_SERVICE, fallbackFactory = RemoteStockFallbackFactory.class)
 public interface RemoteStockService {
@@ -30,7 +32,19 @@ public interface RemoteStockService {
     @PostMapping(value = "/feign/stock/manual/query-4-cal-detail", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     InnerResponse<CalDetailUnionDTO> getCalDetailInfo(@RequestBody Query4ManualCalDTO Query4ManualCalDTO, @RequestHeader(name = "token") String token);
 
-
     @PostMapping(value = "/feign/stock/save-detail", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     InnerResponse<ObjectUtils.Null> saveDetail(@RequestBody List<DailyStockInfoDetailDTO> details, @RequestHeader(name = "token") String token);
+
+    @GetMapping(value = "/feign/stock/query-4-init-yesterday-metrics", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    InnerResponse<Map<String, List<StockInfo4InitMetricsDTO>>> get4CalInitYesterdayMetrics(@RequestHeader(name = "token") String token);
+
+    @GetMapping(value = "/feign/stock/query-4-init-yesterday-detail", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    InnerResponse<Map<String, List<StockInfo4InitDetailDTO>>> get4CalInitYesterdayDetail(@RequestHeader(name = "token") String token);
+
+    @GetMapping(value = "/feign/stock/query-4-init-today-metrics", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    InnerResponse<Query4CalInitTodayMetricsDTO> get4CalInitTodayMetrics(@RequestHeader(name = "token") String token);
+
+    @GetMapping(value = "/feign/stock/query-4-init-today-detail", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    InnerResponse<Query4CalInitTodayDetailDTO> get4CalInitTodayDetail(@RequestHeader(name = "token") String token);
+
 }

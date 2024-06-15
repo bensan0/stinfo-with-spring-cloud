@@ -8,13 +8,11 @@ import java.util.Map;
 @Data
 public class CalMetricsUnionDTO {
 
-    public CalMetricsUnionDTO(List<CalMetricsDTO> calMetricsInfo, List<PastClosingPriceDTO> pastClosingPrice, List<SimpleMetricsDTO> todayExistedMetrics) {
-        this.calMetricsInfo = calMetricsInfo;
-        this.pastClosingPrice = pastClosingPrice;
-        this.todayExistedMetrics = todayExistedMetrics;
+    public CalMetricsUnionDTO(Map<String, List<DailyStockMetricsDTO>> stockIdToMetrics, Map<String, List<DailyStockInfoDTO>> stockIdToInfos) {
+        this.stockIdToMetrics = stockIdToMetrics;
+        this.stockIdToInfos = stockIdToInfos;
     }
 
-    private List<CalMetricsDTO> calMetricsInfo;
-    private List<PastClosingPriceDTO> pastClosingPrice;
-    private List<SimpleMetricsDTO> todayExistedMetrics;
+    private Map<String, List<DailyStockMetricsDTO>> stockIdToMetrics;
+    private Map<String, List<DailyStockInfoDTO>> stockIdToInfos;
 }

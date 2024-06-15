@@ -1,11 +1,13 @@
-package com.personal.project.stockservice.model.dto;
+package com.personal.project.reportservice.model.dto;
 
 import lombok.Data;
 
 import java.math.BigDecimal;
 
 @Data
-public class StockInfo4CalDetailDTO {
+public class DailyStockInfoDTO {
+
+    private Long id;
 
     private String stockId;
 
@@ -18,6 +20,10 @@ public class StockInfo4CalDetailDTO {
 
     private BigDecimal yesterdayClosingPrice;
 
+    private BigDecimal priceGap;
+
+    private BigDecimal priceGapPercent;
+
     private BigDecimal openingPrice;
 
     private BigDecimal highestPrice;
@@ -26,11 +32,9 @@ public class StockInfo4CalDetailDTO {
 
     private Long todayTradingVolumePiece;
 
-    private Long yesterdayTradingVolumePiece;
-
     private BigDecimal todayTradingVolumeMoney;
 
-    private BigDecimal yesterdayTradingVolumeMoney;
+    private Long yesterdayTradingVolumePiece;
 
-    private Integer sequence;
+    private BigDecimal yesterdayTradingVolumeMoney;
 }

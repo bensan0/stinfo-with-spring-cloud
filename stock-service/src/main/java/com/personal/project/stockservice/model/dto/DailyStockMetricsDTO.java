@@ -16,16 +16,6 @@ public class DailyStockMetricsDTO {
     // yyyyMMdd
     private Long date;
 
-    private BigDecimal rsi3;
-
-    private BigDecimal rsi5;
-
-    private BigDecimal rsi6;
-
-    private BigDecimal rsi10;
-
-    private BigDecimal rsi12;
-
     // 5日均
     private BigDecimal ma5;
     private BigDecimal lastMA5price;// 5日最舊價格
@@ -49,6 +39,4 @@ public class DailyStockMetricsDTO {
     // 年線
     private BigDecimal ma240;
     private BigDecimal lastMA240price;
-
-    private Integer sequence;
 }

@@ -16,4 +16,6 @@ public interface DailyStockInfoDetailMapper extends BaseMapper<DailyStockInfoDet
     List<DailyStockInfoDetailDTO> query4CalDetailManual(ManualCalDTO manualCalDTO);
 
     IPage<ConditionQueryUnionInfoDTO> queryCondition(Page<ConditionQueryUnionInfoDTO> page, @Param("dto") QueryConditionDTO dto, @Param("date") Long date);
+
+    List<DailyStockInfoDetailDTO> query4InitTodayDetail();
 }

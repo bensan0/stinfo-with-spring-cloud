@@ -18,6 +18,21 @@
 
     <select id="query4CalDetail" parameterType="com.personal.project.stockservice.model.dto.Query4CalDTO" resultType="com.personal.project.stockservice.model.dto.DailyStockInfoDetailDTO">
         select
+            t.id as id,
+            t.stock_id as stockId,
+            t.date as 'date',
+            t.today_closing_price as todayClosingPrice,
+            t.upper_shadow as upperShadow,
+            t.lower_shadow as lowerShadow,
+            t.real_body as realBody,
+            t.tags as tags;
+        from
+            daily_stock_info_detail t
+        where
+            date = #{date}
+        union
+        select
+            T.id as id,
             T.stock_id as stockId,
             T.date as 'date',
             T.today_closing_price as todayClosingPrice,
@@ -33,7 +48,7 @@
                     (
                         select *
                         from daily_stock_info_detail
-                        where 'date' is not #{date}
+                        where 'date' != #{date} and today_closing_price != null
                     ) tt
 
              ) T
@@ -144,5 +159,27 @@
         </if>
 
         order by stock_id
+    </select>
+
+    <select id="query4InitTodayDetail" resultType="com.personal.project.stockservice.model.dto.DailyStockInfoDetailDTO">
+        select
+            T.stock_id as stockId,
+            T.date as date,
+            T.today_closing_price as todayClosingPrice,
+            T.upper_shadow as upperShadow,
+            T.lower_shadow as lowerShadow,
+            T.real_body as realBody,
+            T.tags as tags
+        from(
+                select
+                    tt.*
+                    row_number() over (partition by stock_id order by 'date' desc) as sequence
+                from(
+                    select *
+                    from daily_stock_detail
+                    where today_closing_price is not null
+                    ) tt
+            ) T
+        where T.sequence = 1;
     </select>
 </mapper>

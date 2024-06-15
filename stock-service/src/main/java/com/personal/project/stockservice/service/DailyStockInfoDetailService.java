@@ -7,6 +7,7 @@ import com.personal.project.stockservice.model.dto.*;
 import com.personal.project.stockservice.model.entity.DailyStockInfoDetailDO;
 
 import java.util.List;
+import java.util.Map;
 
 public interface DailyStockInfoDetailService extends IService<DailyStockInfoDetailDO> {
 
@@ -15,7 +16,7 @@ public interface DailyStockInfoDetailService extends IService<DailyStockInfoDeta
      *
      * @return
      */
-    List<DailyStockInfoDetailDTO> query4CalDetail(Query4CalDTO query4CalDTO);
+    Map<String, List<DailyStockInfoDetailDTO>> query4CalDetail(Query4CalDTO query4CalDTO);
 
     /**
      * 獲取前一個交易日個股標籤數據
@@ -24,13 +25,11 @@ public interface DailyStockInfoDetailService extends IService<DailyStockInfoDeta
      */
     List<DailyStockInfoDetailDTO> query4CalDetail(ManualCalDTO manualCalDTO);
 
+    IPage<ConditionQueryUnionInfoDTO> queryCondition(Page<ConditionQueryUnionInfoDTO> page, QueryConditionDTO dto, Long date);
+
     /**
-     * 根據日期獲取指標數據(id, stock_id)
-     *
-     * @param date
+     * 系統初始化用, 取得計算最新交易日詳細報告所需資料
      * @return
      */
-    List<SimpleDetailDTO> queryDetail(Long date);
-
-    IPage<ConditionQueryUnionInfoDTO> queryCondition(Page<ConditionQueryUnionInfoDTO> page, QueryConditionDTO dto, Long date);
+    Map<String, DailyStockInfoDetailDTO> query4InitTodayDetail();
 }

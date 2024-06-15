@@ -11,6 +11,8 @@ public class DailyStockInfoDetailDTO {
 
     private Long date;
 
+    private BigDecimal todayClosingPrice;
+
     private BigDecimal upperShadow;
 
     private BigDecimal lowerShadow;

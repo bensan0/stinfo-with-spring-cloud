@@ -1,5 +1,5 @@
-CREATE database if NOT EXISTS `stock_servie` default character set utf8mb4 collate utf8mb4_unicode_ci;
-use `stock_servie`;
+CREATE database if NOT EXISTS `stock_service` default character set utf8mb4 collate utf8mb4_unicode_ci;
+use `stock_service`;
 
 SET NAMES utf8mb4;
 
@@ -30,11 +30,6 @@ create table if not exists daily_stock_metrics
     stock_name                      varchar(20)                     default ''        not null comment '股名',
     today_closing_price             decimal(7,2) unsigned                             null     comment '今日收盤價',
     date                            bigint unsigned                 default 0         not null comment 'yyyyMMdd',
-    rsi_3                           decimal(7,2) unsigned                             null     comment 'rsi 3日',
-    rsi_5                           decimal(7,2) unsigned                             null     comment 'rsi 5日',
-    rsi_6                           decimal(7,2) unsigned                             null     comment 'rsi 6日',
-    rsi_10                          decimal(7,2) unsigned                             null     comment 'rsi 10日',
-    rsi_12                          decimal(7,2) unsigned                             null     comment 'rsi 12日',
     ma_5                            decimal(7,2) unsigned                             null     comment '5日均價',
     last_ma_5_price                 decimal(7,2) unsigned                             null     comment '用以計算本次均價的最舊一次收盤價',
     ma_10                           decimal(7,2) unsigned                             null     comment '10日均價',

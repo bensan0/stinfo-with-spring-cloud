@@ -1,6 +1,5 @@
 package com.personal.project.stockservice.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -11,17 +10,26 @@ import com.personal.project.stockservice.service.DailyStockInfoDetailService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class DailyStockInfoDetailServiceImpl extends ServiceImpl<DailyStockInfoDetailMapper, DailyStockInfoDetailDO> implements DailyStockInfoDetailService {
 
     @Override
-    public List<DailyStockInfoDetailDTO> query4CalDetail(Query4CalDTO query4CalDTO) {
+    public Map<String, List<DailyStockInfoDetailDTO>> query4CalDetail(Query4CalDTO query4CalDTO) {
+        List<DailyStockInfoDetailDTO> dtos = baseMapper.query4CalDetail(query4CalDTO);
+        Map<String, List<DailyStockInfoDetailDTO>> results = new HashMap<>();
+        dtos.forEach(dto -> {
+            results.computeIfAbsent(dto.getStockId(), k -> new ArrayList<>()).add(dto);
+        });
 
-        return baseMapper.query4CalDetail(query4CalDTO);
+        return results;
     }
 
     @Override
@@ -30,21 +38,16 @@ public class DailyStockInfoDetailServiceImpl extends ServiceImpl<DailyStockInfoD
     }
 
     @Override
-    public List<SimpleDetailDTO> queryDetail(Long date) {
-        QueryWrapper<DailyStockInfoDetailDO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.select("id", "stock_id")
-                .eq("date", date);
-
-        List<Map<String, Object>> maps = baseMapper.selectMaps(queryWrapper);
-
-        return maps.stream()
-                .map(o -> new SimpleDetailDTO(o.get("stock_id").toString(), Long.valueOf(o.get("id").toString())))
-                .toList();
-    }
-
-    @Override
     public IPage<ConditionQueryUnionInfoDTO> queryCondition(Page<ConditionQueryUnionInfoDTO> page, QueryConditionDTO dto, Long date) {
 
         return baseMapper.queryCondition(page, dto, date);
+    }
+
+    @Override
+    public Map<String, DailyStockInfoDetailDTO> query4InitTodayDetail() {
+
+        List<DailyStockInfoDetailDTO> dtos = baseMapper.query4InitTodayDetail();
+
+        return dtos.stream().collect(Collectors.toMap(DailyStockInfoDetailDTO::getStockId, Function.identity()));
     }
 }

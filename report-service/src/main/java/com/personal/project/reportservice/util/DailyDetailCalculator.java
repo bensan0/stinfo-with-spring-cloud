@@ -1,40 +1,199 @@
 package com.personal.project.reportservice.util;
 
+import cn.hutool.core.util.StrUtil;
+import com.personal.project.commoncore.constants.CommonTerm;
 import com.personal.project.reportservice.constant.DetailTagEnum;
+import com.personal.project.reportservice.model.dto.DailyStockInfoDTO;
 import com.personal.project.reportservice.model.dto.DailyStockInfoDetailDTO;
 import com.personal.project.reportservice.model.dto.DailyStockMetricsDTO;
-import com.personal.project.reportservice.model.dto.StockInfo4CalDetailDTO;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-public class TagHelper {
-    //todo 標籤以多語系方式做英翻中
-    public static List<String> generateTags(String pureDate,
-                                        DailyStockInfoDetailDTO todayDetailDTO,
-                                        StockInfo4CalDetailDTO todayInfo,
-                                        StockInfo4CalDetailDTO yesterdayInfo,
-                                        List<DailyStockMetricsDTO> dailyStockMetricsDTOs) {
+public class DailyDetailCalculator {
 
+    public DailyStockInfoDetailDTO cal(
+            DailyStockInfoDetailDTO result,
+            DailyStockInfoDTO todayInfo,
+            DailyStockInfoDTO yesterdayInfo,
+            DailyStockInfoDTO twoDaysAgoInfo,
+            DailyStockInfoDTO fourDaysAgoInfo,
+            DailyStockMetricsDTO todayMetrics,
+            DailyStockMetricsDTO yesterdayMetrics,
+            DailyStockInfoDetailDTO yesterdayDetail
+    ) {
+        calShadow(result, todayInfo);
+        calConsecutive(result, yesterdayDetail, todayInfo, yesterdayInfo);
+        calComparingPassDays(result, todayInfo, twoDaysAgoInfo, fourDaysAgoInfo);
+        calExtraTags(result, todayInfo, yesterdayInfo, todayMetrics, yesterdayMetrics);
+
+        return result;
+    }
+
+    private void calShadow(DailyStockInfoDetailDTO result, DailyStockInfoDTO todayInfo) {
+        BigDecimal range = todayInfo.getHighestPrice().subtract(todayInfo.getLowestPrice());
+
+        BigDecimal upperShadow = todayInfo.getHighestPrice()
+                .subtract(todayInfo.getOpeningPrice().max(todayInfo.getOpeningPrice()))
+                .divide(range, 4, RoundingMode.FLOOR)
+                .multiply(BigDecimal.valueOf(100));
+        result.setUpperShadow(upperShadow);
+
+        BigDecimal realBody = todayInfo.getOpeningPrice().subtract(todayInfo.getTodayClosingPrice())
+                .abs()
+                .divide(range, 4, RoundingMode.FLOOR)
+                .multiply(BigDecimal.valueOf(100));
+        result.setRealBody(realBody);
+
+        BigDecimal lowerShadow = todayInfo.getOpeningPrice().min(todayInfo.getTodayClosingPrice())
+                .subtract(todayInfo.getLowestPrice())
+                .divide(range, 4, RoundingMode.FLOOR)
+                .multiply(BigDecimal.valueOf(100));
+        result.setLowerShadow(lowerShadow);
+
+    }
+
+    private void calConsecutive(DailyStockInfoDetailDTO result, DailyStockInfoDetailDTO yesterdayDetail, DailyStockInfoDTO todayInfo, DailyStockInfoDTO yesterdayInfo) {
+        DailyStockInfoDetailDTO.TagsDTO yesterdayTags = yesterdayDetail.getTags();
+        DailyStockInfoDetailDTO.TagsDTO todayTags = result.getTags();
+
+        String todayPriceStatus = judgeStatus(todayInfo.getPriceGap());
+        todayTags.setPriceStatus(StrUtil.format("{}->{}", yesterdayTags.getPriceStatus().split("->")[1], todayPriceStatus));
+
+        //金額連
+        if (todayPriceStatus.equals(yesterdayTags.getConsecutivePrice()[1])) {
+            todayTags.setConsecutivePrice(
+                    new String[]{
+                            String.valueOf(Long.parseLong(yesterdayTags.getConsecutivePrice()[1]) + 1),
+                            todayPriceStatus
+                    }
+            );
+        } else {
+            todayTags.setConsecutivePrice(
+                    new String[]{
+                            "1",
+                            todayPriceStatus
+                    }
+            );
+        }
+
+        //交易量連
+        String todayVolumeStatus = judgeStatus(BigDecimal.valueOf(todayInfo.getTodayTradingVolumePiece() - yesterdayInfo.getTodayTradingVolumePiece()));
+        if (todayVolumeStatus.equals(yesterdayTags.getConsecutiveTradingVolume()[1])) {
+            todayTags.setConsecutiveTradingVolume(
+                    new String[]{
+                            String.valueOf(Long.parseLong(yesterdayTags.getConsecutiveTradingVolume()[0]) + 1),
+                            todayVolumeStatus
+                    }
+            );
+        } else {
+            todayTags.setConsecutiveTradingVolume(
+                    new String[]{
+                            "1",
+                            todayVolumeStatus
+                    }
+            );
+        }
+
+        //交易額連
+        String todayAmountStatus = judgeStatus(todayInfo.getTodayTradingVolumeMoney().subtract(yesterdayInfo.getTodayTradingVolumeMoney()));
+        if (todayAmountStatus.equals(yesterdayTags.getConsecutiveTradingAmount()[1])) {
+            todayTags.setConsecutiveTradingVolume(
+                    new String[]{
+                            String.valueOf(Long.parseLong(yesterdayTags.getConsecutiveTradingAmount()[0]) + 1),
+                            todayAmountStatus
+                    }
+            );
+        } else {
+            todayTags.setConsecutiveTradingAmount(
+                    new String[]{
+                            "1",
+                            todayAmountStatus
+                    }
+            );
+        }
+
+
+        result.setTags(todayTags);
+    }
+
+    private void calComparingPassDays(DailyStockInfoDetailDTO result, DailyStockInfoDTO todayInfo, DailyStockInfoDTO twoDaysAgoInfo, DailyStockInfoDTO fourDaysAgoInfo) {
+        DailyStockInfoDetailDTO.TagsDTO todayTags = result.getTags();
+
+        //前第3天
+        BigDecimal vs2DaysPriceDiff = todayInfo.getTodayClosingPrice().subtract(twoDaysAgoInfo.getTodayClosingPrice());
+        String vs2DaysPriceStatus = judgeStatus(vs2DaysPriceDiff);
+        todayTags.setPriceVS2DaysAgo(
+                new String[]{
+                        vs2DaysPriceStatus,
+                        vs2DaysPriceDiff.divide(twoDaysAgoInfo.getTodayClosingPrice(), 4, RoundingMode.FLOOR).toPlainString()
+                }
+        );
+
+        BigDecimal vs2DaysVolumeDiff = BigDecimal.valueOf(todayInfo.getTodayTradingVolumePiece() - twoDaysAgoInfo.getTodayTradingVolumePiece());
+        String vs2DaysVolumeStatus = judgeStatus(vs2DaysVolumeDiff);
+        todayTags.setTradingVolumeVS2DaysAgo(
+                new String[]{
+                        vs2DaysVolumeStatus,
+                        vs2DaysVolumeDiff.divide(BigDecimal.valueOf(twoDaysAgoInfo.getTodayTradingVolumePiece()), 4, RoundingMode.FLOOR).toPlainString()
+                }
+        );
+
+        BigDecimal vs2DaysAmountDiff = todayInfo.getTodayTradingVolumeMoney().subtract(twoDaysAgoInfo.getTodayTradingVolumeMoney());
+        String vs2DaysAmountStatus = judgeStatus(vs2DaysAmountDiff);
+        todayTags.setTradingAmountVS2DaysAgo(
+                new String[]{
+                        vs2DaysAmountStatus,
+                        vs2DaysAmountDiff.divide(twoDaysAgoInfo.getTodayTradingVolumeMoney(), 4, RoundingMode.FLOOR).toPlainString()
+                }
+        );
+
+        //前第5天
+        BigDecimal vs4DaysPriceDiff = todayInfo.getTodayClosingPrice().subtract(fourDaysAgoInfo.getTodayClosingPrice());
+        String vs4DaysPriceStatus = judgeStatus(vs4DaysPriceDiff);
+        todayTags.setPriceVS4DaysAgo(
+                new String[]{
+                        vs4DaysPriceStatus,
+                        vs4DaysPriceDiff.divide(fourDaysAgoInfo.getTodayClosingPrice(), 4, RoundingMode.FLOOR).toPlainString()
+                }
+        );
+
+        BigDecimal vs4DaysVolumeDiff = BigDecimal.valueOf(todayInfo.getTodayTradingVolumePiece() - fourDaysAgoInfo.getTodayTradingVolumePiece());
+        String vs4DaysVolumeStatus = judgeStatus(vs4DaysVolumeDiff);
+        todayTags.setTradingVolumeVS4DaysAgo(
+                new String[]{
+                        vs4DaysVolumeStatus,
+                        vs4DaysVolumeDiff.divide(BigDecimal.valueOf(fourDaysAgoInfo.getTodayTradingVolumePiece()), 4, RoundingMode.FLOOR).toPlainString()
+                }
+        );
+
+        BigDecimal vs4DaysAmountDiff = todayInfo.getTodayTradingVolumeMoney().subtract(fourDaysAgoInfo.getTodayTradingVolumeMoney());
+        String vs4DaysAmountStatus = judgeStatus(vs4DaysAmountDiff);
+        todayTags.setTradingAmountVS4DaysAgo(
+                new String[]{
+                        vs4DaysAmountStatus,
+                        vs4DaysAmountDiff.divide(fourDaysAgoInfo.getTodayTradingVolumeMoney(), 4, RoundingMode.FLOOR).toPlainString()
+                }
+        );
+
+        result.setTags(todayTags);
+    }
+
+    private void calExtraTags(DailyStockInfoDetailDTO result, DailyStockInfoDTO todayInfo, DailyStockInfoDTO yesterdayInfo, DailyStockMetricsDTO todayMetrics, DailyStockMetricsDTO yesterdayMetrics) {
         List<String> tags = new ArrayList<>();
-
-        DailyStockMetricsDTO todayMetrics = dailyStockMetricsDTOs.stream().filter(o -> o.getDate().toString().equals(pureDate)).findFirst().get();
-        DailyStockMetricsDTO yesterdayMetrics = dailyStockMetricsDTOs.stream().filter(o -> !o.getDate().toString().equals(pureDate)).findFirst().get();
-
         generatePriceTags(tags, todayInfo, todayMetrics);
         generateMATags(tags, todayMetrics, yesterdayMetrics);
         generateCrossTags(tags, todayInfo);
-        generateLowerShadowTags(tags, todayDetailDTO, todayInfo, todayMetrics);
-        generateUpperShadowTags(tags, todayDetailDTO, todayInfo, todayMetrics);
-        generateKStickTags(tags, todayInfo, yesterdayInfo, todayDetailDTO);
+        generateLowerShadowTags(tags, todayInfo, todayMetrics, result);
+        generateUpperShadowTags(tags, todayInfo, todayMetrics, result);
+        generateKStickTags(tags, todayInfo, yesterdayInfo, result);
 
-        return tags;
+        result.getTags().setExtraTags(tags);
     }
 
-    private static void generateMATags(List<String> tags, DailyStockMetricsDTO todayMetrics, DailyStockMetricsDTO yesterdayMetrics) {
+    private void generateMATags(List<String> tags, DailyStockMetricsDTO todayMetrics, DailyStockMetricsDTO yesterdayMetrics) {
         if (todayMetrics.getMa5().compareTo(todayMetrics.getMa20()) > 0 && yesterdayMetrics.getMa5().compareTo(yesterdayMetrics.getMa20()) < 0) {
             tags.add(DetailTagEnum.MA5_UP_THROUGH_MA20.getTag());
         }
@@ -60,7 +219,7 @@ public class TagHelper {
         }
     }
 
-    private static void generatePriceTags(List<String> tags, StockInfo4CalDetailDTO todayInfo, DailyStockMetricsDTO todayMetrics) {
+    private void generatePriceTags(List<String> tags, DailyStockInfoDTO todayInfo, DailyStockMetricsDTO todayMetrics) {
         BigDecimal todayClosingPrice = todayInfo.getTodayClosingPrice();
         BigDecimal ma5 = todayMetrics.getMa5();
         BigDecimal ma20 = todayMetrics.getMa20();
@@ -79,7 +238,7 @@ public class TagHelper {
         }
     }
 
-    private static void generateCrossTags(List<String> tags, StockInfo4CalDetailDTO todayInfo) {
+    private void generateCrossTags(List<String> tags, DailyStockInfoDTO todayInfo) {
         BigDecimal todayClosing = todayInfo.getTodayClosingPrice();
         BigDecimal todayOpening = todayInfo.getOpeningPrice();
         boolean crossFlag = todayOpening.compareTo(todayClosing) == 0;
@@ -145,7 +304,7 @@ public class TagHelper {
         }
     }
 
-    private static void generateLowerShadowTags(List<String> tags, DailyStockInfoDetailDTO todayDetailDTO, StockInfo4CalDetailDTO todayInfo, DailyStockMetricsDTO todayMetrics) {
+    private void generateLowerShadowTags(List<String> tags, DailyStockInfoDTO todayInfo, DailyStockMetricsDTO todayMetrics, DailyStockInfoDetailDTO todayDetailDTO) {
         if (todayDetailDTO.getLowerShadow().compareTo(BigDecimal.ZERO) != 0) {
             tags.add(DetailTagEnum.HAVE_LOWER_SHADOW.getTag());
         } else {
@@ -178,10 +337,9 @@ public class TagHelper {
         ) {
             tags.add(DetailTagEnum.TESTING_MA60_SUPPORT.getTag());
         }
-
     }
 
-    private static void generateUpperShadowTags(List<String> tags, DailyStockInfoDetailDTO todayDetailDTO, StockInfo4CalDetailDTO todayInfo, DailyStockMetricsDTO todayMetrics) {
+    private void generateUpperShadowTags(List<String> tags, DailyStockInfoDTO todayInfo, DailyStockMetricsDTO todayMetrics, DailyStockInfoDetailDTO todayDetailDTO) {
 
         if (todayDetailDTO.getUpperShadow().compareTo(BigDecimal.ZERO) != 0) {
             tags.add(DetailTagEnum.HAVE_UPPER_SHADOW.getTag());
@@ -208,10 +366,9 @@ public class TagHelper {
         ) {
             tags.add(DetailTagEnum.TESTING_MA20_PRESSURE.getTag());
         }
-
     }
 
-    private static void generateKStickTags(List<String> tags, StockInfo4CalDetailDTO todayInfo, StockInfo4CalDetailDTO yesterdayInfo, DailyStockInfoDetailDTO todayDetailDTO) {
+    private void generateKStickTags(List<String> tags, DailyStockInfoDTO todayInfo, DailyStockInfoDTO yesterdayInfo, DailyStockInfoDetailDTO todayDetailDTO) {
         BigDecimal todayClosing = todayInfo.getTodayClosingPrice();
         BigDecimal todayOpening = todayInfo.getOpeningPrice();
         BigDecimal todayMiddle = todayOpening.add(todayClosing).divide(BigDecimal.TWO, 2, RoundingMode.FLOOR);
@@ -289,6 +446,17 @@ public class TagHelper {
 
         if (todayOpening.compareTo(todayClosing) > 0) {
             tags.add(DetailTagEnum.GREEN.getTag());
+        }
+    }
+
+    private String judgeStatus(BigDecimal bigDecimal) {
+
+        if (bigDecimal.compareTo(BigDecimal.ZERO) > 0) {
+            return CommonTerm.RISE;
+        } else if (bigDecimal.compareTo(BigDecimal.ZERO) < 0) {
+            return CommonTerm.FALL;
+        } else {
+            return CommonTerm.UNCHANGED;
         }
     }
 }

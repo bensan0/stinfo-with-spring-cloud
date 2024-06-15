@@ -1,5 +1,6 @@
 package com.personal.project.scraperservice.model.dto;
 
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -7,6 +8,7 @@ import java.math.BigDecimal;
 
 @Getter
 @Setter
+@Data
 public class DailyStockInfoDto {
 
     private Long id;
@@ -24,7 +26,7 @@ public class DailyStockInfoDto {
 
     private BigDecimal priceGap;
 
-    private Double priceGapPercent;
+    private BigDecimal priceGapPercent;
 
     private BigDecimal openingPrice;
 
