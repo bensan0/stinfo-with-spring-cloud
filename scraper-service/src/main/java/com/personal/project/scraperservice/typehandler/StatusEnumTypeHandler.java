@@ -11,12 +11,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-@MappedTypes({StatusEnum.class})
-@MappedJdbcTypes(JdbcType.INTEGER)
+@MappedTypes(StatusEnum.class)
+@MappedJdbcTypes(JdbcType.TINYINT)
 public class StatusEnumTypeHandler extends BaseTypeHandler<StatusEnum> {
     @Override
     public void setNonNullParameter(PreparedStatement ps, int i, StatusEnum parameter, JdbcType jdbcType) throws SQLException {
-        ps.setInt(i, parameter.getCode());
+        ps.setObject(i, parameter.getCode());
     }
 
     @Override

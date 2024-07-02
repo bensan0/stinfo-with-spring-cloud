@@ -9,7 +9,7 @@
         <result property="exception" column="exception" jdbcType="VARCHAR"/>
         <result property="exceptionMessage" column="exception_message" jdbcType="VARCHAR"/>
         <result property="extra" column="extra" jdbcType="VARCHAR"/>
-        <result property="status" column="status" jdbcType="INTEGER" typeHandler="com.personal.project.scraperservice.typehandler.StatusEnumTypeHandler"/>
+        <result property="status" column="status" jdbcType="TINYINT" typeHandler="com.personal.project.scraperservice.typehandler.StatusEnumTypeHandler"/>
     </resultMap>
 
     <sql id="Base_Column_List">

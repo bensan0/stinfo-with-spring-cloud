@@ -88,16 +88,16 @@ public class TWSEInitScraper implements PageProcessor {
             page.putField("idToDTOs", Pair.of(split[1], dtos));
             page.addTargetRequests(urls);
         } catch (Exception e) {
+            page.addTargetRequests(urls);
             ScraperErrorMessageDO error = new ScraperErrorMessageDO();
-            error.setErrorMessage(StrUtil.format("TWSE init scraper error"));
+            error.setErrorMessage(StrUtil.format("TWSE init scraper error when downloading {}", page.getUrl()));
             error.setException(e.getClass().getSimpleName());
             error.setExceptionMessage(e.getMessage());
             error.setScraperName("TWSE init scraper");
             error.setDate(LocalDate.now().format(DatePattern.PURE_DATE_FORMATTER));
             errors.add(error);
 
-            log.error("TWSE init scraper error", e);
-
+            log.error("TWSE init scraper error when downloading {}", page.getUrl(), e);
             page.putField("errors", errors);
         }
     }

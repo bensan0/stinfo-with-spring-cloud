@@ -1,5 +1,6 @@
 package com.personal.project.stockservice.model.dto;
 
+import com.personal.project.stockservice.model.entity.Tags;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -19,5 +20,5 @@ public class DailyStockInfoDetailDTO {
 
     private BigDecimal realBody;
 
-    private String tags;
+    private Tags tags;
 }

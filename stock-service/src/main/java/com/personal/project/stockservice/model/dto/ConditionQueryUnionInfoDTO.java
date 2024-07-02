@@ -1,6 +1,6 @@
 package com.personal.project.stockservice.model.dto;
 
-import com.personal.project.stockservice.model.entity.DailyStockInfoDetailDO;
+import com.personal.project.stockservice.model.entity.Tags;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -44,5 +44,5 @@ public class ConditionQueryUnionInfoDTO {
 
     private BigDecimal realBody;
 
-    private DailyStockInfoDetailDO.Tags tags;
+    private Tags tags;
 }

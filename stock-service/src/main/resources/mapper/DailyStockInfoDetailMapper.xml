@@ -9,7 +9,7 @@
         <result property="upperShadow" column="upper_shadow" jdbcType="DECIMAL"/>
         <result property="lowerShadow" column="lower_shadow" jdbcType="DECIMAL"/>
         <result property="realBody" column="real_body" jdbcType="DECIMAL"/>
-        <result property="tags" column="tags" jdbcType="VARCHAR" typeHandler="com.personal.project.stockservice.typehandler.TagsHandler"/>
+        <result property="tags" column="tags" typeHandler="com.personal.project.stockservice.typehandler.TagsHandler"/>
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -43,7 +43,7 @@
         from (
                 select
                     tt.*,
-                    row_number() over (partition by stock_id order by 'date' desc) as sequence
+                    row_number() over (partition by stock_id order by date desc) as sequence
                 from
                     (
                         select *
@@ -67,7 +67,7 @@
         from (
                 select
                     tt.*,
-                    row_number() over (partition by stock_id order by 'date' desc) as sequence
+                    row_number() over (partition by stock_id order by date desc) as sequence
                 from
                     (
                         select *
@@ -172,11 +172,11 @@
             T.tags as tags
         from(
                 select
-                    tt.*
-                    row_number() over (partition by stock_id order by 'date' desc) as sequence
+                    tt.*,
+                    row_number() over (partition by stock_id order by date desc) as sequence
                 from(
                     select *
-                    from daily_stock_detail
+                    from daily_stock_info_detail
                     where today_closing_price is not null
                     ) tt
             ) T

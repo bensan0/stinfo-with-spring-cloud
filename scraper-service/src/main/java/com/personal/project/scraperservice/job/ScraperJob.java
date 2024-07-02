@@ -14,8 +14,6 @@ import com.personal.project.scraperservice.remote.RemoteStockService;
 import com.personal.project.scraperservice.scraper.webmagic.SeleniumDownloader;
 import com.personal.project.scraperservice.scraper.webmagic.goofinfo.GoodInfoPipeline;
 import com.personal.project.scraperservice.scraper.webmagic.goofinfo.GoodInfoScraper;
-import com.personal.project.scraperservice.scraper.webmagic.goofinfo.GoodInfoStockListPipeline;
-import com.personal.project.scraperservice.scraper.webmagic.goofinfo.GoodInfoStockListScraper;
 import com.personal.project.scraperservice.scraper.webmagic.tpex.TPEXInitPipeline;
 import com.personal.project.scraperservice.scraper.webmagic.tpex.TPEXInitScraper;
 import com.personal.project.scraperservice.scraper.webmagic.twse.TWSEInitPipeline;
@@ -28,7 +26,9 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.openqa.selenium.By;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import us.codecraft.webmagic.Spider;
 
 import java.math.BigDecimal;
@@ -36,10 +36,7 @@ import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -70,101 +67,104 @@ public class ScraperJob {
     public void twseAndTPEXInitHandle() {
         log.info("資料初始化任務 twse-tpex-system-init-scrape 開始執行");
         TimeInterval timer = DateUtil.timer();
-        LocalDate now = LocalDate.now();
-
-        //獲取股票代號清單
-        Map<String, Map<String, String>> stockListResult = scrapeGoodInfoInitStockList();
-        log.info("資料初始化任務 twse-tpex-system-init-scrape 獲取股票代碼列表花費 {} 毫秒, 結果 {}", timer.intervalRestart(), JSON.toJSON(stockListResult));
-
-        List<DailyStockInfoDto> twseDTOs = null;
-        List<DailyStockInfoDto> tpexDTOs = null;
-        List<ScraperErrorMessageDO> allErrors = new ArrayList<>();
-
-        //VT, 啟動
-        try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
-
-            //獲取上市股票最新-一年前
-            Future<Pair<List<DailyStockInfoDto>, List<ScraperErrorMessageDO>>> listedFuture = executorService.submit(() -> {
-                //篩選上市股票
-                List<String> listedIds = stockListResult.get(LISTED).keySet().stream()
-                        .filter(StrUtil::isNumeric)
-                        .toList();
-
-                //產出下載地址
-                List<String> twseUrls = new ArrayList<>();
-                LocalDate lastYear = now.minusMonths(14);
-                LocalDate tempDate;
-                for (String id : listedIds) {
-                    tempDate = now;
-                    while (lastYear.isBefore(tempDate)) {
-                        twseUrls.add(StrUtil.format("https://www.twse.com.tw/rwd/zh/afterTrading/STOCK_DAY?date={}&stockNo={}&response=html", tempDate.format(DatePattern.PURE_DATE_FORMATTER), id));
-                        tempDate = tempDate.minusMonths(1);
-                    }
-                }
-
-                TWSEInitScraper twseInitScraper = new TWSEInitScraper(twseUrls);
-                TWSEInitPipeline twseInitPipeline = new TWSEInitPipeline();
-
-                return scrapeTWSEInitDailyStockInfo(twseInitScraper, twseInitPipeline);
-            });
-
-            //獲取上櫃股票最新-一年前
-            Future<Pair<List<DailyStockInfoDto>, List<ScraperErrorMessageDO>>> otcFuture = executorService.submit(() -> {
-                //篩選上櫃股票
-                List<String> otcIds = stockListResult.get(OTC).keySet().stream()
-                        .filter(StrUtil::isNumeric)
-                        .toList();
-
-                //產出下載地址
-                LocalDate lastYear = now.minusMonths(14);
-                LocalDate tempDate;
-                List<String> tpexUrls = new ArrayList<>();
-                for (String id : otcIds) {
-                    tempDate = now;
-                    while (lastYear.isBefore(tempDate)) {
-                        tpexUrls.add(StrUtil.format("https://www.tpex.org.tw/web/stock/aftertrading/daily_trading_info/st43_print.php?l=zh-tw&d={}/{}&stkno={}&s=0,asc,0", tempDate.getYear() - 1911, tempDate.getMonth().getValue(), id));
-                        tempDate = tempDate.minusMonths(1);
-                    }
-                }
-
-                TPEXInitScraper tpexInitScraper = new TPEXInitScraper(tpexUrls);
-                TPEXInitPipeline tpexInitPipeline = new TPEXInitPipeline();
-
-                return scrapeTPEXInitDailyStockInfo(classpath + "driver/chrome-driver-mac-arm64/chromedriver", tpexInitScraper, tpexInitPipeline);
-
-            });
-
-            Pair<List<DailyStockInfoDto>, List<ScraperErrorMessageDO>> otcPair = otcFuture.get();
-            Pair<List<DailyStockInfoDto>, List<ScraperErrorMessageDO>> listedPair = listedFuture.get();
-
-            twseDTOs = otcPair.getLeft();
-            tpexDTOs = listedPair.getLeft();
-            allErrors.addAll(otcPair.getRight());
-            allErrors.addAll(listedPair.getRight());
-
-        } catch (Exception e) {
-            log.error("資料初始化任務 twse-tpex-system-init-scrape 出現錯誤", e);
-        }
-
-        List<DailyStockInfoDto> resultCollect = new ArrayList<>();
-        resultCollect.addAll(twseDTOs);
-        resultCollect.addAll(tpexDTOs);
-        log.info("資料初始化任務 twse-tpex-system-init-scrape 獲取股票資料花費 {} 毫秒, 結果 {}", timer.intervalRestart(), JSON.toJSON(resultCollect));
-
-        //init data 呼叫入庫
-        InnerResponse<ObjectUtils.Null> response = remoteStockService.initSaveAll(resultCollect, null);
-        log.info("資料初始化任務 twse-tpex-system-init-scrape 股票資料入庫花費 {} 毫秒, 結果 {}", timer.intervalRestart(), JSON.toJSON(response));
-
-        //錯誤入庫
-        if (!allErrors.isEmpty()) {
-            boolean saved = errorMessageService.saveBatch(allErrors);
-            log.info("資料初始化任務 twse-tpex-system-init-scrape 錯誤入庫花費 {} 毫秒, 結果 {}", timer.intervalRestart(), saved);
-
-        }
+//        LocalDate now = LocalDate.now();
+//
+//        //獲取股票代號清單
+//        Map<String, Map<String, String>> stockListResult = scrapeGoodInfoInitStockList();
+//        log.info("資料初始化任務 twse-tpex-system-init-scrape 獲取股票代碼列表花費 {} 毫秒, 結果 {}", timer.intervalRestart(), JSON.toJSON(stockListResult));
+//
+//        List<DailyStockInfoDto> twseDTOs = null;
+//        List<ScraperErrorMessageDO> twseErrors = null;
+//        List<DailyStockInfoDto> tpexDTOs = null;
+//        List<ScraperErrorMessageDO> tpexErrors = null;
+//
+//        //VT, 啟動
+//        try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
+//
+//            //獲取上市股票最新-一年前
+//            Future<Pair<List<DailyStockInfoDto>, List<ScraperErrorMessageDO>>> listedFuture = executorService.submit(() -> {
+//                //篩選上市股票
+//                List<String> listedIds = stockListResult.get(LISTED).keySet().stream()
+//                        .filter(StrUtil::isNumeric)
+//                        .toList();
+//
+//                //產出下載地址
+//                List<String> twseUrls = new ArrayList<>();
+//                LocalDate lastYear = now.minusMonths(14);
+//                LocalDate tempDate;
+//                for (String id : listedIds) {
+//                    tempDate = now;
+//                    while (lastYear.isBefore(tempDate)) {
+//                        twseUrls.add(StrUtil.format("https://www.twse.com.tw/rwd/zh/afterTrading/STOCK_DAY?date={}&stockNo={}&response=html", tempDate.format(DatePattern.PURE_DATE_FORMATTER), id));
+//                        tempDate = tempDate.minusMonths(1);
+//                    }
+//                }
+//
+//                TWSEInitScraper twseInitScraper = new TWSEInitScraper(twseUrls);
+//                TWSEInitPipeline twseInitPipeline = new TWSEInitPipeline();
+//
+//                return scrapeTWSEInitDailyStockInfo(twseInitScraper, twseInitPipeline);
+//            });
+//
+//            //獲取上櫃股票最新-一年前
+//            Future<Pair<List<DailyStockInfoDto>, List<ScraperErrorMessageDO>>> otcFuture = executorService.submit(() -> {
+//                //篩選上櫃股票
+//                List<String> otcIds = stockListResult.get(OTC).keySet().stream()
+//                        .filter(StrUtil::isNumeric)
+//                        .toList();
+//
+//                //產出下載地址
+//                LocalDate lastYear = now.minusMonths(14);
+//                LocalDate tempDate;
+//                List<String> tpexUrls = new ArrayList<>();
+//                for (String id : otcIds) {
+//                    tempDate = now;
+//                    while (lastYear.isBefore(tempDate)) {
+//                        tpexUrls.add(StrUtil.format("https://www.tpex.org.tw/web/stock/aftertrading/daily_trading_info/st43_print.php?l=zh-tw&d={}/{}&stkno={}&s=0,asc,0", tempDate.getYear() - 1911, tempDate.getMonth().getValue(), id));
+//                        tempDate = tempDate.minusMonths(1);
+//                    }
+//                }
+//
+//                TPEXInitScraper tpexInitScraper = new TPEXInitScraper(tpexUrls);
+//                TPEXInitPipeline tpexInitPipeline = new TPEXInitPipeline();
+//
+//                return scrapeTPEXInitDailyStockInfo(classpath + "driver/chrome-driver-mac-arm64/chromedriver", tpexInitScraper, tpexInitPipeline);
+//
+//            });
+//
+//            Pair<List<DailyStockInfoDto>, List<ScraperErrorMessageDO>> otcPair = otcFuture.get();
+//            Pair<List<DailyStockInfoDto>, List<ScraperErrorMessageDO>> listedPair = listedFuture.get();
+//
+//            twseDTOs = otcPair.getLeft();
+//            tpexDTOs = listedPair.getLeft();
+//            twseErrors = otcPair.getRight();
+//            tpexErrors = listedPair.getRight();
+//
+//        } catch (Exception e) {
+//            log.error("資料初始化任務 twse-tpex-system-init-scrape 出現錯誤", e);
+//        }
+//
+//        List<DailyStockInfoDto> resultCollect = new ArrayList<>();
+//        resultCollect.addAll(twseDTOs);
+//        resultCollect.addAll(tpexDTOs);
+//        log.info("資料初始化任務 twse-tpex-system-init-scrape 獲取股票資料花費 {} 毫秒", timer.intervalRestart());
+//
+//        //init data 呼叫入庫
+//        InnerResponse<ObjectUtils.Null> response = remoteStockService.initSaveAll(resultCollect, null);
+//        log.info("資料初始化任務 twse-tpex-system-init-scrape 股票資料入庫花費 {} 毫秒, 結果 {}", timer.intervalRestart(), JSON.toJSON(response));
+//
+//        //錯誤入庫
+//        List<ScraperErrorMessageDO> allErrors = new ArrayList<>();
+//        allErrors.addAll(twseErrors);
+//        allErrors.addAll(tpexErrors);
+//        if (!allErrors.isEmpty()) {
+//            boolean saved = errorMessageService.saveBatch(allErrors);
+//            log.info("資料初始化任務 twse-tpex-system-init-scrape 錯誤入庫花費 {} 毫秒, {}", timer.intervalRestart(), saved);
+//        }
 
         //call remote report to cal yesterday metric and detail
-        InnerResponse<ObjectUtils.Null> response1 = remoteReportService.initYesterdayReport(null);
-        log.info("資料初始化任務 twse-tpex-system-init-scrape 初始化上一個交易日的指標報告/詳細報告花費 {} 毫秒, 結果 {}", timer.intervalRestart(), JSON.toJSON(response1));
+//        InnerResponse<ObjectUtils.Null> response1 = remoteReportService.initYesterdayReport(null);
+//        log.info("資料初始化任務 twse-tpex-system-init-scrape 初始化上一個交易日的指標報告/詳細報告花費 {} 毫秒, 結果 {}", timer.intervalRestart(), JSON.toJSON(response1));
 
         //call remote report to cal newest trading day metric and detail
         InnerResponse<ObjectUtils.Null> response2 = remoteReportService.initTodayReport(null);
@@ -180,24 +180,35 @@ public class ScraperJob {
      * @return ex: {"市" -> {"2330" -> "台積電", "0050" -> "元大ETF", ...}, "櫃" -> {"1742" -> "台蠟", ...} }
      */
     private Map<String, Map<String, String>> scrapeGoodInfoInitStockList() {
-        GoodInfoStockListScraper listScraper = new GoodInfoStockListScraper();
-        GoodInfoStockListPipeline listPipeline = new GoodInfoStockListPipeline();
-        Spider.create(listScraper)
-                //推測Spider設定的thread是單指一個網址而言, 若同時在Spider.addUrl設定多個網址,
-                // 則每個網址會同時分配一條thread, 導致Spider.thread無意義(每個url會在同一時間以多條thread一起發出請求, 會被反爬搞), 因此應於PageProcessor內addTargetRequest的方式才是預想中使thread, sleep有效的方式
-                //todo 待追source code驗證
-//                .addUrl(stockListUrls.toArray(new String[0]))
-                .addUrl("https://goodinfo.tw/tw2/StockList.asp?MARKET_CAT=上櫃&INDUSTRY_CAT=上櫃全部&SHEET=交易狀況&SHEET2=日&RPT_TIME=最新資料", "https://goodinfo.tw/tw2/StockList.asp?MARKET_CAT=上市&INDUSTRY_CAT=上市全部&SHEET=交易狀況&SHEET2=日&RPT_TIME=最新資料")
-                .addPipeline(listPipeline)
-                .setDownloader(
-                        new SeleniumDownloader(classpath + "driver/chrome-driver-mac-arm64/chromedriver",
-                                Duration.ofSeconds(10),
-                                ExpectedConditions.visibilityOfElementLocated(By.id("tblStockList"))
-                        )
-                )
-                .thread(1)
-                .run();
-        return listPipeline.getResult();
+//        GoodInfoStockListScraper listScraper = new GoodInfoStockListScraper();
+//        GoodInfoStockListPipeline listPipeline = new GoodInfoStockListPipeline();
+//        Spider.create(listScraper)
+//                //推測Spider設定的thread是單指一個網址而言, 若同時在Spider.addUrl設定多個網址,
+//                // 則每個網址會同時分配一條thread, 導致Spider.thread無意義(每個url會在同一時間以多條thread一起發出請求, 會被反爬搞), 因此應於PageProcessor內addTargetRequest的方式才是預想中使thread, sleep有效的方式
+//                //todo 待追source code驗證
+////                .addUrl(stockListUrls.toArray(new String[0]))
+//                .addUrl("https://goodinfo.tw/tw2/StockList.asp?MARKET_CAT=上櫃&INDUSTRY_CAT=上櫃全部&SHEET=交易狀況&SHEET2=日&RPT_TIME=最新資料", "https://goodinfo.tw/tw2/StockList.asp?MARKET_CAT=上市&INDUSTRY_CAT=上市全部&SHEET=交易狀況&SHEET2=日&RPT_TIME=最新資料")
+//                .addPipeline(listPipeline)
+//                .setDownloader(
+//                        new SeleniumDownloader(classpath + "driver/chrome-driver-mac-arm64/chromedriver",
+//                                Duration.ofSeconds(10),
+//                                ExpectedConditions.visibilityOfElementLocated(By.id("tblStockList"))
+//                        )
+//                )
+//                .thread(1)
+//                .run();
+//        return listPipeline.getResult();
+
+        return new HashMap<>() {{
+            put("市", new HashMap<>() {{
+                put("2330", "台積電");
+                put("6689", "伊雲谷");
+            }});
+            put("櫃", new HashMap<>() {{
+                put("3071", "協禧");
+                put("5274", "信驊");
+            }});
+        }};
     }
 
     /**
@@ -241,14 +252,17 @@ public class ScraperJob {
                         }
                     }
                     //tempDTO填上缺失的昨日資訊
+                    tempDTO.setYesterdayClosingPrice(thisRoundDTO.getTodayClosingPrice());
                     tempDTO.setYesterdayTradingVolumePiece(thisRoundDTO.getTodayTradingVolumePiece());
-                    tempDTO.setTodayTradingVolumeMoney(thisRoundDTO.getTodayTradingVolumeMoney());
+                    tempDTO.setYesterdayTradingVolumeMoney(thisRoundDTO.getTodayTradingVolumeMoney());
+                    tempDTO.setPriceGap(tempDTO.getTodayClosingPrice().subtract(tempDTO.getYesterdayClosingPrice()));
+                    tempDTO.setPriceGapPercent(tempDTO.getPriceGap().divide(tempDTO.getYesterdayClosingPrice(), 4, RoundingMode.FLOOR).multiply(BigDecimal.valueOf(100)));
                 }
 
                 tempDTO = thisRoundDTO;
             }
         });
-
+        log.info("下載twse, errors: {}", twseInitPipeline.getErrors());
         return Pair.of(finalResult, twseInitPipeline.getErrors());
     }
 

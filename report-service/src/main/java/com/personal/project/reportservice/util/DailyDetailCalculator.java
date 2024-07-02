@@ -57,7 +57,7 @@ public class DailyDetailCalculator {
 
     private void calConsecutive(DailyStockInfoDetailDTO result, DailyStockInfoDetailDTO yesterdayDetail, DailyStockInfoDTO todayInfo, DailyStockInfoDTO yesterdayInfo) {
         DailyStockInfoDetailDTO.TagsDTO yesterdayTags = yesterdayDetail.getTags();
-        DailyStockInfoDetailDTO.TagsDTO todayTags = result.getTags();
+        DailyStockInfoDetailDTO.TagsDTO todayTags = new DailyStockInfoDetailDTO.TagsDTO();
 
         String todayPriceStatus = judgeStatus(todayInfo.getPriceGap());
         todayTags.setPriceStatus(StrUtil.format("{}->{}", yesterdayTags.getPriceStatus().split("->")[1], todayPriceStatus));
@@ -66,7 +66,7 @@ public class DailyDetailCalculator {
         if (todayPriceStatus.equals(yesterdayTags.getConsecutivePrice()[1])) {
             todayTags.setConsecutivePrice(
                     new String[]{
-                            String.valueOf(Long.parseLong(yesterdayTags.getConsecutivePrice()[1]) + 1),
+                            String.valueOf(Long.parseLong(yesterdayTags.getConsecutivePrice()[0]) + 1),
                             todayPriceStatus
                     }
             );
@@ -120,7 +120,7 @@ public class DailyDetailCalculator {
     }
 
     private void calComparingPassDays(DailyStockInfoDetailDTO result, DailyStockInfoDTO todayInfo, DailyStockInfoDTO twoDaysAgoInfo, DailyStockInfoDTO fourDaysAgoInfo) {
-        DailyStockInfoDetailDTO.TagsDTO todayTags = result.getTags();
+        DailyStockInfoDetailDTO.TagsDTO todayTags = new DailyStockInfoDetailDTO.TagsDTO();
 
         //前第3天
         BigDecimal vs2DaysPriceDiff = todayInfo.getTodayClosingPrice().subtract(twoDaysAgoInfo.getTodayClosingPrice());

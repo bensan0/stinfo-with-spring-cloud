@@ -26,21 +26,7 @@ public class DailyStockInfoDetailDTO {
 
     private BigDecimal realBody;
 
-    @Getter(AccessLevel.NONE)
-    @Setter(AccessLevel.NONE)
-    private String tags;
-
-    public TagsDTO getTags() {
-        if (this.tags == null) {
-            this.tags = JSONUtil.toJsonStr(new TagsDTO());
-        }
-
-        return JSONUtil.toBean(this.tags, TagsDTO.class);
-    }
-
-    public void setTags(TagsDTO dto) {
-        this.tags = JSONUtil.toJsonStr(dto);
-    }
+    private TagsDTO tags;
 
     @Data
     public static class TagsDTO {

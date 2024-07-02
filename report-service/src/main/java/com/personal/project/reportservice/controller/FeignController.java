@@ -34,7 +34,6 @@ public class FeignController {
 
     @PostMapping("/init-today-report")
     public InnerResponse<ObjectUtils.Null> calInitTodayReport() {
-
         InnerResponse<ObjectUtils.Null> response = generateReportService.generateInitTodayMetricReport();
         if(!ResponseCode.Success.getCode().equals(response.getCode())){
             return response;

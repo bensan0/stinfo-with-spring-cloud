@@ -54,6 +54,6 @@ create table if not exists daily_stock_info_detail
     upper_shadow                    decimal(5,2) unsigned                             null     comment '上影線佔長(%)',
     lower_shadow                    decimal(5,2) unsigned                             null     comment '下影線佔長(%)',
     real_body                       decimal(5,2) unsigned                             null     comment '實體佔長(%)',
-    tags                            varchar(5000)                                     null     comment 'json, 標籤詳細資訊'
+    tags                            json                                              null     comment 'json, 標籤詳細資訊'
     )
     comment '每日股票標籤詳細數據' charset = utf8mb4;

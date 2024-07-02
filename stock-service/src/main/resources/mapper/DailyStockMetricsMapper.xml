@@ -22,8 +22,7 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,stock_id,stock_name,today_closing_price,date,rsi_3,rsi_5,
-        rsi_6,rsi_10,rsi_12,ma_5,last_ma_5_price,ma_10,
+        id,stock_id,stock_name,today_closing_price,date,ma_5,last_ma_5_price,ma_10,
         last_ma_10_price,ma_20,last_ma_20_price,ma_60,last_ma_60_price,ma_120,
         last_ma_120_price,ma_240,last_ma_240_price
     </sql>
@@ -125,7 +124,7 @@
         from (
                 select
                     tt.*,
-                    row_number() over (partition by stock_id order by 'date' desc) as sequence
+                    row_number() over (partition by stock_id order by date desc) as sequence
                 from
                     (
                         select *
@@ -157,7 +156,7 @@
             T.sequence
         from (
             select
-            tt.*, row_number() over (partition by stock_id order by 'date' desc) as sequence
+            tt.*, row_number() over (partition by stock_id order by date desc) as sequence
             from
             (
             select *
@@ -173,6 +172,7 @@
         select
             T.stock_id as stockId,
             T.date as date,
+            T.today_closing_price as todayClosingPrice,
             T.stock_name as stockName,
             T.ma_5 as ma5,
             T.last_ma_5_price as lastMA5Price,
@@ -185,15 +185,15 @@
             T.ma_120 as ma120,
             T.last_ma_120_price as lastMA120Price,
             T.ma_240 as ma240,
-            T.last_ma_240_price as lastMA240Price,
+            T.last_ma_240_price as lastMA240Price
         from (
                 select
                     tt.*,
-                    row_number() over (partition by stock_id order by 'date' desc) as sequence
+                    row_number() over (partition by stock_id order by date desc) as 'sequence'
                 from
                     (
                         select *
-                        from daily_stock_metric
+                        from daily_stock_metrics
                         where today_closing_price is not null
                     ) tt
             ) T
@@ -216,18 +216,17 @@
             T.ma_120 as ma120,
             T.last_ma_120_price as lastMA120Price,
             T.ma_240 as ma240,
-            T.last_ma_240_price as lastMA240Price,
+            T.last_ma_240_price as lastMA240Price
         from (
-            select
-            tt.*,
-            row_number() over (partition by stock_id order by 'date' desc) as sequence
-            from
-            (
-            select *
-            from daily_stock_metric
-            where today_closing_price is not null
-            ) tt
-            ) T
+                select
+                    tt.*,
+                    row_number() over (partition by stock_id order by date desc) as sequence
+                from(
+                    select *
+                    from daily_stock_metrics
+                    where today_closing_price is not null
+                    ) tt
+                ) T
         where T.sequence in (1, 2);
     </select>
 </mapper>

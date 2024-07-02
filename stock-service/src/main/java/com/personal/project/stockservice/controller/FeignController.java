@@ -228,11 +228,11 @@ public class FeignController {
 
     @PostMapping("/save-detail")
     public InnerResponse<ObjectUtils.Null> saveDetail(
-            @RequestBody List<DailyStockInfoDetailDTO> detailDTOs
+            @RequestBody List<DailyStockInfoDetailDTO> details
     ) {
         try {
             boolean saved = dailyStockInfoDetailService.saveOrUpdateBatch(
-                    detailDTOs.stream()
+                    details.stream()
                             .map(o -> BeanUtil.copyProperties(o, DailyStockInfoDetailDO.class))
                             .toList()
             );

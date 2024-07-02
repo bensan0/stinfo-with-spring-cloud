@@ -16,6 +16,8 @@ public class DailyStockMetricsDTO {
     // yyyyMMdd
     private Long date;
 
+    private BigDecimal todayClosingPrice;
+
     // 5日均
     private BigDecimal ma5;
     private BigDecimal lastMA5price;// 5日最舊價格

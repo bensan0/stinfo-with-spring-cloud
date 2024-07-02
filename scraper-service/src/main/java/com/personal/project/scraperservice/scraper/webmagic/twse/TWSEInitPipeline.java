@@ -28,6 +28,7 @@ public class TWSEInitPipeline implements Pipeline {
         try {
             if (resultItems.get("errors") != null) {
                 errors.addAll(resultItems.get("errors"));
+                return;
             }
 
             Pair<String, List<DailyStockInfoDto>> pair = resultItems.get("idToDTOs");

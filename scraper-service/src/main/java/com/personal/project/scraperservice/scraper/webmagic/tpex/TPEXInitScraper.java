@@ -103,14 +103,14 @@ public class TPEXInitScraper implements PageProcessor {
             page.addTargetRequests(urls);
         } catch (Exception e) {
             ScraperErrorMessageDO error = new ScraperErrorMessageDO();
-            error.setErrorMessage(StrUtil.format("TPEX init scraper error"));
+            error.setErrorMessage(StrUtil.format("TPEX init scraper error when dowloading {}", page.getUrl()));
             error.setException(e.getClass().getSimpleName());
             error.setExceptionMessage(e.getMessage());
             error.setScraperName("TPEX init scraper");
             error.setDate(LocalDate.now().format(DatePattern.PURE_DATE_FORMATTER));
             errors.add(error);
 
-            log.error("TPEX init scraper error", e);
+            log.error("TPEX init scraper error when dowloading {}", page.getUrl(), e);
 
             page.putField("errors", errors);
         }

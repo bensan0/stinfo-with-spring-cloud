@@ -47,7 +47,7 @@
         from (
             select
                 tt.*,
-                row_number() over (partition by stock_id order by 'date' desc) as 'sequence'
+                row_number() over (partition by stock_id order by date desc) as 'sequence'
             from (
                 select *
                 from daily_stock_info
@@ -94,7 +94,7 @@
         from (
                  select
                      tt.*,
-                     row_number() over (partition by stock_id order by 'date' desc) as 'sequence'
+                     row_number() over (partition by stock_id order by date desc) as 'sequence'
                  from (
                           select *
                           from daily_stock_info
@@ -122,7 +122,7 @@
         from (
                  select
                      tt.*,
-                     row_number() over (partition by stock_id order by 'date' desc) as 'sequence'
+                     row_number() over (partition by stock_id order by date desc) as 'sequence'
                  from (
                         select *
                         from daily_stock_info
@@ -139,20 +139,16 @@
             T.stock_id as stockId,
             T.stock_name as stockName,
             T.date as date,
-            T.today_closing_price as todayClosingPrice,
-            T.sequence as sequence
+            T.today_closing_price as todayClosingPrice
         from (
                 select
-                    tt.stock_id,
-                    tt.stock_name,
-                    tt.date,
-                    tt.today_closing_price,
-                    row_number() over (partition by stock_id order by 'date' desc) as 'sequence'
+                    tt.*,
+                    row_number() over (partition by stock_id order by date desc) as 'sequence'
                 from(
                         select *
                         from daily_stock_info
                         where today_closing_price is not null
-                    )
+                    ) tt
              ) T
         where T.sequence &lt; 242
     </select>
@@ -173,7 +169,7 @@
         from (
                 select
                     tt.*,
-                    row_number() over (partition by stock_id order by 'date' desc)
+                    row_number() over (partition by stock_id order by date desc) as sequence
                 from (
                         select *
                         from daily_stock_info
@@ -192,17 +188,14 @@
             T.date as date,
             T.today_closing_price as todayClosingPrice
         from (
-            select
-            tt.stock_id,
-            tt.stock_name,
-            tt.date,
-            tt.today_closing_price,
-            row_number() over (partition by stock_id order by 'date' desc) as 'sequence'
-            from(
-            select *
-            from daily_stock_info
-            where today_closing_price is not null
-            )
+                select
+                    tt.*,
+                    row_number() over (partition by stock_id order by date desc) as 'sequence'
+                from(
+                        select *
+                        from daily_stock_info
+                        where today_closing_price is not null
+                    ) tt
             ) T
         where T.sequence in (1, 5, 10, 20, 60, 120, 240);
     </select>
@@ -225,15 +218,15 @@
             T.yesterday_trading_volume_piece as yesterdayTradingVolumePiece,
             T.yesterday_trading_volume_money as yesterdayTradingVolumeMoney
         from (
-            select
-            tt.*
-            row_number() over (partition by stock_id order by 'date' desc) as 'sequence'
-            from(
-            select *
-            from daily_stock_info
-            where today_closing_price is not null
-            )
-            ) T
+                select
+                    tt.*,
+                    row_number() over (partition by stock_id order by date desc) as 'sequence'
+                from(
+                        select *
+                        from daily_stock_info
+                        where today_closing_price is not null
+                    ) tt
+                ) T
         where T.sequence in (1, 2, 3, 5);
     </select>
 </mapper>

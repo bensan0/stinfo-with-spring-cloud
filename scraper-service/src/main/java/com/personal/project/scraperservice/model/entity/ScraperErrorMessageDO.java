@@ -6,10 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.personal.project.scraperservice.constant.StatusEnum;
 import com.personal.project.scraperservice.typehandler.StatusEnumTypeHandler;
-import lombok.Data;
-import lombok.ToString;
-
-import java.util.Optional;
+import lombok.*;
 
 @ToString
 @Data
@@ -35,14 +32,16 @@ public class ScraperErrorMessageDO {
     private String extra;
 
     @TableField(typeHandler = StatusEnumTypeHandler.class)
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
     private Integer status = StatusEnum.UNHANDLED.getCode();
 
     public void setStatus(StatusEnum status) {
         this.status = status.getCode();
     }
 
-    public Optional<StatusEnum> getStatus() {
+    public StatusEnum getStatus() {
 
-        return StatusEnum.of(this.status);
+        return StatusEnum.of(this.status).orElse(null);
     }
 }

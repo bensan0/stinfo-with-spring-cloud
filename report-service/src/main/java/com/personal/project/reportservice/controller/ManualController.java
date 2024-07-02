@@ -38,9 +38,10 @@ public class ManualController {
             return checkResult;
         }
 
-        InnerResponse<ObjectUtils.Null> result = generateReportService.generateMetricReport(dto);
-
-        return ResponseCode.Success.getCode().equals(result.getCode()) ? CommonResponse.ok(null) : CommonResponse.error(result.getCode(), result.getMsg(), null);
+//        InnerResponse<ObjectUtils.Null> result = generateReportService.generateMetricReport(dto);
+//
+//        return ResponseCode.Success.getCode().equals(result.getCode()) ? CommonResponse.ok(null) : CommonResponse.error(result.getCode(), result.getMsg(), null);
+        return null;
     }
 
     //todo 同上
@@ -54,9 +55,10 @@ public class ManualController {
             return checkResult;
         }
 
-        InnerResponse<ObjectUtils.Null> result = generateReportService.generateDetailReport(dto);
-
-        return ResponseCode.Success.getCode().equals(result.getCode()) ? CommonResponse.ok(null) : CommonResponse.error(result.getCode(), result.getMsg(), null);
+//        InnerResponse<ObjectUtils.Null> result = generateReportService.generateDetailReport(dto);
+//
+//        return ResponseCode.Success.getCode().equals(result.getCode()) ? CommonResponse.ok(null) : CommonResponse.error(result.getCode(), result.getMsg(), null);
+        return null;
     }
 
     private CommonResponse<ObjectUtils.Null> dateCheck(String date) {

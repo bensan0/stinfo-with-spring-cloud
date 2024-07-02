@@ -3,6 +3,7 @@ package com.personal.project.reportservice.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.personal.project.commoncore.constants.CommonTerm;
 import com.personal.project.commoncore.response.InnerResponse;
 import com.personal.project.reportservice.model.dto.*;
@@ -48,6 +49,7 @@ public class GenerateReportServiceImpl implements GenerateReportService {
             //第一個是最新交易日資料
             //產出上個交易日指標
             v.sort(Comparator.comparingLong(StockInfo4InitMetricsDTO::getDate).reversed());
+
             BigDecimal ma5 = v.subList(1, 6).stream()
                     .map(StockInfo4InitMetricsDTO::getTodayClosingPrice)
                     .reduce(BigDecimal.ZERO, BigDecimal::add)
@@ -87,7 +89,7 @@ public class GenerateReportServiceImpl implements GenerateReportService {
             DailyStockMetricsDTO dto = DailyStockMetricsDTO.builder()
                     .stockId(k)
                     .stockName(v.getFirst().getStockName())
-                    .date(v.getFirst().getDate())
+                    .date(v.get(1).getDate())
                     .todayClosingPrice(v.get(1).getTodayClosingPrice())
                     .ma5(ma5)
                     .lastMA5price(lastMA5Price)
@@ -109,7 +111,7 @@ public class GenerateReportServiceImpl implements GenerateReportService {
 
             if (!newestTradingDate.minusDays(1).isEqual(lastTradingDate)) {
                 LocalDate tempDate = lastTradingDate.plusDays(1);
-                while (!tempDate.isEqual(newestTradingDate) && tempDate.isBefore(newestTradingDate)) {
+                while (tempDate.isBefore(newestTradingDate)) {
                     if (tempDate.getDayOfWeek() != DayOfWeek.SATURDAY && tempDate.getDayOfWeek() != DayOfWeek.SUNDAY) {
                         DailyStockMetricsDTO copied = BeanUtil.copyProperties(dto, DailyStockMetricsDTO.class);
                         copied.setDate(Long.parseLong(tempDate.format(DatePattern.PURE_DATE_FORMATTER)));
@@ -234,10 +236,11 @@ public class GenerateReportServiceImpl implements GenerateReportService {
                 tempAmount = dto.getTodayTradingVolumeMoney();
             }
 
-            detail.getTags().setConsecutivePrice(tempConsecutivePrice);
-            detail.getTags().setConsecutiveTradingVolume(tempConsecutiveTradingVolume);
-            detail.getTags().setConsecutiveTradingAmount(tempConsecutiveTradingAmount);
-            detail.getTags().setPriceStatus(StrUtil.format("{}->{}", priceStatus[0], priceStatus[1]));
+            DailyStockInfoDetailDTO.TagsDTO tags = new DailyStockInfoDetailDTO.TagsDTO();
+            tags.setConsecutivePrice(tempConsecutivePrice);
+            tags.setConsecutiveTradingVolume(tempConsecutiveTradingVolume);
+            tags.setConsecutiveTradingAmount(tempConsecutiveTradingAmount);
+            tags.setPriceStatus(StrUtil.format("{}->{}", priceStatus[0], priceStatus[1]));
 
             //對比三天前
             BigDecimal vs2daysPriceDiff = second.getTodayClosingPrice()
@@ -245,33 +248,33 @@ public class GenerateReportServiceImpl implements GenerateReportService {
                     .divide(v.get(3).getTodayClosingPrice(), 4, RoundingMode.FLOOR)
                     .multiply(BigDecimal.valueOf(100));
             if (vs2daysPriceDiff.compareTo(BigDecimal.ZERO) > 0) {
-                detail.getTags().setPriceVS2DaysAgo(new String[]{CommonTerm.RISE, vs2daysPriceDiff.abs().toPlainString()});
+                tags.setPriceVS2DaysAgo(new String[]{CommonTerm.RISE, vs2daysPriceDiff.abs().toPlainString()});
             } else if (vs2daysPriceDiff.compareTo(BigDecimal.ZERO) < 0) {
-                detail.getTags().setPriceVS2DaysAgo(new String[]{CommonTerm.FALL, vs2daysPriceDiff.abs().toPlainString()});
+                tags.setPriceVS2DaysAgo(new String[]{CommonTerm.FALL, vs2daysPriceDiff.abs().toPlainString()});
             } else {
-                detail.getTags().setPriceVS2DaysAgo(new String[]{CommonTerm.UNCHANGED, vs2daysPriceDiff.abs().toPlainString()});
+                tags.setPriceVS2DaysAgo(new String[]{CommonTerm.UNCHANGED, vs2daysPriceDiff.abs().toPlainString()});
             }
             BigDecimal vs2daysVolumeDiff = second.getTodayTradingVolumePiece()
                     .subtract(v.get(3).getTodayTradingVolumePiece())
                     .divide(v.get(3).getTodayTradingVolumePiece(), 4, RoundingMode.FLOOR)
                     .multiply(BigDecimal.valueOf(100));
             if (vs2daysVolumeDiff.compareTo(BigDecimal.ZERO) > 0) {
-                detail.getTags().setTradingVolumeVS2DaysAgo(new String[]{CommonTerm.RISE, vs2daysVolumeDiff.abs().toPlainString()});
+                tags.setTradingVolumeVS2DaysAgo(new String[]{CommonTerm.RISE, vs2daysVolumeDiff.abs().toPlainString()});
             } else if (vs2daysVolumeDiff.compareTo(BigDecimal.ZERO) < 0) {
-                detail.getTags().setTradingVolumeVS2DaysAgo(new String[]{CommonTerm.FALL, vs2daysVolumeDiff.abs().toPlainString()});
+                tags.setTradingVolumeVS2DaysAgo(new String[]{CommonTerm.FALL, vs2daysVolumeDiff.abs().toPlainString()});
             } else {
-                detail.getTags().setTradingVolumeVS2DaysAgo(new String[]{CommonTerm.UNCHANGED, vs2daysVolumeDiff.abs().toPlainString()});
+                tags.setTradingVolumeVS2DaysAgo(new String[]{CommonTerm.UNCHANGED, vs2daysVolumeDiff.abs().toPlainString()});
             }
             BigDecimal vs2daysAmountDiff = second.getTodayTradingVolumeMoney()
                     .subtract(v.get(3).getTodayTradingVolumeMoney())
                     .divide(v.get(3).getTodayTradingVolumeMoney(), 4, RoundingMode.FLOOR)
                     .multiply(BigDecimal.valueOf(100));
             if (vs2daysAmountDiff.compareTo(BigDecimal.ZERO) > 0) {
-                detail.getTags().setTradingAmountVS2DaysAgo(new String[]{CommonTerm.RISE, vs2daysAmountDiff.abs().toPlainString()});
+                tags.setTradingAmountVS2DaysAgo(new String[]{CommonTerm.RISE, vs2daysAmountDiff.abs().toPlainString()});
             } else if (vs2daysAmountDiff.compareTo(BigDecimal.ZERO) < 0) {
-                detail.getTags().setTradingAmountVS2DaysAgo(new String[]{CommonTerm.FALL, vs2daysAmountDiff.abs().toPlainString()});
+                tags.setTradingAmountVS2DaysAgo(new String[]{CommonTerm.FALL, vs2daysAmountDiff.abs().toPlainString()});
             } else {
-                detail.getTags().setTradingAmountVS2DaysAgo(new String[]{CommonTerm.UNCHANGED, vs2daysAmountDiff.abs().toPlainString()});
+                tags.setTradingAmountVS2DaysAgo(new String[]{CommonTerm.UNCHANGED, vs2daysAmountDiff.abs().toPlainString()});
             }
 
             //對比五天前
@@ -280,34 +283,35 @@ public class GenerateReportServiceImpl implements GenerateReportService {
                     .divide(v.get(5).getTodayClosingPrice(), 4, RoundingMode.FLOOR)
                     .multiply(BigDecimal.valueOf(100));
             if (vs4daysPriceDiff.compareTo(BigDecimal.ZERO) > 0) {
-                detail.getTags().setPriceVS4DaysAgo(new String[]{CommonTerm.RISE, vs4daysPriceDiff.abs().toPlainString()});
+                tags.setPriceVS4DaysAgo(new String[]{CommonTerm.RISE, vs4daysPriceDiff.abs().toPlainString()});
             } else if (vs4daysPriceDiff.compareTo(BigDecimal.ZERO) < 0) {
-                detail.getTags().setPriceVS4DaysAgo(new String[]{CommonTerm.FALL, vs4daysPriceDiff.abs().toPlainString()});
+                tags.setPriceVS4DaysAgo(new String[]{CommonTerm.FALL, vs4daysPriceDiff.abs().toPlainString()});
             } else {
-                detail.getTags().setPriceVS4DaysAgo(new String[]{CommonTerm.UNCHANGED, vs4daysPriceDiff.abs().toPlainString()});
+                tags.setPriceVS4DaysAgo(new String[]{CommonTerm.UNCHANGED, vs4daysPriceDiff.abs().toPlainString()});
             }
             BigDecimal vs4daysVolumeDiff = second.getTodayTradingVolumePiece()
                     .subtract(v.get(5).getTodayTradingVolumePiece())
                     .divide(v.get(5).getTodayTradingVolumePiece(), 4, RoundingMode.FLOOR)
                     .multiply(BigDecimal.valueOf(100));
             if (vs4daysVolumeDiff.compareTo(BigDecimal.ZERO) > 0) {
-                detail.getTags().setTradingVolumeVS4DaysAgo(new String[]{CommonTerm.RISE, vs4daysVolumeDiff.abs().toPlainString()});
+                tags.setTradingVolumeVS4DaysAgo(new String[]{CommonTerm.RISE, vs4daysVolumeDiff.abs().toPlainString()});
             } else if (vs4daysVolumeDiff.compareTo(BigDecimal.ZERO) < 0) {
-                detail.getTags().setTradingVolumeVS4DaysAgo(new String[]{CommonTerm.FALL, vs4daysVolumeDiff.abs().toPlainString()});
+                tags.setTradingVolumeVS4DaysAgo(new String[]{CommonTerm.FALL, vs4daysVolumeDiff.abs().toPlainString()});
             } else {
-                detail.getTags().setTradingVolumeVS4DaysAgo(new String[]{CommonTerm.UNCHANGED, vs4daysVolumeDiff.abs().toPlainString()});
+                tags.setTradingVolumeVS4DaysAgo(new String[]{CommonTerm.UNCHANGED, vs4daysVolumeDiff.abs().toPlainString()});
             }
             BigDecimal vs4daysAmountDiff = second.getTodayTradingVolumeMoney()
                     .subtract(v.get(5).getTodayTradingVolumeMoney())
                     .divide(v.get(5).getTodayTradingVolumeMoney(), 4, RoundingMode.FLOOR)
                     .multiply(BigDecimal.valueOf(100));
             if (vs4daysAmountDiff.compareTo(BigDecimal.ZERO) > 0) {
-                detail.getTags().setTradingAmountVS4DaysAgo(new String[]{CommonTerm.RISE, vs4daysAmountDiff.abs().toPlainString()});
+                tags.setTradingAmountVS4DaysAgo(new String[]{CommonTerm.RISE, vs4daysAmountDiff.abs().toPlainString()});
             } else if (vs4daysAmountDiff.compareTo(BigDecimal.ZERO) < 0) {
-                detail.getTags().setTradingAmountVS4DaysAgo(new String[]{CommonTerm.FALL, vs4daysAmountDiff.abs().toPlainString()});
+                tags.setTradingAmountVS4DaysAgo(new String[]{CommonTerm.FALL, vs4daysAmountDiff.abs().toPlainString()});
             } else {
-                detail.getTags().setTradingAmountVS4DaysAgo(new String[]{CommonTerm.UNCHANGED, vs4daysAmountDiff.abs().toPlainString()});
+                tags.setTradingAmountVS4DaysAgo(new String[]{CommonTerm.UNCHANGED, vs4daysAmountDiff.abs().toPlainString()});
             }
+            detail.setTags(tags);
 
             //填充前一個交易日到最新交易日之間非週六週日資料
             LocalDate newestTradingDate = LocalDate.parse(String.valueOf(v.getFirst().getDate()), DatePattern.PURE_DATE_FORMATTER);
@@ -321,7 +325,6 @@ public class GenerateReportServiceImpl implements GenerateReportService {
                 }
                 tempDate = tempDate.plusDays(1);
             }
-
             result.add(detail);
         });
 
@@ -367,9 +370,8 @@ public class GenerateReportServiceImpl implements GenerateReportService {
                     v.get(6),
                     metrics
             );
-
             //填充本日到最新交易日之間非週六週日的資料
-            LocalDate tempDate = LocalDate.parse(first.getDate().toString(), DatePattern.PURE_DATE_FORMATTER).minusDays(1);
+            LocalDate tempDate = LocalDate.parse(first.getDate().toString(), DatePattern.PURE_DATE_FORMATTER).plusDays(1);
             while (tempDate.isBefore(now)) {
                 if (tempDate.getDayOfWeek() != DayOfWeek.SATURDAY && tempDate.getDayOfWeek() != DayOfWeek.SUNDAY) {
                     DailyStockMetricsDTO copied = BeanUtil.copyProperties(result, DailyStockMetricsDTO.class);
@@ -377,12 +379,10 @@ public class GenerateReportServiceImpl implements GenerateReportService {
                     copied.setTodayClosingPrice(null);
                     results.add(copied);
                 }
-                tempDate = tempDate.minusDays(1);
+                tempDate = tempDate.plusDays(1);
             }
-
             results.add(result);
         });
-
 
         return remoteStockService.saveMetrics(results, null);
     }
