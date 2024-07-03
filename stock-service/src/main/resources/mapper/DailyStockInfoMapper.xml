@@ -176,7 +176,7 @@
                         where today_closing_price is not null
                      ) tt
              ) T
-        where T.sequence &lt; 13;
+        where T.sequence &lt; 7;
     </select>
 
     <select id="query4InitTodayMetrics"

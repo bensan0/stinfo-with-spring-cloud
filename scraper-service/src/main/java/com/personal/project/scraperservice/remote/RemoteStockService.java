@@ -3,6 +3,7 @@ package com.personal.project.scraperservice.remote;
 import com.personal.project.commoncore.constants.ServiceNameConstants;
 import com.personal.project.commoncore.response.InnerResponse;
 import com.personal.project.scraperservice.model.dto.DailyStockInfoDto;
+import lombok.Getter;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
@@ -25,4 +26,7 @@ public interface RemoteStockService {
 
     @GetMapping(value = "/feign/stock/get-former", consumes = MediaType.APPLICATION_JSON_VALUE)
     InnerResponse<Map<String, DailyStockInfoDto>> getFormer(@RequestHeader("token") String token);
+
+    @GetMapping(value = "/feign/stock/get-exists", consumes = MediaType.APPLICATION_JSON_VALUE)
+    InnerResponse<List<String>> getExist();
 }

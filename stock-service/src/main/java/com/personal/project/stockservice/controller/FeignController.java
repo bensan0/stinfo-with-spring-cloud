@@ -12,6 +12,7 @@ import com.personal.project.stockservice.model.entity.DailyStockMetricsDO;
 import com.personal.project.stockservice.service.DailyStockInfoDetailService;
 import com.personal.project.stockservice.service.DailyStockInfoService;
 import com.personal.project.stockservice.service.DailyStockMetricsService;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
@@ -36,6 +37,12 @@ public class FeignController {
         this.dailyStockInfoService = dailyStockInfoService;
         this.dailyStockMetricsService = dailyStockMetricsService;
         this.dailyStockInfoDetailService = dailyStockInfoDetailService;
+    }
+
+    @GetMapping("/get-exists")
+    public InnerResponse<List<String>> getExist(){
+        List<String> ids = dailyStockInfoService.queryExist();
+        return InnerResponse.ok(ids);
     }
 
     @PostMapping("/get-by-date")

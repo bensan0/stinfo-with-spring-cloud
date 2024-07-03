@@ -60,7 +60,7 @@ public class ReportJob {
         Map<String, List<DailyStockMetricsDTO>> stockIdToMetrics = response.getData().getStockIdToMetrics();
         Map<String, List<DailyStockInfoDTO>> stockIdToInfos = response.getData().getStockIdToInfos();
         List<DailyStockMetricsDTO> results = new ArrayList<>();
-        DailyMetricsCalculator metricsCalculator = new DailyMetricsCalculator();
+        DailyMetricsCalculator metricsCalculator = new DailyMetricsCalculator(remoteStockService);
 
         stockIdToInfos.forEach((k, v) -> {
             v.sort(Comparator.comparingLong(DailyStockInfoDTO::getDate).reversed());
@@ -106,8 +106,8 @@ public class ReportJob {
                     BeanUtil.copyProperties(v.get(2), StockInfo4InitMetricsDTO.class),
                     BeanUtil.copyProperties(v.get(3), StockInfo4InitMetricsDTO.class),
                     BeanUtil.copyProperties(v.get(4), StockInfo4InitMetricsDTO.class),
-                    BeanUtil.copyProperties(v.get(5), StockInfo4InitMetricsDTO.class),
-                    BeanUtil.copyProperties(v.getLast(), StockInfo4InitMetricsDTO.class),
+//                    BeanUtil.copyProperties(v.get(5), StockInfo4InitMetricsDTO.class),
+//                    BeanUtil.copyProperties(v.getLast(), StockInfo4InitMetricsDTO.class),
                     yesterdayMetrics);
 
             results.add(todayMetrics);

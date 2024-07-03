@@ -47,6 +47,16 @@ public class DailyStockInfoServiceImpl extends ServiceImpl<DailyStockInfoMapper,
     }
 
     @Override
+    public List<String> queryExist() {
+        LambdaQueryWrapper<DailyStockInfoDO> wrapper  = new LambdaQueryWrapper();
+        wrapper.select(DailyStockInfoDO::getStockId);
+        wrapper.groupBy(DailyStockInfoDO::getStockId);
+        List<DailyStockInfoDO> dailyStockInfoDOS = dailyStockInfoMapper.selectList(wrapper);
+
+        return dailyStockInfoDOS.stream().map(DailyStockInfoDO::getStockId).toList();
+    }
+
+    @Override
     public Map<String, DailyStockInfoDTO> queryFormer() {
         List<DailyStockInfoDO> dailyStockInfoDOs = baseMapper.queryFormer();
 

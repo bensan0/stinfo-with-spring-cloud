@@ -1,11 +1,11 @@
 package com.personal.project.scraperservice.scraper.webmagic;
 
+import lombok.Getter;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedCondition;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,9 +20,8 @@ import us.codecraft.webmagic.selector.PlainText;
 import java.io.Closeable;
 import java.io.IOException;
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.Set;
 
 /**
  * 使用Selenium调用浏览器进行渲染。目前仅支持chrome。<br>
@@ -46,6 +45,9 @@ public class SeleniumDownloader extends AbstractDownloader implements Closeable 
 
     private ExpectedCondition waitCondition = null;
 
+    @Getter
+    private Set<String> failedUrls;
+
     /**
      * 新建
      *
@@ -56,13 +58,15 @@ public class SeleniumDownloader extends AbstractDownloader implements Closeable 
                 chromeDriverPath);
     }
 
-    public SeleniumDownloader(String chromeDriverPath, Duration waitTime, ExpectedCondition waitCondition) {
+    public SeleniumDownloader(String chromeDriverPath, Duration waitTime, ExpectedCondition waitCondition, Set<String> failedUrls) {
         System.getProperties().setProperty("webdriver.chrome.driver",
                 chromeDriverPath);
 
         this.waitTime = waitTime;
 
         this.waitCondition = waitCondition;
+
+        this.failedUrls = failedUrls;
     }
 
     /**
@@ -116,7 +120,7 @@ public class SeleniumDownloader extends AbstractDownloader implements Closeable 
              *
              * @author: bob.li.0718@gmail.com
              */
-            if(waitTime != null && waitCondition != null){
+            if (waitTime != null && waitCondition != null) {
                 new WebDriverWait(webDriver, waitTime).until(waitCondition);
             }
 
@@ -130,7 +134,10 @@ public class SeleniumDownloader extends AbstractDownloader implements Closeable 
             onSuccess(page, task);
         } catch (Exception e) {
             logger.warn("download page {} error", request.getUrl(), e);
-            onError(page, task, e);
+            if (failedUrls != null) {
+                failedUrls.add(request.getUrl());
+            }
+//            onError(page, task, e);
         } finally {
             if (webDriver != null) {
                 webDriverPool.returnToPool(webDriver);
@@ -156,4 +163,10 @@ public class SeleniumDownloader extends AbstractDownloader implements Closeable 
     public void close() throws IOException {
         webDriverPool.closeAll();
     }
+
+    @Override
+    protected void onError(Page page, Task task, Throwable e) {
+        super.onError(page, task, e);
+    }
+
 }

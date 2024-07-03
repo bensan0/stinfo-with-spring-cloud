@@ -34,6 +34,11 @@ public class RemoteStockFallbackFactory implements FallbackFactory<RemoteStockSe
             }
 
             @Override
+            public InnerResponse<List<String>> getExist() {
+                return null;
+            }
+
+            @Override
             public String toString() {
                 return super.toString();
             }

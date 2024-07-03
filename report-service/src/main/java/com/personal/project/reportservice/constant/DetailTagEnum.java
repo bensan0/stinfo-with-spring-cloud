@@ -13,9 +13,11 @@ public enum DetailTagEnum {
 
     //MA
     MA5_UP_THROUGH_MA20("5日線上穿月線"),
+    MA20_DOWN_THROUGH_MA5("月線下穿5日線"),
+    MA5_DOWN_THROUGH_MA20("5日線下穿月線"),
     MA20_UP_THROUGH_MA5("月線上穿5日線"),
     MA20_UP_THROUGH_MA60("月線上穿季線"),
-    MA5_DOWN_THROUGH_MA20("5日線下穿月線"),
+    MA60_DOWN_THROUGH_MA20("季線下穿月線"),
     MA20_DOWN_THROUGH_MA60("月線下穿季線"),
     MA_QUEUED_UP("均線多頭排列"),
 

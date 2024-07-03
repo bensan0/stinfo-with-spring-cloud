@@ -4,6 +4,7 @@ import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.util.StrUtil;
 import com.personal.project.scraperservice.model.dto.DailyStockInfoDto;
 import com.personal.project.scraperservice.model.entity.ScraperErrorMessageDO;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import us.codecraft.webmagic.Page;
@@ -16,6 +17,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -24,13 +26,19 @@ public class TPEXInitScraper implements PageProcessor {
     private final Site site = Site.me()
             .setDefaultCharset("utf-8")
             .setCycleRetryTimes(0)
-            .setSleepTime(5000)
+            .setSleepTime(7000)
             .setUserAgent("User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2.1 Safari/605.1.15")
             .addHeader("Accept-Language", "zh-TW,zh-Hant;q=0.9")
             .addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
             .addHeader("Accept-Encoding", "gzip, deflate, br");
 
     private final List<String> urls = new ArrayList<>();
+
+    @Getter
+    private final List<String> failedUrls = Collections.synchronizedList(new ArrayList<>());
+
+    @Getter
+    private final List<ScraperErrorMessageDO> errors = Collections.synchronizedList(new ArrayList<>());
 
     public TPEXInitScraper() {
     }
@@ -41,11 +49,12 @@ public class TPEXInitScraper implements PageProcessor {
 
     @Override
     public void process(Page page) {
-        List<ScraperErrorMessageDO> errors = new ArrayList<>();
+        page.addTargetRequests(urls);
         try {
             Html html = page.getHtml();
             List<Selectable> trs = html.xpath("/html/body/table/tbody/tr").nodes();
             String[] split = html.xpath("//th[@id='th']/text()").get().split(" +");
+
             String stockId = split[1].split(":")[1].trim();
             String stockName = split[2].split(":")[1].trim();
             List<DailyStockInfoDto> dtos = new ArrayList<>();
@@ -57,7 +66,7 @@ public class TPEXInitScraper implements PageProcessor {
 
                 //日
                 String[] yMd = tr.xpath("//tr/td[1]/text()").get().split("/");
-                LocalDate localDate = LocalDate.of(Integer.valueOf(yMd[0]) + 1911, Integer.valueOf(yMd[1]), Integer.valueOf(yMd[2]));
+                LocalDate localDate = LocalDate.of(Integer.valueOf(yMd[0]) + 1911, Integer.valueOf(yMd[1]), Integer.valueOf(yMd[2].replaceAll("[^0-9.]", "")));
                 dto.setDate(Long.valueOf(localDate.format(DatePattern.PURE_DATE_FORMATTER)));
 
                 //股數
@@ -69,50 +78,53 @@ public class TPEXInitScraper implements PageProcessor {
                 dto.setTodayTradingVolumeMoney(tradingVolumeMoney);
 
                 //開
-                BigDecimal openingPrice = new BigDecimal(tr.xpath("//tr/td[4]/text()").get().replace(",", "").trim());
+                String rawOpening = tr.xpath("//tr/td[4]/text()").get().replaceAll("[^0-9.]", "").trim();
+                BigDecimal openingPrice = rawOpening.isEmpty() ? BigDecimal.valueOf(-1) : new BigDecimal(rawOpening);
                 dto.setOpeningPrice(openingPrice);
 
                 //高
-                BigDecimal highestPrice = new BigDecimal(tr.xpath("//tr/td[5]/text()").get().replace(",", "").trim());
+                String rawHighest = tr.xpath("//tr/td[5]/text()").get().replaceAll("[^0-9.]", "").trim();
+                BigDecimal highestPrice = rawHighest.isEmpty() ? BigDecimal.valueOf(-1) : new BigDecimal(rawHighest);
                 dto.setHighestPrice(highestPrice);
 
                 //低
-                BigDecimal lowestPrice = new BigDecimal(tr.xpath("//tr/td[6]/text()").get().replace(",", "").trim());
+                String rawLowest = tr.xpath("//tr/td[6]/text()").get().replaceAll("[^0-9.]", "").trim();
+                BigDecimal lowestPrice = rawLowest.isEmpty() ? BigDecimal.valueOf(-1) : new BigDecimal(rawLowest);
                 dto.setLowestPrice(lowestPrice);
 
                 //收
-                BigDecimal closingPrice = new BigDecimal(tr.xpath("//tr/td[7]/text()").get().replace(",", "").trim());
+                String rawClosing = tr.xpath("//tr/td[7]/text()").get().replaceAll("[^0-9.]", "").trim();
+                BigDecimal closingPrice = rawClosing.isEmpty() ? BigDecimal.valueOf(-1) : new BigDecimal(rawClosing);
                 dto.setTodayClosingPrice(closingPrice);
 
-                //差額
-                BigDecimal priceGap = new BigDecimal(tr.xpath("//tr/td[8]/text()").get().replace(",", "").trim());
-                dto.setPriceGap(priceGap);
-
-                //昨收
-                dto.setYesterdayClosingPrice(closingPrice.subtract(priceGap));
-
-                //漲跌幅
-                dto.setPriceGapPercent(
-                        priceGap.divide(dto.getYesterdayClosingPrice(), 4, RoundingMode.FLOOR).multiply(BigDecimal.valueOf(100))
-                );
+                //差額, 昨收, 漲跌幅
+                if (closingPrice.compareTo(BigDecimal.valueOf(-1)) == 0) {
+                    dto.setPriceGap(BigDecimal.valueOf(-1));
+                    dto.setYesterdayClosingPrice(BigDecimal.valueOf(-1));
+                    dto.setPriceGapPercent(BigDecimal.valueOf(-1));
+                } else {
+                    BigDecimal priceGap = new BigDecimal(tr.xpath("//tr/td[8]/text()").get().replace(",", "").trim());
+                    dto.setPriceGap(priceGap);
+                    dto.setYesterdayClosingPrice(closingPrice.subtract(priceGap));
+                    dto.setPriceGapPercent(priceGap.divide(dto.getYesterdayClosingPrice(), 4, RoundingMode.FLOOR).multiply(BigDecimal.valueOf(100)));
+                }
 
                 dtos.add(dto);
             }
 
             page.putField("idToDTOs", Pair.of(stockId, dtos));
-            page.addTargetRequests(urls);
         } catch (Exception e) {
             ScraperErrorMessageDO error = new ScraperErrorMessageDO();
-            error.setErrorMessage(StrUtil.format("TPEX init scraper error when dowloading {}", page.getUrl()));
+            error.setErrorMessage(StrUtil.format("解析tpex {} 頁面內容失敗", page.getUrl()));
             error.setException(e.getClass().getSimpleName());
             error.setExceptionMessage(e.getMessage());
             error.setScraperName("TPEX init scraper");
             error.setDate(LocalDate.now().format(DatePattern.PURE_DATE_FORMATTER));
             errors.add(error);
 
-            log.error("TPEX init scraper error when dowloading {}", page.getUrl(), e);
-
-            page.putField("errors", errors);
+            log.error("TPEX init scraper error when analyzing {} content", page.getUrl(), e);
+            failedUrls.add(page.getUrl().toString());
+            page.setSkip(true);
         }
     }
 

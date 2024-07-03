@@ -26,17 +26,9 @@ public class TPEXInitPipeline implements Pipeline {
     @Override
     public void process(ResultItems resultItems, Task task) {
         try {
-            if (resultItems.get("errors") != null) {
-                errors.addAll(resultItems.get("errors"));
-            }
-
             Pair<String, List<DailyStockInfoDto>> pair = resultItems.get("idToDTOs");
 
-            if (result.get(pair.getLeft()) == null) {
-                result.put(pair.getLeft(), pair.getRight());
-            } else {
-                result.get(pair.getLeft()).addAll(pair.getRight());
-            }
+            result.computeIfAbsent(pair.getLeft(), k -> new ArrayList<>()).addAll(pair.getRight());
         } catch (Exception e) {
             ScraperErrorMessageDO error = new ScraperErrorMessageDO();
             error.setErrorMessage(StrUtil.format("TPEX init pipeline error"));

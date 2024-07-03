@@ -14,6 +14,8 @@ public interface DailyStockInfoService extends IService<DailyStockInfoDO> {
 
     boolean saveAll(List<DailyStockInfoDTO> data);
 
+    List<String> queryExist();
+
     /**
      * 獲取前一個交易日資料
      * @return
