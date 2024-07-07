@@ -27,8 +27,11 @@ public class DailyDetailCalculator {
         calShadow(result, todayInfo);
 
         DailyStockInfoDetailDTO.TagsDTO todayTags = new DailyStockInfoDetailDTO.TagsDTO();
+
         calConsecutive(todayTags, yesterdayDetail, todayInfo, yesterdayInfo);
+
         calComparingPassDays(todayTags, todayInfo, twoDaysAgoInfo, fourDaysAgoInfo);
+
         calExtraTags(result, todayTags, todayInfo, yesterdayInfo, todayMetrics, yesterdayMetrics);
 
         result.setTags(todayTags);
@@ -67,7 +70,6 @@ public class DailyDetailCalculator {
                                 DailyStockInfoDetailDTO yesterdayDetail,
                                 DailyStockInfoDTO todayInfo,
                                 DailyStockInfoDTO yesterdayInfo) {
-
         //正常情況下, yesterdayInfo與yesterdayDetail是同有同無
         if (yesterdayInfo == null) {
             todayTags.setPriceStatus(StrUtil.format("{}->{}", CommonTerm.UNCHANGED, CommonTerm.UNCHANGED));
@@ -239,11 +241,11 @@ public class DailyDetailCalculator {
 
     private void generateMATags(List<String> tags, DailyStockMetricsDTO todayMetrics, DailyStockMetricsDTO yesterdayMetrics) {
         BigDecimal ma5 = todayMetrics.getMa5();
-        BigDecimal yesterdayMa5 = yesterdayMetrics.getMa5();
+        BigDecimal yesterdayMa5 = yesterdayMetrics == null ? null : yesterdayMetrics.getMa5();
         BigDecimal ma20 = todayMetrics.getMa20();
-        BigDecimal yesterdayMa20 = yesterdayMetrics.getMa20();
+        BigDecimal yesterdayMa20 = yesterdayMetrics == null ? null : yesterdayMetrics.getMa20();
         BigDecimal ma60 = todayMetrics.getMa60();
-        BigDecimal yesterdayMa60 = yesterdayMetrics.getMa60();
+        BigDecimal yesterdayMa60 = yesterdayMetrics == null ? null : yesterdayMetrics.getMa60();
 
         if (ma5 != null && yesterdayMa5 != null && ma20 != null && yesterdayMa20 != null) {
             if (ma5.compareTo(ma20) > 0 && yesterdayMa5.compareTo(yesterdayMa20) < 0) {
@@ -268,8 +270,15 @@ public class DailyDetailCalculator {
             }
         }
 
-        if (ma5 != null && ma20 != null && ma60 != null) {
-            if (ma5.compareTo(ma20) > 0 && ma20.compareTo(ma60) > 0) {
+        if (ma5 != null && ma20 != null && ma60 != null &&
+                yesterdayMa5 != null && yesterdayMa20 != null && yesterdayMa60 != null
+        ) {
+            if (ma5.compareTo(ma20) > 0
+                    && ma20.compareTo(ma60) > 0
+                    && ma5.compareTo(yesterdayMa5) > 0
+                    && ma20.compareTo(yesterdayMa20) > 0
+                    && ma60.compareTo(yesterdayMa60) > 0
+            ) {
                 tags.add(DetailTagEnum.MA_QUEUED_UP.getTag());
             }
         }
@@ -337,7 +346,7 @@ public class DailyDetailCalculator {
             tags.add(DetailTagEnum.STRONG_CROSS.getTag());
         }
 
-        if (todayClosing.compareTo(todayMiddle) == 0) {
+        if (todayClosing.compareTo(todayMiddle) == 0 && todayLowest.compareTo(todayMiddle) != 0 && todayHighest.compareTo(todayMiddle) != 0) {
             tags.add(DetailTagEnum.CROSS.getTag());
         }
 
@@ -436,83 +445,99 @@ public class DailyDetailCalculator {
     }
 
     private void generateKStickTags(List<String> tags, DailyStockInfoDTO todayInfo, DailyStockInfoDTO yesterdayInfo, DailyStockInfoDetailDTO todayDetailDTO) {
-        BigDecimal todayClosing = todayInfo.getTodayClosingPrice();
-        BigDecimal todayOpening = todayInfo.getOpeningPrice();
-        BigDecimal todayMiddle = todayOpening.add(todayClosing).divide(BigDecimal.TWO, 2, RoundingMode.FLOOR);
-        BigDecimal todayHighest = todayInfo.getHighestPrice();
-        BigDecimal todayLowest = todayInfo.getLowestPrice();
-        BigDecimal yesterdayClosing = todayInfo.getYesterdayClosingPrice();
-        BigDecimal yesterdayOpening = yesterdayInfo.getOpeningPrice();
-
-        if (todayClosing.compareTo(todayOpening) > 0 &&
-                todayClosing.compareTo(todayMiddle.add(todayHighest).divide(BigDecimal.TWO, 2, RoundingMode.FLOOR)) >= 0 &&
-                todayOpening.compareTo(todayMiddle.add(todayHighest).divide(BigDecimal.TWO, 2, RoundingMode.FLOOR)) >= 0
-        ) {
-            tags.add(DetailTagEnum.RED_HAMMER.getTag());
+        BigDecimal todayClosing = null;
+        BigDecimal todayOpening = null;
+        BigDecimal todayMiddle = null;
+        BigDecimal todayHighest = null;
+        BigDecimal todayLowest = null;
+        if (todayInfo.getTodayClosingPrice() != null) {
+            todayClosing = todayInfo.getTodayClosingPrice();
+            todayOpening = todayInfo.getOpeningPrice();
+            todayMiddle = todayOpening.add(todayClosing).divide(BigDecimal.TWO, 2, RoundingMode.FLOOR);
+            todayHighest = todayInfo.getHighestPrice();
+            todayLowest = todayInfo.getLowestPrice();
         }
 
-        if (todayClosing.compareTo(todayOpening) < 0 &&
-                todayClosing.compareTo(todayMiddle.add(todayHighest).divide(BigDecimal.TWO, 2, RoundingMode.FLOOR)) >= 0 &&
-                todayOpening.compareTo(todayMiddle.add(todayHighest).divide(BigDecimal.TWO, 2, RoundingMode.FLOOR)) >= 0
-        ) {
-            tags.add(DetailTagEnum.GREEN_HAMMER.getTag());
+        BigDecimal yesterdayClosing = null;
+        BigDecimal yesterdayOpening = null;
+        if (yesterdayInfo != null) {
+            yesterdayClosing = yesterdayInfo.getTodayClosingPrice();
+            yesterdayOpening = yesterdayInfo.getOpeningPrice();
         }
 
-        if (todayClosing.compareTo(todayOpening) > 0 &&
-                todayDetailDTO.getRealBody().compareTo(BigDecimal.valueOf(50)) > 0
-        ) {
-            tags.add(DetailTagEnum.LONG_RED.getTag());
-        }
+        if (todayClosing != null) {
+            if (todayClosing.compareTo(todayOpening) > 0 &&
+                    todayClosing.compareTo(todayMiddle.add(todayHighest).divide(BigDecimal.TWO, 2, RoundingMode.FLOOR)) >= 0 &&
+                    todayOpening.compareTo(todayMiddle.add(todayHighest).divide(BigDecimal.TWO, 2, RoundingMode.FLOOR)) >= 0
+            ) {
+                tags.add(DetailTagEnum.RED_HAMMER.getTag());
+            }
 
-        if (todayDetailDTO.getRealBody().compareTo(BigDecimal.valueOf(100L)) == 0 &&
-                todayClosing.compareTo(todayOpening) > 0
-        ) {
-            tags.add(DetailTagEnum.MAX_RED.getTag());
-        }
+            if (todayClosing.compareTo(todayOpening) < 0 &&
+                    todayClosing.compareTo(todayMiddle.add(todayHighest).divide(BigDecimal.TWO, 2, RoundingMode.FLOOR)) >= 0 &&
+                    todayOpening.compareTo(todayMiddle.add(todayHighest).divide(BigDecimal.TWO, 2, RoundingMode.FLOOR)) >= 0
+            ) {
+                tags.add(DetailTagEnum.GREEN_HAMMER.getTag());
+            }
 
-        if (todayDetailDTO.getRealBody().compareTo(BigDecimal.valueOf(100L)) == 0 &&
-                todayClosing.compareTo(todayOpening) < 0
-        ) {
-            tags.add(DetailTagEnum.MAX_GREEN.getTag());
-        }
+            if (todayClosing.compareTo(todayOpening) > 0 &&
+                    todayDetailDTO.getRealBody().compareTo(BigDecimal.valueOf(50)) > 0
+            ) {
+                tags.add(DetailTagEnum.LONG_RED.getTag());
+            }
 
-        if (todayClosing.compareTo(todayOpening) < 0 &&
-                todayDetailDTO.getRealBody().compareTo(BigDecimal.valueOf(50)) > 0
-        ) {
-            tags.add(DetailTagEnum.LONG_GREEN.getTag());
-        }
+            if (todayDetailDTO.getRealBody().compareTo(BigDecimal.valueOf(100L)) == 0 &&
+                    todayClosing.compareTo(todayOpening) > 0
+            ) {
+                tags.add(DetailTagEnum.MAX_RED.getTag());
+            }
 
-        if (todayClosing.compareTo(todayOpening) > 0 &&
-                todayClosing.compareTo(todayLowest.add(todayMiddle).divide(BigDecimal.TWO, 2, RoundingMode.FLOOR)) < 0 &&
-                todayOpening.compareTo(todayLowest.add(todayMiddle).divide(BigDecimal.TWO, 2, RoundingMode.FLOOR)) < 0
-        ) {
-            tags.add(DetailTagEnum.RED_INVERTED_HAMMER.getTag());
-        }
+            if (todayDetailDTO.getRealBody().compareTo(BigDecimal.valueOf(100L)) == 0 &&
+                    todayClosing.compareTo(todayOpening) < 0
+            ) {
+                tags.add(DetailTagEnum.MAX_GREEN.getTag());
+            }
 
-        if (todayClosing.compareTo(todayOpening) < 0 &&
-                todayClosing.compareTo(todayLowest.add(todayMiddle).divide(BigDecimal.TWO, 2, RoundingMode.FLOOR)) < 0 &&
-                todayOpening.compareTo(todayLowest.add(todayMiddle).divide(BigDecimal.TWO, 2, RoundingMode.FLOOR)) < 0) {
-            tags.add(DetailTagEnum.GREEN_INVERTED_HAMMER.getTag());
-        }
+            if (todayClosing.compareTo(todayOpening) < 0 &&
+                    todayDetailDTO.getRealBody().compareTo(BigDecimal.valueOf(50)) > 0
+            ) {
+                tags.add(DetailTagEnum.LONG_GREEN.getTag());
+            }
 
-        if (todayOpening.compareTo(yesterdayClosing) > 0 &&
-                todayClosing.compareTo(yesterdayClosing) > 0
-        ) {
-            tags.add(DetailTagEnum.GAP_UP.getTag());
-        }
+            if (todayClosing.compareTo(todayOpening) > 0 &&
+                    todayClosing.compareTo(todayLowest.add(todayMiddle).divide(BigDecimal.TWO, 2, RoundingMode.FLOOR)) < 0 &&
+                    todayOpening.compareTo(todayLowest.add(todayMiddle).divide(BigDecimal.TWO, 2, RoundingMode.FLOOR)) < 0
+            ) {
+                tags.add(DetailTagEnum.RED_INVERTED_HAMMER.getTag());
+            }
 
-        if (todayOpening.compareTo(yesterdayClosing.min(yesterdayOpening)) < 0 &&
-                todayClosing.compareTo(yesterdayClosing.min(yesterdayOpening)) < 0
-        ) {
-            tags.add(DetailTagEnum.GAP_DOWN.getTag());
-        }
+            if (todayClosing.compareTo(todayOpening) < 0 &&
+                    todayClosing.compareTo(todayLowest.add(todayMiddle).divide(BigDecimal.TWO, 2, RoundingMode.FLOOR)) < 0 &&
+                    todayOpening.compareTo(todayLowest.add(todayMiddle).divide(BigDecimal.TWO, 2, RoundingMode.FLOOR)) < 0) {
+                tags.add(DetailTagEnum.GREEN_INVERTED_HAMMER.getTag());
+            }
 
-        if (todayOpening.compareTo(todayClosing) < 0) {
-            tags.add(DetailTagEnum.RED.getTag());
-        }
+            if (todayOpening.compareTo(todayClosing) < 0) {
+                tags.add(DetailTagEnum.RED.getTag());
+            }
 
-        if (todayOpening.compareTo(todayClosing) > 0) {
-            tags.add(DetailTagEnum.GREEN.getTag());
+            if (todayOpening.compareTo(todayClosing) > 0) {
+                tags.add(DetailTagEnum.GREEN.getTag());
+            }
+
+            if (yesterdayClosing != null) {
+                if (todayOpening.compareTo(yesterdayClosing) > 0 &&
+                        todayClosing.compareTo(yesterdayClosing) > 0
+                ) {
+                    tags.add(DetailTagEnum.GAP_UP.getTag());
+                }
+
+                if (todayOpening.compareTo(yesterdayClosing.min(yesterdayOpening)) < 0 &&
+                        todayClosing.compareTo(yesterdayClosing.min(yesterdayOpening)) < 0
+                ) {
+                    tags.add(DetailTagEnum.GAP_DOWN.getTag());
+                }
+            }
         }
     }
 

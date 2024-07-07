@@ -6,6 +6,7 @@
         <id property="id" column="id" jdbcType="BIGINT"/>
         <result property="stockId" column="stock_id" jdbcType="VARCHAR"/>
         <result property="stockName" column="stock_name" jdbcType="VARCHAR"/>
+        <result property="market" column="market" jdbcType="VARCHAR"/>
         <result property="date" column="date" jdbcType="BIGINT"/>
         <result property="todayClosingPrice" column="today_closing_price" jdbcType="DECIMAL"/>
         <result property="yesterdayClosingPrice" column="yesterday_closing_price" jdbcType="DECIMAL"/>
@@ -21,7 +22,7 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,stock_id,stock_name,'date',today_closing_price,yesterday_closing_price,
+        id,stock_id,stock_name,'date',market,today_closing_price,yesterday_closing_price,
         price_gap,price_gap_percent,opening_price,highest_price,lowest_price,
         today_trading_volume_piece,today_trading_volume_money,yesterday_trading_volume_piece,
         yesterday_trading_volume_money
@@ -51,7 +52,7 @@
             from (
                 select *
                 from daily_stock_info
-                where date = #{date} or today_closing_price is not null
+                where date &lt;= #{date} and today_closing_price is not null
                  ) tt
              ) T
         where T.sequence in (1, 5, 10, 20, 60, 120, 240)
@@ -63,6 +64,8 @@
             t.stock_id as stockId,
             t.stock_name as stockName,
             t.date as 'date',
+            t.price_gap as priceGap,
+            t.price_gap_percent as priceGapPercent,
             t.today_closing_price as todayClosingPrice,
             t.yesterday_closing_price as yesterdayClosingPrice,
             t.opening_price as openingPrice,
@@ -82,6 +85,8 @@
             T.stock_id as stockId,
             T.stock_name as stockName,
             T.date as 'date',
+            T.price_gap_percent as priceGapPercent,
+            T.today_closing_price as todayClosingPrice,
             T.today_closing_price as todayClosingPrice,
             T.yesterday_closing_price as yesterdayClosingPrice,
             T.opening_price as openingPrice,
@@ -96,9 +101,9 @@
                      tt.*,
                      row_number() over (partition by stock_id order by date desc) as 'sequence'
                  from (
-                          select *
-                          from daily_stock_info
-                          where 'date' != #{date} and today_closing_price is not null
+                          select s.*
+                          from daily_stock_info s
+                          where s.date &lt; #{date} and today_closing_price is not null
                       ) tt
              ) T
         where T.sequence in (1, 2, 4)
@@ -118,15 +123,15 @@
             T.today_trading_volume_piece as todayTradingVolumePiece,
             T.yesterday_trading_volume_piece as yesterdayTradingVolumePiece,
             T.today_trading_volume_money as todayTradingVolumeMoney,
-            T.yesterday_trading_volume_money as yesterdayTradingVolumeMoney,
+            T.yesterday_trading_volume_money as yesterdayTradingVolumeMoney
         from (
                  select
                      tt.*,
-                     row_number() over (partition by stock_id order by date desc) as 'sequence'
+                     row_number() over (partition by stock_id order by date desc) as sequence
                  from (
                         select *
-                        from daily_stock_info
-                        where today_closing_price is not null;
+                        from daily_stock_info s
+                        where s.today_closing_price is not null and s.date &lt; #{date}
                       ) tt
              ) T
         where T.sequence = 1

@@ -4,6 +4,7 @@ import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.util.StrUtil;
 import com.personal.project.scraperservice.model.dto.DailyStockInfoDto;
 import com.personal.project.scraperservice.model.entity.ScraperErrorMessageDO;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Site;
@@ -15,10 +16,14 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
 public class GoodInfoScraper implements PageProcessor {
+
+    @Getter
+    private List<ScraperErrorMessageDO> errors = Collections.synchronizedList(new ArrayList<>());
 
     private Site site = Site.me()
             .setDefaultCharset("utf-8")
@@ -33,8 +38,8 @@ public class GoodInfoScraper implements PageProcessor {
     public void process(Page page) {
         LocalDate now = LocalDate.now();
         Html html = page.getHtml();
+        System.out.println(html.get());
         List<DailyStockInfoDto> dtos = new ArrayList<>();
-        List<ScraperErrorMessageDO> errors = new ArrayList<>();
         List<Selectable> trs = html.xpath("//table[@id='tblStockList']/tbody/tr").nodes();
         for (Selectable tr : trs) {
             try {
@@ -59,7 +64,7 @@ public class GoodInfoScraper implements PageProcessor {
 
                     //收
                     BigDecimal closingPrice = new BigDecimal(
-                            tr.xpath("//tr/td[6]/nobr/text()").get().trim().replace(",", "")
+                            tr.xpath("//tr/td[6]/nobr/a/text()").get().trim().replace(",", "")
                     );
 
                     //漲跌價
@@ -120,7 +125,9 @@ public class GoodInfoScraper implements PageProcessor {
                     dtos.add(dto);
                 }
 
+                page.addTargetRequest("https://goodinfo.tw/tw2/StockList.asp?MARKET_CAT=上櫃&INDUSTRY_CAT=上櫃全部&SHEET=交易狀況&SHEET2=日&RPT_TIME=最新資料");
             } catch (Exception e) {
+                log.error("some thing is wrong!!!", e);
                 ScraperErrorMessageDO error = new ScraperErrorMessageDO();
                 error.setErrorMessage("GoodInfo scraper 解析頁面出現錯誤");
                 error.setDate(LocalDate.now().toString());
@@ -133,7 +140,6 @@ public class GoodInfoScraper implements PageProcessor {
         }
 
         page.putField("dtos", dtos);
-        page.putField("errors", errors);
     }
 
     @Override

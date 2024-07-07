@@ -5,7 +5,6 @@ import com.personal.project.scraperservice.constant.Term;
 import com.personal.project.scraperservice.model.dto.DailyStockInfoDto;
 import com.personal.project.scraperservice.model.entity.ScraperErrorMessageDO;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Site;
 import us.codecraft.webmagic.processor.PageProcessor;
@@ -18,8 +17,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-@Slf4j
-public class TWSEInitScraper implements PageProcessor {
+public class TWSERoutineScraper implements PageProcessor {
 
     private final Site site = Site.me()
             .setDefaultCharset("utf-8")
@@ -30,32 +28,29 @@ public class TWSEInitScraper implements PageProcessor {
             .addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
             .addHeader("Accept-Encoding", "gzip, deflate, br");
 
-    private final List<String> urls = new ArrayList<>();
-
     @Getter
     private final List<ScraperErrorMessageDO> errors = Collections.synchronizedList(new ArrayList<>());
 
-    public TWSEInitScraper() {
-    }
+    private final Long date;
 
-    public TWSEInitScraper(List<String> urls) {
-        this.urls.addAll(urls);
+    public TWSERoutineScraper(Long date) {
+        this.date = date;
     }
 
     @Override
     public void process(Page page) {
-        page.addTargetRequests(urls);
+
         Html html = page.getHtml();
-        String date = page.getUrl().get().replace("https://www.twse.com.tw/rwd/zh/afterTrading/MI_INDEX?date=", "").replace("&type=ALL&response=html", "");
         List<Selectable> nodes = html.xpath("//table").nodes();
+
         Selectable targetTable = nodes.stream()
                 .filter(s -> s.xpath("//table/thead/tr/th/div/text()").get().contains("每日收盤行情(全部)"))
                 .findFirst()
                 .orElse(null);
 
-        if (targetTable == null) {
+        if(targetTable == null){
             ScraperErrorMessageDO error = new ScraperErrorMessageDO();
-            error.setDate(date);
+            error.setDate(date.toString());
             error.setErrorMessage("本日twse無收盤行情");
             error.setScraperName("TWSE Routine Scraper");
             errors.add(error);
@@ -78,7 +73,7 @@ public class TWSEInitScraper implements PageProcessor {
             String stockName = row.xpath("//tr/td[2]/text()").get();
             dto.setStockName(stockName);
             dto.setMarket(Term.LISTED.getFieldName());
-            dto.setDate(Long.parseLong(date));
+            dto.setDate(date);
 
             //張
             Long tradingPiece = new BigDecimal(
@@ -94,31 +89,27 @@ public class TWSEInitScraper implements PageProcessor {
 
             //開
             String rawOp = row.xpath("//tr/td[6]/text()").get().trim().replace(",", "");
-            try {
+            try{
                 dto.setOpeningPrice(new BigDecimal(rawOp));
-            } catch (Exception ignored) {
-            }
+            }catch (Exception ignored){}
 
             //高
             String rawHigh = row.xpath("//tr/td[7]/text()").get().trim().replace(",", "");
-            try {
+            try{
                 dto.setHighestPrice(new BigDecimal(rawHigh));
-            } catch (Exception ignored) {
-            }
+            }catch (Exception ignored){}
 
             //低
             String rawLow = row.xpath("//tr/td[8]/text()").get().trim().replace(",", "");
-            try {
+            try{
                 dto.setLowestPrice(new BigDecimal(rawLow));
-            } catch (Exception ignored) {
-            }
+            }catch (Exception ignored){}
 
             //收
             String rawClose = row.xpath("//tr/td[9]/text()").get().trim().replace(",", "");
-            try {
+            try{
                 dto.setTodayClosingPrice(new BigDecimal(rawClose));
-            } catch (Exception ignored) {
-            }
+            }catch (Exception ignored){}
 
             results.add(dto);
         }
@@ -130,12 +121,6 @@ public class TWSEInitScraper implements PageProcessor {
     public Site getSite() {
         return site;
     }
-
-    public void setUrls(List<String> urls){
-        this.urls.addAll(urls);
-    }
-
-    public String getFirstUrl(){
-        return urls.getFirst();
-    }
 }
+
+

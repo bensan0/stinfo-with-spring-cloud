@@ -19,9 +19,6 @@ public class GoodInfoPipeline implements Pipeline {
     @Getter
     private final List<DailyStockInfoDto> dtos = Collections.synchronizedList(new ArrayList<>());
 
-    @Getter
-    private final List<ScraperErrorMessageDO> errors = Collections.synchronizedList(new ArrayList<>());
-
     private static final String Trillion = "兆";
     private static final String HundredMillion = "億";
     private static final String TenThousand = "萬";
@@ -34,9 +31,7 @@ public class GoodInfoPipeline implements Pipeline {
     public void process(ResultItems resultItems, Task task) {
 
         List<DailyStockInfoDto> dtos = resultItems.get("dtos");
-        List<ScraperErrorMessageDO> errors = resultItems.get("errors");
         this.dtos.addAll(dtos);
-        this.errors.addAll(errors);
     }
 
     private BigDecimal calculateChineseMoneyUnit(String str) {

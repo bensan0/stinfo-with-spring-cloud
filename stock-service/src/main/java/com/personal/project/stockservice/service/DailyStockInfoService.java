@@ -20,7 +20,7 @@ public interface DailyStockInfoService extends IService<DailyStockInfoDO> {
      * 獲取前一個交易日資料
      * @return
      */
-    Map<String, DailyStockInfoDTO> queryFormer();
+    Map<String, DailyStockInfoDTO> queryFormer(Long date);
 
     /**
      * 初始化任務用, 獲取計算上一個交易日指標所需資料(上個交易日～今天算起之前第241個交易日)

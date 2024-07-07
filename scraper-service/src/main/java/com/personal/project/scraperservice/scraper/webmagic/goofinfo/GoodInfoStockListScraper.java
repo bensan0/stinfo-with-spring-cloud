@@ -46,6 +46,7 @@ public class GoodInfoStockListScraper implements PageProcessor {
         }
 
         page.putField("marketToObj", marketToObj);
+        page.addTargetRequest("https://goodinfo.tw/tw2/StockList.asp?MARKET_CAT=上市&INDUSTRY_CAT=上市全部&SHEET=交易狀況&SHEET2=日&RPT_TIME=最新資料");
     }
 
     @Override

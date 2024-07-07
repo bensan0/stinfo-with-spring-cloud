@@ -13,7 +13,7 @@ public class RemoteStockFallbackFactory implements FallbackFactory<RemoteStockSe
     public RemoteStockService create(Throwable cause) {
         return new RemoteStockService() {
             @Override
-            public InnerResponse<Map<String, DailyStockInfoDto>> getByDate(String getByDateDTO, String token) {
+            public InnerResponse<Map<String, DailyStockInfoDto>> getByDate(Long date, String token) {
                 return null;
             }
 
@@ -29,7 +29,7 @@ public class RemoteStockFallbackFactory implements FallbackFactory<RemoteStockSe
             }
 
             @Override
-            public InnerResponse<Map<String, DailyStockInfoDto>> getFormer(String token) {
+            public InnerResponse<Map<String, DailyStockInfoDto>> getFormer(Long date, String token) {
                 return null;
             }
 

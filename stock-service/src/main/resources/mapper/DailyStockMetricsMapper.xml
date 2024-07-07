@@ -46,7 +46,7 @@
             t.ma_240 as ma240,
             t.last_ma_240_price as lastMA240Price
         from
-            daily_stock_info t
+            daily_stock_metrics t
         where
             t.date = #{date}
         union
@@ -74,11 +74,10 @@
                 from (
                         select *
                         from daily_stock_metrics
-                        where date != #{date} and today_closing_price is not null
+                        where date &lt; #{date} and today_closing_price is not null
                      ) T
-                where T.sequence = 1
             ) t1
-
+        where t1.sequence = 1
     </select>
 
     <select id="query4CalDetail" parameterType="com.personal.project.stockservice.model.dto.Query4CalDTO" resultType="com.personal.project.stockservice.model.dto.DailyStockMetricsDTO">
@@ -127,9 +126,9 @@
                     row_number() over (partition by stock_id order by date desc) as sequence
                 from
                     (
-                        select *
-                        from daily_stock_metric
-                        where 'date' != #{date} or today_closing_price is not null
+                        select s.*
+                        from daily_stock_metrics s
+                        where s.date &lt; #{date} and today_closing_price is not null
                     ) tt
              ) T
         where T.sequence = 1

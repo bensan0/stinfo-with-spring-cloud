@@ -13,6 +13,8 @@ public class DailyStockInfoDTO {
 
     private String stockName;
 
+    private String market;
+
     // yyyyMMdd
     private Long date;
 

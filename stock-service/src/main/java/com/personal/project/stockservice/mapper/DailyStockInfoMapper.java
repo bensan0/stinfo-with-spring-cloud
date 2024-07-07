@@ -12,7 +12,7 @@ public interface DailyStockInfoMapper extends BaseMapper<DailyStockInfoDO> {
 
     List<DailyStockInfoDTO> queryInfo4CalDetail(Query4CalDTO query4CalDTO);
 
-    List<DailyStockInfoDO> queryFormer();
+    List<DailyStockInfoDO> queryFormer(Long date);
 
     List<StockInfo4InitMetricsDTO> query4InitYesterdayMetrics();
 

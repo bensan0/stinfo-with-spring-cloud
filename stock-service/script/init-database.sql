@@ -8,6 +8,7 @@ create table if not exists daily_stock_info
     id                              int unsigned auto_increment                       primary key,
     stock_id                        varchar(6)                      default '0'       not null comment '股票代號',
     stock_name                      varchar(20)                     default ''        not null comment '股名',
+    market                          varchar(3)                      default ''        not null comment '市場',
     date                            bigint unsigned                 default 0         not null comment 'yyyyMMdd',
     today_closing_price             decimal(7,2) unsigned                             null     comment '今日收盤價',
     yesterday_closing_price         decimal(7,2) unsigned                             null     comment '昨日收盤價',

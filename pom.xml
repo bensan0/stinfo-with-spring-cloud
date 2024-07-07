@@ -134,8 +134,9 @@
             <dependency>
                 <groupId>org.seleniumhq.selenium</groupId>
                 <artifactId>selenium-java</artifactId>
-                <version>4.18.1</version>
+                <version>4.22.0</version>
             </dependency>
+
 
             <dependency>
                 <groupId>com.xuxueli</groupId>

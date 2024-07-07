@@ -43,7 +43,7 @@ public class DailyStockInfoServiceImpl extends ServiceImpl<DailyStockInfoMapper,
     public boolean saveAll(List<DailyStockInfoDTO> data) {
         List<DailyStockInfoDO> pojoList = data.stream().map(dto -> BeanUtil.copyProperties(dto, DailyStockInfoDO.class)).toList();
 
-        return applicationContext.getBean(DailyStockInfoService.class).saveBatch(pojoList);
+        return applicationContext.getBean(DailyStockInfoService.class).saveOrUpdateBatch(pojoList);
     }
 
     @Override
@@ -57,8 +57,8 @@ public class DailyStockInfoServiceImpl extends ServiceImpl<DailyStockInfoMapper,
     }
 
     @Override
-    public Map<String, DailyStockInfoDTO> queryFormer() {
-        List<DailyStockInfoDO> dailyStockInfoDOs = baseMapper.queryFormer();
+    public Map<String, DailyStockInfoDTO> queryFormer(Long date) {
+        List<DailyStockInfoDO> dailyStockInfoDOs = baseMapper.queryFormer(date);
 
         return dailyStockInfoDOs.stream()
                 .map(d -> BeanUtil.copyProperties(d, DailyStockInfoDTO.class))

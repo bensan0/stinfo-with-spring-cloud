@@ -59,7 +59,7 @@ public class ReportJob {
             return;
         }
 
-        InnerResponse<CalMetricsUnionDTO> response = remoteStockService.getCalMetricsInfo(new Query4CalMetricsDTO(Long.parseLong(now.format(DatePattern.PURE_DATE_FORMATTER))), null);
+        InnerResponse<CalMetricsUnionDTO> response = remoteStockService.getCalMetricsInfo(new Query4CalMetricsDTO(Long.parseLong(nowStr)), null);
         Map<String, List<DailyStockMetricsDTO>> stockIdToMetrics = response.getData().getStockIdToMetrics();
         Map<String, List<DailyStockInfoDTO>> stockIdToInfos = response.getData().getStockIdToInfos();
         List<DailyStockMetricsDTO> results = new ArrayList<>();
@@ -84,9 +84,10 @@ public class ReportJob {
                 yesterdayMetrics = metrics.getLast();
             }
 
+            todayMetrics.setTodayClosingPrice(v.getFirst().getTodayClosingPrice());
+
             //今日上市櫃
             if(v.size() == 1){
-                todayMetrics.setTodayClosingPrice(v.getFirst().getTodayClosingPrice());
                 results.add(todayMetrics);
                 return;
             }
@@ -133,7 +134,7 @@ public class ReportJob {
 
         //call feign save
         InnerResponse<ObjectUtils.Null> saved = remoteStockService.saveMetrics(results, null);
-
+        System.out.println("儲存完畢");
         if (!ResponseCode.Success.getCode().equals(saved.getCode())) {
             log.error("Calculate metrics save metrics failed");
             generateAndSaveReportErrorMessage(DAILY_STOCK_METRICS, saved.getMsg(), null, null, JSONUtil.toJsonStr(saved));
@@ -171,19 +172,30 @@ public class ReportJob {
             List<DailyStockMetricsDTO> metrics = stockIdToMetrics.get(k);
             metrics.sort(Comparator.comparingLong(DailyStockMetricsDTO::getDate).reversed());
             List<DailyStockInfoDetailDTO> details = stockIdToDetails.get(k);
-            DailyStockInfoDetailDTO todayDetail;
-            DailyStockInfoDetailDTO yesterdayDetail;
+            details.sort(Comparator.comparingLong(DailyStockInfoDetailDTO::getDate).reversed());
+            DailyStockInfoDetailDTO todayDetail = null;
+            DailyStockInfoDetailDTO yesterdayDetail = null;
 
             //本日有沒有提前按過
-            if (details.size() == 1) {
+            //0 = 沒提前按 梅昨天
+            //1 = 沒提前按 友昨天 or 提前按 梅昨天
+            //2 = 提前按 友昨天
+            if (details.size() == 0) {
                 todayDetail = new DailyStockInfoDetailDTO();
                 todayDetail.setStockId(k);
                 todayDetail.setDate(Long.parseLong(nowStr));
-                yesterdayDetail = details.getFirst();
-            } else {
-                details.sort(Comparator.comparingLong(DailyStockInfoDetailDTO::getDate).reversed());
+            } else if(details.size() == 1){
+                if(details.getFirst().getDate() == Long.parseLong(nowStr)){
+                    todayDetail = details.getFirst();
+                }else{
+                    todayDetail = new DailyStockInfoDetailDTO();
+                    todayDetail.setStockId(k);
+                    todayDetail.setDate(Long.parseLong(nowStr));
+                    yesterdayDetail = details.getFirst();
+                }
+            }else{
                 todayDetail = details.getFirst();
-                yesterdayDetail = details.getLast();
+                yesterdayDetail = details.get(1);
             }
 
             //本日有沒有開市
@@ -195,17 +207,42 @@ public class ReportJob {
                 results.add(todayDetail);
                 return;
             } else {
-                todayDetail.setTodayClosingPrice(v.removeFirst().getTodayClosingPrice());
+                todayDetail.setTodayClosingPrice(v.getFirst().getTodayClosingPrice());
             }
+
+            DailyStockInfoDTO yesterdayInfo = null;
+            try{
+                yesterdayInfo = v.get(1);
+            }catch (Exception ignored){}
+
+            DailyStockInfoDTO twoDaysAgoInfo = null;
+            try{
+                twoDaysAgoInfo = v.get(2);
+            }catch (Exception ignored){}
+
+            DailyStockInfoDTO fourDaysAgoInfo = null;
+            try{
+                fourDaysAgoInfo = v.get(3);
+            }catch (Exception ignored){}
+
+            DailyStockMetricsDTO todayMetrics = null;
+            try{
+                todayMetrics = metrics.getFirst();
+            }catch (Exception ignored){}
+
+            DailyStockMetricsDTO yesterdayMetrics = null;
+            try{
+                yesterdayMetrics = metrics.get(1);
+            }catch (Exception ignored){}
 
             calculator.cal(
                     todayDetail,
                     v.getFirst(),
-                    v.get(1),
-                    v.get(2),
-                    v.get(3),
-                    metrics.getFirst(),
-                    metrics.getLast(),
+                    yesterdayInfo,
+                    twoDaysAgoInfo,
+                    fourDaysAgoInfo,
+                    todayMetrics,
+                    yesterdayMetrics,
                     yesterdayDetail
             );
 

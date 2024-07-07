@@ -25,11 +25,11 @@
             t.upper_shadow as upperShadow,
             t.lower_shadow as lowerShadow,
             t.real_body as realBody,
-            t.tags as tags;
+            t.tags as tags
         from
             daily_stock_info_detail t
         where
-            date = #{date}
+            t.date = #{date}
         union
         select
             T.id as id,
@@ -39,19 +39,19 @@
             T.upper_shadow as upperShadow,
             T.lower_shadow as lowerShadow,
             T.real_body as realBody,
-            T.tags as tags;
+            T.tags as tags
         from (
-                select
-                    tt.*,
-                    row_number() over (partition by stock_id order by date desc) as sequence
-                from
-                    (
-                        select *
-                        from daily_stock_info_detail
-                        where 'date' != #{date} and today_closing_price != null
-                    ) tt
+            select
+                tt.*,
+                row_number() over (partition by stock_id order by date desc) as sequence
+            from
+                (
+                     SELECT s.*
+                     from daily_stock_info_detail s
+                     WHERE s.date &lt; 20240709 and today_closing_price IS not null
+                ) tt
 
-             ) T
+        ) T
         where T.sequence = 1
     </select>
 

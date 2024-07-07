@@ -15,7 +15,7 @@ import java.util.Map;
 public interface RemoteStockService {
 
     @PostMapping(value = "/feign/stock/query-4-cal-metrics", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    InnerResponse<CalMetricsUnionDTO> getCalMetricsInfo(@RequestBody Query4CalMetricsDTO query4CalMetricsDto, @RequestHeader(name = "token") String token);
+    InnerResponse<CalMetricsUnionDTO> getCalMetricsInfo(@RequestBody Query4CalMetricsDTO query4CalMetricsDTO, @RequestHeader(name = "token") String token);
 
     @PostMapping(value = "/feign/stock/manual/query-4-cal-metrics", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     InnerResponse<CalMetricsUnionDTO> getCalMetricsInfo(@RequestBody Query4ManualCalDTO query4ManualCalDTO, @RequestHeader(name = "token") String token);
@@ -24,7 +24,7 @@ public interface RemoteStockService {
     InnerResponse<ObjectUtils.Null> saveMetrics(@RequestBody List<DailyStockMetricsDTO> metrics, @RequestHeader(name = "token") String token);
 
     @PostMapping(value = "/feign/stock/query-4-cal-detail", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    InnerResponse<CalDetailUnionDTO> getCalDetailInfo(@RequestBody Query4CalMetricsDTO query4CalMetricsDTO, @RequestHeader(name = "token") String token);
+    InnerResponse<CalDetailUnionDTO> getCalDetailInfo(@RequestBody Query4CalMetricsDTO query4CalDetailDTO, @RequestHeader(name = "token") String token);
 
     @PostMapping(value = "/feign/stock/manual/query-4-cal-detail", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     InnerResponse<CalDetailUnionDTO> getCalDetailInfo(@RequestBody Query4ManualCalDTO Query4ManualCalDTO, @RequestHeader(name = "token") String token);
@@ -44,7 +44,7 @@ public interface RemoteStockService {
     @GetMapping(value = "/feign/stock/query-4-init-today-detail", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     InnerResponse<Query4CalInitTodayDetailDTO> get4CalInitTodayDetail(@RequestHeader(name = "token") String token);
 
-    @GetMapping(value = "/feign/stock/query-info-by-cond", consumes = MediaType.APPLICATION_JSON_VALUE)
-    InnerResponse<List<DailyStockInfoDTO>> getInfosByCond(@RequestParam Long date, String stockId);
+    @GetMapping(value = "/feign/stock/query-info-by-cond")
+    InnerResponse<List<DailyStockInfoDTO>> getInfosByCond(@RequestParam Long date, @RequestParam String stockId);
 
 }

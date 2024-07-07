@@ -45,11 +45,10 @@ public class FeignController {
         return InnerResponse.ok(ids);
     }
 
-    @PostMapping("/get-by-date")
-    public InnerResponse<Map<String, DailyStockInfoDTO>> getByDate(@RequestBody String getByDateDTO) {
-        JSONObject parsedObj = JSONUtil.parseObj(getByDateDTO);
-        String date = parsedObj.get("date").toString();
-        Map<String, DailyStockInfoDTO> stockIdToInfo = dailyStockInfoService.queryByDate(Long.parseLong(date));
+    @GetMapping("/get-by-date")
+    public InnerResponse<Map<String, DailyStockInfoDTO>> getByDate(@RequestParam Long date) {
+
+        Map<String, DailyStockInfoDTO> stockIdToInfo = dailyStockInfoService.queryByDate(date);
 
         return InnerResponse.ok(stockIdToInfo);
     }
@@ -83,8 +82,8 @@ public class FeignController {
      * @return
      */
     @GetMapping("/get-former")
-    public InnerResponse<Map<String, DailyStockInfoDTO>> getFormer() {
-        Map<String, DailyStockInfoDTO> idToDTO = dailyStockInfoService.queryFormer();
+    public InnerResponse<Map<String, DailyStockInfoDTO>> getFormer(@RequestParam Long date) {
+        Map<String, DailyStockInfoDTO> idToDTO = dailyStockInfoService.queryFormer(date);
 
         return InnerResponse.ok(idToDTO);
     }
@@ -147,13 +146,11 @@ public class FeignController {
      * 新增爬蟲服務當日數據
      *
      * @param data
-     * @param token
      * @return
      */
     @PostMapping("/save-all")
     public InnerResponse<ObjectUtils.Null> saveAll(
-            @RequestBody List<DailyStockInfoDTO> data,
-            @RequestHeader String token) {
+            @RequestBody List<DailyStockInfoDTO> data) {
         try {
             boolean saved = dailyStockInfoService.saveAll(data);
             if (saved) {
@@ -177,11 +174,11 @@ public class FeignController {
      */
     @PostMapping("/query-4-cal-metrics")
     public InnerResponse<CalMetricsUnionDTO> query4CalMetrics(
-            @RequestBody Query4CalDTO query4CalDTO
+            @RequestBody Query4CalDTO query4CalMetricsDTO
     ) {
         try {
-            Map<String, List<DailyStockMetricsDTO>> stockIdToMetrics = dailyStockMetricsService.query4CalMetrics(query4CalDTO);
-            Map<String, List<DailyStockInfoDTO>> stockIdToInfos = dailyStockInfoService.query4CalMetrics(query4CalDTO);
+            Map<String, List<DailyStockMetricsDTO>> stockIdToMetrics = dailyStockMetricsService.query4CalMetrics(query4CalMetricsDTO);
+            Map<String, List<DailyStockInfoDTO>> stockIdToInfos = dailyStockInfoService.query4CalMetrics(query4CalMetricsDTO);
 
             return InnerResponse.ok(new CalMetricsUnionDTO(stockIdToMetrics, stockIdToInfos));
         } catch (Exception e) {
@@ -215,12 +212,12 @@ public class FeignController {
 
     @PostMapping("/query-4-cal-detail")
     public InnerResponse<CalDetailUnionDTO> query4CalDetail(
-            @RequestBody Query4CalDTO query4CalDto
+            @RequestBody Query4CalDTO query4CalDetailDTO
     ) {
         try {
-            Map<String, List<DailyStockInfoDTO>> stockIdToInfos = dailyStockInfoService.queryInfo4CalDetail(query4CalDto);
-            Map<String, List<DailyStockMetricsDTO>> stockIdToMetrics = dailyStockMetricsService.query4CalDetail(query4CalDto);
-            Map<String, List<DailyStockInfoDetailDTO>> stockIdToDetails = dailyStockInfoDetailService.query4CalDetail(query4CalDto);
+            Map<String, List<DailyStockInfoDTO>> stockIdToInfos = dailyStockInfoService.queryInfo4CalDetail(query4CalDetailDTO);
+            Map<String, List<DailyStockMetricsDTO>> stockIdToMetrics = dailyStockMetricsService.query4CalDetail(query4CalDetailDTO);
+            Map<String, List<DailyStockInfoDetailDTO>> stockIdToDetails = dailyStockInfoDetailService.query4CalDetail(query4CalDetailDTO);
 
             CalDetailUnionDTO dto = new CalDetailUnionDTO(stockIdToInfos, stockIdToMetrics, stockIdToDetails);
 
