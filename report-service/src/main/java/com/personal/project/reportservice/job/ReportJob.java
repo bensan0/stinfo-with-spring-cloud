@@ -10,6 +10,7 @@ import com.personal.project.commoncore.response.InnerResponse;
 import com.personal.project.reportservice.model.dto.*;
 import com.personal.project.reportservice.model.entity.ReportErrorMessageDO;
 import com.personal.project.reportservice.remote.RemoteStockService;
+import com.personal.project.reportservice.service.GenerateReportService;
 import com.personal.project.reportservice.service.ReportErrorMessageService;
 import com.personal.project.reportservice.util.DailyDetailCalculator;
 import com.personal.project.reportservice.util.DailyMetricsCalculator;
@@ -34,10 +35,12 @@ public class ReportJob {
 
     private final RemoteStockService remoteStockService;
     private final ReportErrorMessageService reportErrorMessageService;
+    private final GenerateReportService generateReportService;
 
-    public ReportJob(RemoteStockService remoteStockService, ReportErrorMessageService reportErrorMessageService) {
+    public ReportJob(RemoteStockService remoteStockService, ReportErrorMessageService reportErrorMessageService, GenerateReportService generateReportService) {
         this.remoteStockService = remoteStockService;
         this.reportErrorMessageService = reportErrorMessageService;
+        this.generateReportService = generateReportService;
     }
 
     /**
@@ -64,10 +67,10 @@ public class ReportJob {
 
         stockIdToInfos.forEach((k, v) -> {
             v.sort(Comparator.comparingLong(DailyStockInfoDTO::getDate).reversed());
-            DailyStockMetricsDTO todayMetrics;
-            DailyStockMetricsDTO yesterdayMetrics;
             List<DailyStockMetricsDTO> metrics = stockIdToMetrics.get(k);
             metrics.sort(Comparator.comparingLong(DailyStockMetricsDTO::getDate).reversed());
+            DailyStockMetricsDTO todayMetrics;
+            DailyStockMetricsDTO yesterdayMetrics;
 
             //metrics任務沒被手動提前按
             if (metrics.size() == 1) {
@@ -79,6 +82,13 @@ public class ReportJob {
             } else {
                 todayMetrics = metrics.getFirst();
                 yesterdayMetrics = metrics.getLast();
+            }
+
+            //今日上市櫃
+            if(v.size() == 1){
+                todayMetrics.setTodayClosingPrice(v.getFirst().getTodayClosingPrice());
+                results.add(todayMetrics);
+                return;
             }
 
             //此個股今天沒開市
@@ -100,15 +110,23 @@ public class ReportJob {
                 return;
             }
 
-            metricsCalculator.cal(todayMetrics,
-                    BeanUtil.copyProperties(v.getFirst(), StockInfo4InitMetricsDTO.class),
-                    BeanUtil.copyProperties(v.get(1), StockInfo4InitMetricsDTO.class),
-                    BeanUtil.copyProperties(v.get(2), StockInfo4InitMetricsDTO.class),
-                    BeanUtil.copyProperties(v.get(3), StockInfo4InitMetricsDTO.class),
-                    BeanUtil.copyProperties(v.get(4), StockInfo4InitMetricsDTO.class),
+            //因yesterday metrics一旦有值為null, 則往後的metrics並不會重新計算而導致該值永遠為null, 因此先行檢查,
+            //若有發現值為null, 則以重新獲取過去info計算本日metrics
+            if(yesterdayMetrics.getMa5() == null || yesterdayMetrics.getMa10() == null || yesterdayMetrics.getMa20() == null || yesterdayMetrics.getMa60() == null) {
+                DailyStockMetricsDTO dailyStockMetricsDTO = generateReportService.generateRoutineMetrics(k, Long.parseLong(nowStr));
+                dailyStockMetricsDTO.setId(todayMetrics.getId());
+                todayMetrics = dailyStockMetricsDTO;
+            }else{
+                metricsCalculator.cal(todayMetrics,
+                        BeanUtil.copyProperties(v.getFirst(), StockInfo4InitMetricsDTO.class),
+                        BeanUtil.copyProperties(v.get(1), StockInfo4InitMetricsDTO.class),
+                        BeanUtil.copyProperties(v.get(2), StockInfo4InitMetricsDTO.class),
+                        BeanUtil.copyProperties(v.get(3), StockInfo4InitMetricsDTO.class),
+                        BeanUtil.copyProperties(v.get(4), StockInfo4InitMetricsDTO.class),
 //                    BeanUtil.copyProperties(v.get(5), StockInfo4InitMetricsDTO.class),
 //                    BeanUtil.copyProperties(v.getLast(), StockInfo4InitMetricsDTO.class),
-                    yesterdayMetrics);
+                        yesterdayMetrics);
+            }
 
             results.add(todayMetrics);
         });

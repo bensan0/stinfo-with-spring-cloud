@@ -569,10 +569,79 @@ public class GenerateReportServiceImpl implements GenerateReportService {
         return remoteStockService.saveDetail(results, null);
     }
 
-    public static void main(String[] args) {
-        List<Integer> integers = List.of(1, 2, 3, 4, 5);
-        integers.get(5);
-        System.out.println(integers.subList(0, 6));
+    @Override
+    public DailyStockMetricsDTO generateRoutineMetrics(String stockId, Long date) {
+        InnerResponse<List<DailyStockInfoDTO>> response = remoteStockService.getInfosByCond(date, stockId);
 
+        List<DailyStockInfoDTO> infos = response.getData();
+
+        DailyStockMetricsDTO dto = new DailyStockMetricsDTO();
+        dto.setStockId(stockId);
+        dto.setStockName(infos.getFirst().getStockName());
+        dto.setDate(date);
+        dto.setTodayClosingPrice(infos.getFirst().getTodayClosingPrice());
+
+        try{
+            dto.setMa5(
+                    infos.subList(0, 5)
+                            .stream()
+                            .map(DailyStockInfoDTO::getTodayClosingPrice)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add)
+                            .divide(BigDecimal.valueOf(5), 2, RoundingMode.FLOOR)
+            );
+            dto.setLastMA5price(infos.getFirst().getTodayClosingPrice());
+        }catch (Exception ignored){
+            return dto;
+        }
+
+        try{
+            dto.setMa10(
+                    infos.subList(0,10)
+                            .stream()
+                            .map(DailyStockInfoDTO::getTodayClosingPrice)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add)
+                            .divide(BigDecimal.valueOf(10), 2, RoundingMode.FLOOR)
+            );
+            dto.setLastMA10price(infos.get(9).getTodayClosingPrice());
+        }catch (Exception ignored){
+            return dto;
+        }
+
+        try{
+            dto.setMa20(
+                    infos.subList(0,20)
+                            .stream()
+                            .map(DailyStockInfoDTO::getTodayClosingPrice)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add)
+                            .divide(BigDecimal.valueOf(20), 2, RoundingMode.FLOOR)
+            );
+            dto.setLastMA20price(infos.get(19).getTodayClosingPrice());
+        }catch (Exception ignored){
+            return dto;
+        }
+
+        try{
+            dto.setMa60(
+                    infos.subList(0,60)
+                            .stream()
+                            .map(DailyStockInfoDTO::getTodayClosingPrice)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add)
+                            .divide(BigDecimal.valueOf(60), 2, RoundingMode.FLOOR)
+            );
+            dto.setLastMA60price(infos.get(59).getTodayClosingPrice());
+        }catch (Exception ignored){
+            return dto;
+        }
+
+        return dto;
+    }
+
+    public static void main(String[] args) {
+        List<BigDecimal> integers = List.of(BigDecimal.ONE, BigDecimal.TWO, BigDecimal.valueOf(3), BigDecimal.valueOf(4), BigDecimal.valueOf(5));
+        BigDecimal divide = integers.stream()
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+//                .divide(BigDecimal.valueOf(integers.size()), 4, RoundingMode.FLOOR);
+
+        System.out.println(divide);
     }
 }

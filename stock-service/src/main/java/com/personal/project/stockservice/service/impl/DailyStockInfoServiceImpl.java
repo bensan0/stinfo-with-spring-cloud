@@ -142,4 +142,20 @@ public class DailyStockInfoServiceImpl extends ServiceImpl<DailyStockInfoMapper,
                 .map(e -> BeanUtil.copyProperties(e, DailyStockInfoDTO.class))
                 .collect(Collectors.toMap(DailyStockInfoDTO::getStockId, Function.identity()));
     }
+
+    @Override
+    public List<DailyStockInfoDTO> queryByDateAndId(Long date, String stockId) {
+        LambdaQueryWrapper<DailyStockInfoDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(DailyStockInfoDO::getStockId, stockId)
+                .isNotNull(DailyStockInfoDO::getTodayClosingPrice)
+                .le(DailyStockInfoDO::getDate, date)
+                .orderByDesc(DailyStockInfoDO::getDate)
+                .last("limit 240");
+
+        List<DailyStockInfoDO> dailyStockInfoDOs = dailyStockInfoMapper.selectList(wrapper);
+
+        return dailyStockInfoDOs.stream()
+                .map(e->BeanUtil.copyProperties(e, DailyStockInfoDTO.class))
+                .toList();
+    }
 }

@@ -59,4 +59,6 @@ public interface DailyStockInfoService extends IService<DailyStockInfoDO> {
     Map<String, List<DailyStockInfoDTO>> queryInfo4CalDetail(Query4CalDTO query4CalDto);
 
     Map<String, DailyStockInfoDTO> queryByDate(long date);
+
+    List<DailyStockInfoDTO> queryByDateAndId(Long date, String stockId);
 }

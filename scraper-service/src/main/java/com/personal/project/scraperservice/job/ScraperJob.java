@@ -637,12 +637,11 @@ public class ScraperJob {
         Spider.create(scraper)
                 .addUrl("https://goodinfo.tw/tw2/StockList.asp?MARKET_CAT=上櫃&INDUSTRY_CAT=上櫃全部&SHEET=交易狀況&SHEET2=日&RPT_TIME=最新資料", "https://goodinfo.tw/tw2/StockList.asp?MARKET_CAT=上市&INDUSTRY_CAT=上市全部&SHEET=交易狀況&SHEET2=日&RPT_TIME=最新資料")
                 .addPipeline(pipeline)
-                //開3個執行緒執行
                 .thread(1)
                 .setDownloader(
                         new SeleniumDownloader(
                                 classpath + "driver/chrome-driver-mac-arm64/chromedriver",
-                                Duration.ofSeconds(5),
+                                Duration.ofSeconds(15),
                                 ExpectedConditions.visibilityOfElementLocated(By.id("tblStockList")),
                                 new HashSet<>()
                         )
@@ -703,10 +702,5 @@ public class ScraperJob {
         InnerResponse<ObjectUtils.Null> innerResponse = remoteStockService.saveAll(dtos, null);
 
         log.info("【GoodInfo爬蟲結束】共抓取{}筆資料，入庫回應: {}", dtos.size(), JSON.toJSON(innerResponse));
-    }
-
-    public static void main(String[] args) {
-        List<Integer> integers = List.of(1, 2, 3, 4, 5);
-        System.out.println(integers.subList(3, 0));
     }
 }

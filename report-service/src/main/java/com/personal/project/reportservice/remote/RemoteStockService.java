@@ -6,10 +6,7 @@ import com.personal.project.reportservice.model.dto.*;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -46,5 +43,8 @@ public interface RemoteStockService {
 
     @GetMapping(value = "/feign/stock/query-4-init-today-detail", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     InnerResponse<Query4CalInitTodayDetailDTO> get4CalInitTodayDetail(@RequestHeader(name = "token") String token);
+
+    @GetMapping(value = "/feign/stock/query-info-by-cond", consumes = MediaType.APPLICATION_JSON_VALUE)
+    InnerResponse<List<DailyStockInfoDTO>> getInfosByCond(@RequestParam Long date, String stockId);
 
 }

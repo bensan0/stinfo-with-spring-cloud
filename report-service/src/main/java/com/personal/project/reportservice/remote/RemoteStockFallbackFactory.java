@@ -66,6 +66,11 @@ public class RemoteStockFallbackFactory implements FallbackFactory<RemoteStockSe
             public InnerResponse<Query4CalInitTodayDetailDTO> get4CalInitTodayDetail(String token) {
                 return null;
             }
+
+            @Override
+            public InnerResponse<List<DailyStockInfoDTO>> getInfosByCond(Long date, String stockId) {
+                return null;
+            }
         };
     }
 }

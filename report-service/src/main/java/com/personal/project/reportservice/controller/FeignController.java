@@ -2,12 +2,17 @@ package com.personal.project.reportservice.controller;
 
 import com.personal.project.commoncore.constants.ResponseCode;
 import com.personal.project.commoncore.response.InnerResponse;
+import com.personal.project.reportservice.model.dto.DailyStockInfoDTO;
 import com.personal.project.reportservice.service.GenerateReportService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/feign/report")
@@ -20,6 +25,15 @@ public class FeignController {
         this.generateReportService = generateReportService;
     }
 
+    @PostMapping("/clean-init-twse-info")
+    public void cleanInitTWSE(@RequestBody Map<String, List<DailyStockInfoDTO>> stockIdToDTOs){
+
+    }
+
+    @PostMapping("/clean-init-tpex-info")
+    public void cleanInitTPEX(@RequestBody Map<String, List<DailyStockInfoDTO>> stockIdToDTOs){
+
+    }
 
     @PostMapping("/init-yesterday-report")
     public InnerResponse<ObjectUtils.Null> calInitYesterdayReport() {

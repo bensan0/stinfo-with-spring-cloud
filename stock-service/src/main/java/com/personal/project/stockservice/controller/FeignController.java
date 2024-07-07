@@ -254,4 +254,14 @@ public class FeignController {
             return InnerResponse.failed(ResponseCode.Failed.getCode(), e.getClass().getSimpleName());
         }
     }
+
+    @GetMapping("/query-info-by-cond")
+    public InnerResponse<List<DailyStockInfoDTO>> queryInfoByCond(
+            @RequestParam Long date,
+            @RequestParam String stockId
+    ){
+        List<DailyStockInfoDTO> result = dailyStockInfoService.queryByDateAndId(date, stockId);
+
+        return InnerResponse.ok(result);
+    }
 }

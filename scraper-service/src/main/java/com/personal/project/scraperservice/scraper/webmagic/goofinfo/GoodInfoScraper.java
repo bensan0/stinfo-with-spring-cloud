@@ -122,7 +122,7 @@ public class GoodInfoScraper implements PageProcessor {
 
             } catch (Exception e) {
                 ScraperErrorMessageDO error = new ScraperErrorMessageDO();
-                error.setErrorMessage("GoodInfo scraper 爬蟲出現錯誤");
+                error.setErrorMessage("GoodInfo scraper 解析頁面出現錯誤");
                 error.setDate(LocalDate.now().toString());
                 error.setException(e.getClass().getSimpleName());
                 error.setExceptionMessage(e.getMessage());
