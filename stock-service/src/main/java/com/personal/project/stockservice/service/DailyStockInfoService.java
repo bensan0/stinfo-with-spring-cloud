@@ -14,7 +14,7 @@ public interface DailyStockInfoService extends IService<DailyStockInfoDO> {
 
     boolean saveAll(List<DailyStockInfoDTO> data);
 
-    List<String> queryExist();
+    Map<String, String> queryExist();
 
     /**
      * 獲取前一個交易日資料
@@ -61,4 +61,8 @@ public interface DailyStockInfoService extends IService<DailyStockInfoDO> {
     Map<String, DailyStockInfoDTO> queryByDate(long date);
 
     List<DailyStockInfoDTO> queryByDateAndId(Long date, String stockId);
+
+    Map<String, List<DailyStockInfoDTO>> query4CalRealTimeMetrics(Long date);
+
+    Map<String, List<DailyStockInfoDTO>> queryInfo4CalRealTimeDetail(Long date);
 }

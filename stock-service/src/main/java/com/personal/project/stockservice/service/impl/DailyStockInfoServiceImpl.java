@@ -47,13 +47,13 @@ public class DailyStockInfoServiceImpl extends ServiceImpl<DailyStockInfoMapper,
     }
 
     @Override
-    public List<String> queryExist() {
-        LambdaQueryWrapper<DailyStockInfoDO> wrapper  = new LambdaQueryWrapper();
-        wrapper.select(DailyStockInfoDO::getStockId);
+    public Map<String, String> queryExist() {
+        LambdaQueryWrapper<DailyStockInfoDO> wrapper  = new LambdaQueryWrapper<>();
+        wrapper.select(DailyStockInfoDO::getStockId, DailyStockInfoDO::getMarket);
         wrapper.groupBy(DailyStockInfoDO::getStockId);
         List<DailyStockInfoDO> dailyStockInfoDOS = dailyStockInfoMapper.selectList(wrapper);
 
-        return dailyStockInfoDOS.stream().map(DailyStockInfoDO::getStockId).toList();
+        return dailyStockInfoDOS.stream().collect(Collectors.toMap(DailyStockInfoDO::getStockId, DailyStockInfoDO::getMarket));
     }
 
     @Override
@@ -157,5 +157,23 @@ public class DailyStockInfoServiceImpl extends ServiceImpl<DailyStockInfoMapper,
         return dailyStockInfoDOs.stream()
                 .map(e->BeanUtil.copyProperties(e, DailyStockInfoDTO.class))
                 .toList();
+    }
+
+    @Override
+    public Map<String, List<DailyStockInfoDTO>> query4CalRealTimeMetrics(Long date) {
+        List<DailyStockInfoDTO> dtos = baseMapper.query4RealTimeMetrics(date);
+        Map<String, List<DailyStockInfoDTO>> stockIdToDTOs = new HashMap<>();
+        dtos.forEach(d->stockIdToDTOs.computeIfAbsent(d.getStockId(), k->new ArrayList<>()).add(d));
+
+        return stockIdToDTOs;
+    }
+
+    @Override
+    public Map<String, List<DailyStockInfoDTO>> queryInfo4CalRealTimeDetail(Long date) {
+        List<DailyStockInfoDTO> dtos = baseMapper.query4RealTimeDetail(date);
+        Map<String, List<DailyStockInfoDTO>> stockIdToDTOs = new HashMap<>();
+        dtos.forEach(d->stockIdToDTOs.computeIfAbsent(d.getStockId(), k->new ArrayList<>()).add(d));
+
+        return stockIdToDTOs;
     }
 }

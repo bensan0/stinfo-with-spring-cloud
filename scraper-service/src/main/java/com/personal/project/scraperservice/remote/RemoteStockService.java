@@ -28,5 +28,5 @@ public interface RemoteStockService {
     InnerResponse<Map<String, DailyStockInfoDto>> getFormer(@RequestParam Long date, @RequestHeader("token") String token);
 
     @GetMapping(value = "/feign/stock/get-exists", consumes = MediaType.APPLICATION_JSON_VALUE)
-    InnerResponse<List<String>> getExist();
+    InnerResponse<Map<String, String>> getExist();
 }

@@ -10,6 +10,7 @@ import com.personal.project.reportservice.model.dto.DailyStockMetricsDTO;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class DailyDetailCalculator {
@@ -43,7 +44,7 @@ public class DailyDetailCalculator {
         BigDecimal range = todayInfo.getHighestPrice().subtract(todayInfo.getLowestPrice());
         if (range.compareTo(BigDecimal.ZERO) != 0) {
             BigDecimal upperShadow = todayInfo.getHighestPrice()
-                    .subtract(todayInfo.getOpeningPrice().max(todayInfo.getOpeningPrice()))
+                    .subtract(todayInfo.getOpeningPrice().max(todayInfo.getTodayClosingPrice()))
                     .divide(range, 4, RoundingMode.FLOOR)
                     .multiply(BigDecimal.valueOf(100));
             result.setUpperShadow(upperShadow);
@@ -122,21 +123,23 @@ public class DailyDetailCalculator {
             }
 
             //交易額連
-            String todayAmountStatus = judgeStatus(todayInfo.getTodayTradingVolumeMoney().subtract(yesterdayInfo.getTodayTradingVolumeMoney()));
-            if (todayAmountStatus.equals(yesterdayTags.getConsecutiveTradingAmount()[1])) {
-                todayTags.setConsecutiveTradingAmount(
-                        new String[]{
-                                String.valueOf(Long.parseLong(yesterdayTags.getConsecutiveTradingAmount()[0]) + 1),
-                                todayAmountStatus
-                        }
-                );
-            } else {
-                todayTags.setConsecutiveTradingAmount(
-                        new String[]{
-                                "1",
-                                todayAmountStatus
-                        }
-                );
+            if(todayInfo.getTodayTradingVolumeMoney() != null){ //考量到即時報價沒有交易額
+                String todayAmountStatus = judgeStatus(todayInfo.getTodayTradingVolumeMoney().subtract(yesterdayInfo.getTodayTradingVolumeMoney()));
+                if (todayAmountStatus.equals(yesterdayTags.getConsecutiveTradingAmount()[1])) {
+                    todayTags.setConsecutiveTradingAmount(
+                            new String[]{
+                                    String.valueOf(Long.parseLong(yesterdayTags.getConsecutiveTradingAmount()[0]) + 1),
+                                    todayAmountStatus
+                            }
+                    );
+                } else {
+                    todayTags.setConsecutiveTradingAmount(
+                            new String[]{
+                                    "1",
+                                    todayAmountStatus
+                            }
+                    );
+                }
             }
         }
     }
@@ -166,18 +169,22 @@ public class DailyDetailCalculator {
                     }
             );
 
-            BigDecimal vs2DaysAmountDiff = todayInfo.getTodayTradingVolumeMoney().subtract(twoDaysAgoInfo.getTodayTradingVolumeMoney());
-            String vs2DaysAmountStatus = judgeStatus(vs2DaysAmountDiff);
-            todayTags.setTradingAmountVS2DaysAgo(
-                    new String[]{
-                            vs2DaysAmountStatus,
-                            vs2DaysAmountDiff.divide(
-                                    twoDaysAgoInfo.getTodayTradingVolumeMoney().compareTo(BigDecimal.ZERO) == 0 ? BigDecimal.ONE : twoDaysAgoInfo.getTodayTradingVolumeMoney(),
-                                    4,
-                                    RoundingMode.FLOOR
-                            ).toPlainString()
-                    }
-            );
+            try {//即時報價沒有交易額
+                BigDecimal vs2DaysAmountDiff = todayInfo.getTodayTradingVolumeMoney().subtract(twoDaysAgoInfo.getTodayTradingVolumeMoney());
+                String vs2DaysAmountStatus = judgeStatus(vs2DaysAmountDiff);
+                todayTags.setTradingAmountVS2DaysAgo(
+                        new String[]{
+                                vs2DaysAmountStatus,
+                                vs2DaysAmountDiff.divide(
+                                        twoDaysAgoInfo.getTodayTradingVolumeMoney().compareTo(BigDecimal.ZERO) == 0 ? BigDecimal.ONE : twoDaysAgoInfo.getTodayTradingVolumeMoney(),
+                                        4,
+                                        RoundingMode.FLOOR
+                                ).toPlainString()
+                        }
+                );
+            } catch (Exception ignored) {
+            }
+
         } else {
             todayTags.setPriceVS2DaysAgo(new String[]{CommonTerm.UNCHANGED, "0"});
             todayTags.setTradingVolumeVS2DaysAgo(new String[]{CommonTerm.UNCHANGED, "0"});
@@ -208,18 +215,21 @@ public class DailyDetailCalculator {
                     }
             );
 
-            BigDecimal vs4DaysAmountDiff = todayInfo.getTodayTradingVolumeMoney().subtract(fourDaysAgoInfo.getTodayTradingVolumeMoney());
-            String vs4DaysAmountStatus = judgeStatus(vs4DaysAmountDiff);
-            todayTags.setTradingAmountVS4DaysAgo(
-                    new String[]{
-                            vs4DaysAmountStatus,
-                            vs4DaysAmountDiff.divide(
-                                    fourDaysAgoInfo.getTodayTradingVolumeMoney().compareTo(BigDecimal.ZERO) == 0 ? BigDecimal.ONE : fourDaysAgoInfo.getTodayTradingVolumeMoney(),
-                                    4,
-                                    RoundingMode.FLOOR
-                            ).toPlainString()
-                    }
-            );
+            try {
+                BigDecimal vs4DaysAmountDiff = todayInfo.getTodayTradingVolumeMoney().subtract(fourDaysAgoInfo.getTodayTradingVolumeMoney());
+                String vs4DaysAmountStatus = judgeStatus(vs4DaysAmountDiff);
+                todayTags.setTradingAmountVS4DaysAgo(
+                        new String[]{
+                                vs4DaysAmountStatus,
+                                vs4DaysAmountDiff.divide(
+                                        fourDaysAgoInfo.getTodayTradingVolumeMoney().compareTo(BigDecimal.ZERO) == 0 ? BigDecimal.ONE : fourDaysAgoInfo.getTodayTradingVolumeMoney(),
+                                        4,
+                                        RoundingMode.FLOOR
+                                ).toPlainString()
+                        }
+                );
+            } catch (Exception ignored) {}
+
         } else {
             todayTags.setPriceVS4DaysAgo(new String[]{CommonTerm.UNCHANGED, "0"});
             todayTags.setTradingVolumeVS4DaysAgo(new String[]{CommonTerm.UNCHANGED, "0"});

@@ -25,16 +25,6 @@ public class FeignController {
         this.generateReportService = generateReportService;
     }
 
-    @PostMapping("/clean-init-twse-info")
-    public void cleanInitTWSE(@RequestBody Map<String, List<DailyStockInfoDTO>> stockIdToDTOs){
-
-    }
-
-    @PostMapping("/clean-init-tpex-info")
-    public void cleanInitTPEX(@RequestBody Map<String, List<DailyStockInfoDTO>> stockIdToDTOs){
-
-    }
-
     @PostMapping("/init-yesterday-report")
     public InnerResponse<ObjectUtils.Null> calInitYesterdayReport() {
 
@@ -54,5 +44,19 @@ public class FeignController {
         }
 
         return generateReportService.generateInitTodayDetailReport();
+    }
+
+    @PostMapping("/gen-real-time-metrics-report")
+    public InnerResponse<ObjectUtils.Null> calRealTimeMetrics(
+            @RequestBody Long date
+    ){
+        return generateReportService.generateRealTimeMetrics(date);
+    }
+
+    @PostMapping("/gen-real-time-detail-report")
+    public InnerResponse<ObjectUtils.Null> calRealTimeDetail(
+            @RequestBody Long date
+    ){
+        return generateReportService.generateRealTimeDetail(date);
     }
 }

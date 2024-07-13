@@ -40,9 +40,9 @@ public class FeignController {
     }
 
     @GetMapping("/get-exists")
-    public InnerResponse<List<String>> getExist(){
-        List<String> ids = dailyStockInfoService.queryExist();
-        return InnerResponse.ok(ids);
+    public InnerResponse<Map<String, String>> getExist(){
+        Map<String, String> stockIdToMarket = dailyStockInfoService.queryExist();
+        return InnerResponse.ok(stockIdToMarket);
     }
 
     @GetMapping("/get-by-date")
@@ -177,8 +177,9 @@ public class FeignController {
             @RequestBody Query4CalDTO query4CalMetricsDTO
     ) {
         try {
-            Map<String, List<DailyStockMetricsDTO>> stockIdToMetrics = dailyStockMetricsService.query4CalMetrics(query4CalMetricsDTO);
             Map<String, List<DailyStockInfoDTO>> stockIdToInfos = dailyStockInfoService.query4CalMetrics(query4CalMetricsDTO);
+            Map<String, List<DailyStockMetricsDTO>> stockIdToMetrics = dailyStockMetricsService.query4CalMetrics(query4CalMetricsDTO.date());
+
 
             return InnerResponse.ok(new CalMetricsUnionDTO(stockIdToMetrics, stockIdToInfos));
         } catch (Exception e) {
@@ -216,8 +217,8 @@ public class FeignController {
     ) {
         try {
             Map<String, List<DailyStockInfoDTO>> stockIdToInfos = dailyStockInfoService.queryInfo4CalDetail(query4CalDetailDTO);
-            Map<String, List<DailyStockMetricsDTO>> stockIdToMetrics = dailyStockMetricsService.query4CalDetail(query4CalDetailDTO);
-            Map<String, List<DailyStockInfoDetailDTO>> stockIdToDetails = dailyStockInfoDetailService.query4CalDetail(query4CalDetailDTO);
+            Map<String, List<DailyStockMetricsDTO>> stockIdToMetrics = dailyStockMetricsService.query4CalDetail(query4CalDetailDTO.date());
+            Map<String, List<DailyStockInfoDetailDTO>> stockIdToDetails = dailyStockInfoDetailService.query4CalDetail(query4CalDetailDTO.date());
 
             CalDetailUnionDTO dto = new CalDetailUnionDTO(stockIdToInfos, stockIdToMetrics, stockIdToDetails);
 
@@ -260,5 +261,31 @@ public class FeignController {
         List<DailyStockInfoDTO> result = dailyStockInfoService.queryByDateAndId(date, stockId);
 
         return InnerResponse.ok(result);
+    }
+
+    @GetMapping("/query-4-cal-real-time-metrics")
+    public InnerResponse<CalMetricsUnionDTO> query4RealTimeMetrics(@RequestParam Long date){
+        try {
+            Map<String, List<DailyStockInfoDTO>> stockIdToInfos = dailyStockInfoService.query4CalRealTimeMetrics(date);
+            Map<String, List<DailyStockMetricsDTO>> stockIdToMetrics = dailyStockMetricsService.query4CalMetrics(date);
+
+
+            return InnerResponse.ok(new CalMetricsUnionDTO(stockIdToMetrics, stockIdToInfos));
+        } catch (Exception e) {
+            log.error("Stock service feign query4CalMetrics failed", e);
+
+            return InnerResponse.failed(ResponseCode.Failed.getCode(), "Stock service feign query4CalMetrics failed");
+        }
+    }
+
+    @GetMapping("/query-4-cal-real-time-detail")
+    InnerResponse<CalDetailUnionDTO> queryRealTimeDetail(@RequestParam Long date){
+        Map<String, List<DailyStockInfoDTO>> stockIdToInfos = dailyStockInfoService.queryInfo4CalRealTimeDetail(date);
+        Map<String, List<DailyStockMetricsDTO>> stockIdToMetrics = dailyStockMetricsService.query4CalDetail(date);
+        Map<String, List<DailyStockInfoDetailDTO>> stockIdToDetails = dailyStockInfoDetailService.query4CalDetail(date);
+
+        CalDetailUnionDTO dto = new CalDetailUnionDTO(stockIdToInfos, stockIdToMetrics, stockIdToDetails);
+
+        return InnerResponse.ok(dto);
     }
 }

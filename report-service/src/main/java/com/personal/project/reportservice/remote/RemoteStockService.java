@@ -47,4 +47,9 @@ public interface RemoteStockService {
     @GetMapping(value = "/feign/stock/query-info-by-cond")
     InnerResponse<List<DailyStockInfoDTO>> getInfosByCond(@RequestParam Long date, @RequestParam String stockId);
 
+    @GetMapping(value = "/feign/stock/query-4-cal-real-time-metrics")
+    InnerResponse<CalMetricsUnionDTO> get4CalRealTimeMetrics(@RequestParam Long date, @RequestHeader(name = "token") String token);
+
+    @GetMapping(value = "/feign/stock/query-4-cal-real-time-detail")
+    InnerResponse<CalDetailUnionDTO> get4CalRealTimeDetailInfo(@RequestParam Long date, @RequestHeader(name = "token") String token);
 }

@@ -11,10 +11,6 @@ import com.personal.project.scraperservice.model.entity.ScraperErrorMessageDO;
 import com.personal.project.scraperservice.remote.RemoteReportService;
 import com.personal.project.scraperservice.remote.RemoteStockService;
 import com.personal.project.scraperservice.scraper.webmagic.SeleniumDownloader;
-import com.personal.project.scraperservice.scraper.webmagic.goofinfo.GoodInfoPipeline;
-import com.personal.project.scraperservice.scraper.webmagic.goofinfo.GoodInfoScraper;
-import com.personal.project.scraperservice.scraper.webmagic.goofinfo.GoodInfoStockListPipeline;
-import com.personal.project.scraperservice.scraper.webmagic.goofinfo.GoodInfoStockListScraper;
 import com.personal.project.scraperservice.scraper.webmagic.tpex.TPEXInitPipeline;
 import com.personal.project.scraperservice.scraper.webmagic.tpex.TPEXInitScraper;
 import com.personal.project.scraperservice.scraper.webmagic.tpex.TPEXRoutinePipeline;
@@ -23,6 +19,8 @@ import com.personal.project.scraperservice.scraper.webmagic.twse.TWSEInitPipelin
 import com.personal.project.scraperservice.scraper.webmagic.twse.TWSEInitScraper;
 import com.personal.project.scraperservice.scraper.webmagic.twse.TWSERoutinePipeline;
 import com.personal.project.scraperservice.scraper.webmagic.twse.TWSERoutineScraper;
+import com.personal.project.scraperservice.scraper.webmagic.yahoo.YahooRealTimePipeline;
+import com.personal.project.scraperservice.scraper.webmagic.yahoo.YahooRealTimeScraper;
 import com.personal.project.scraperservice.service.ErrorMessageService;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +37,11 @@ import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.*;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -57,7 +59,8 @@ public class ScraperJob {
 
     private static final String classpath = ClassPathUtils.class.getClassLoader().getResource("").getFile();
 
-    private static final String driverPath = "driver/chromedriver-win64/chromedriver.exe";
+//    private static final String driverPath = "driver/chromedriver-win64/chromedriver.exe";
+    private static final String driverPath = "driver/chrome-driver-mac-arm64/chromedriver";
 
     private static final String LISTED = "市";
 
@@ -189,35 +192,6 @@ public class ScraperJob {
         log.info("資料初始化任務 twse-tpex-system-init-scrape 初始化最新交易日的指標報告/詳細報告花費 {} 毫秒, 結果 {}", timer.intervalRestart(), JSON.toJSON(response2));
 
         log.info("資料初始化任務 twse-tpex-system-init-scrape 結束");
-    }
-
-    /**
-     * 系統初始化時, 從goodinfo爬取未來需要的股票代號清單
-     *
-     * @return ex: {"市" -> {"2330" -> "台積電", "0050" -> "元大ETF", ...}, "櫃" -> {"1742" -> "台蠟", ...} }
-     */
-    private Map<String, Map<String, String>> scrapeGoodInfoInitStockList() {
-        GoodInfoStockListScraper listScraper = new GoodInfoStockListScraper();
-        GoodInfoStockListPipeline listPipeline = new GoodInfoStockListPipeline();
-        Spider.create(listScraper)
-                //推測Spider設定的thread是單指一個網址而言, 若同時在Spider.addUrl設定多個網址,
-                // 則每個網址會同時分配一條thread, 導致Spider.thread無意義(每個url會在同一時間以多條thread一起發出請求, 會被反爬搞), 因此應於PageProcessor內addTargetRequest的方式才是預想中使thread, sleep有效的方式
-                //todo 待追source code驗證
-//                .addUrl(stockListUrls.toArray(new String[0]))
-                .addUrl("https://goodinfo.tw/tw2/StockList.asp?MARKET_CAT=上櫃&INDUSTRY_CAT=上櫃全部&SHEET=交易狀況&SHEET2=日&RPT_TIME=最新資料")
-                .addPipeline(listPipeline)
-                .setDownloader(
-                        new SeleniumDownloader(classpath + driverPath,
-                                Duration.ofSeconds(10),
-//                                ExpectedConditions.visibilityOfElementLocated(By.id("row0")),
-                                null,
-                                new HashSet<>()
-                        )
-                )
-                .thread(1)
-                .run();
-
-        return listPipeline.getResult();
     }
 
     /**
@@ -387,7 +361,6 @@ public class ScraperJob {
     /**
      * 爬TPEX(櫃買)個股日成交資訊
      *
-     * @param driverPath
      * @param tpexInitScraper
      * @param tpexInitPipeline
      * @return
@@ -522,87 +495,11 @@ public class ScraperJob {
     }
 
 
-    @XxlJob("goodinfo-routine-scrape")
-    public void goodinfoJobHandle() {
-        log.info("爬蟲任務 goodinfo-scrape 開始執行");
-        LocalDate now = LocalDate.now();
-        String nowStr = now.format(DatePattern.PURE_DATE_FORMATTER);
-        GoodInfoScraper scraper = new GoodInfoScraper();
-        GoodInfoPipeline pipeline = new GoodInfoPipeline();
-
-        Spider.create(scraper)
-                .addUrl("https://goodinfo.tw/tw2/StockList.asp?MARKET_CAT=上市&INDUSTRY_CAT=上市全部&SHEET=交易狀況&SHEET2=日&RPT_TIME=最新資料")
-                .addPipeline(pipeline)
-                .thread(1)
-                .setDownloader(
-                        new SeleniumDownloader(
-                                classpath + driverPath,
-                                Duration.ofSeconds(8),
-                                ExpectedConditions.visibilityOfElementLocated(By.id("tblStockList")),
-                                new HashSet<>()
-                        )
-                )
-                //啟動爬蟲
-                .run();
-
-        List<DailyStockInfoDto> dtos = pipeline.getDtos();
-        List<ScraperErrorMessageDO> errors = scraper.getErrors();
-
-        if (!errors.isEmpty()) {
-            errorMessageService.saveBatch(errors);
-        }
-
-        //獲取上個交易日資料, 填充缺失的昨張 昨額
-        Map<String, DailyStockInfoDto> formers = remoteStockService.getFormer(Long.parseLong(nowStr), null).getData();
-
-        List<DailyStockInfoDto> results = new ArrayList<>();
-        dtos.forEach(dto -> {
-            String stockId = dto.getStockId();
-
-            //以防萬一平日國定假日而資料是昨日, 檢查日期
-            if (!dto.getDate().toString().equals(nowStr)) {
-                DailyStockInfoDto result = new DailyStockInfoDto();
-                result.setStockId(stockId);
-                result.setStockName(dto.getStockName());
-                result.setDate(Long.parseLong(nowStr));
-                results.add(result);
-                return;
-            }
-
-            DailyStockInfoDto former = formers.get(dto.getStockId());
-            dto.setYesterdayTradingVolumePiece(former.getTodayTradingVolumePiece());
-            dto.setYesterdayTradingVolumeMoney(former.getTodayTradingVolumeMoney());
-            results.add(dto);
-
-            //為了檢查昨日有資料而今日無資料之股票
-            formers.remove(dto.getStockId());
-        });
-
-        formers.forEach((k, v) -> {
-            DailyStockInfoDto result = new DailyStockInfoDto();
-            result.setStockId(k);
-            result.setStockName(v.getStockName());
-            result.setDate(Long.parseLong(nowStr));
-            results.add(result);
-        });
-
-        //獲取本日資料, 以防已經手動執行過任務
-        Map<String, DailyStockInfoDto> stockIdToTodayInfo = remoteStockService.getByDate(Long.parseLong(nowStr), null).getData();
-        results.forEach(dto -> {
-            if (stockIdToTodayInfo.get(dto.getStockId()) != null) {
-                dto.setId(stockIdToTodayInfo.get(dto.getStockId()).getId());
-            }
-        });
-
-        InnerResponse<ObjectUtils.Null> innerResponse = remoteStockService.saveAll(results, null);
-
-        log.info("【GoodInfo爬蟲結束】共抓取{}筆資料，入庫回應: {}", dtos.size(), JSON.toJSON(innerResponse));
-    }
-
     @XxlJob("twse-tpex-routine-scrape")
     public void twseJobHandle() {
         log.info("爬蟲任務 twse-routine-scrape 開始執行");
-        LocalDate now = LocalDate.now();
+//        LocalDate now = LocalDate.now();
+        LocalDate now = LocalDate.of(2024,7,12);
         String nowStr = now.format(DatePattern.PURE_DATE_FORMATTER);
 
         List<DailyStockInfoDto> results = new ArrayList<>();
@@ -656,8 +553,8 @@ public class ScraperJob {
         for (DailyStockInfoDto dto : results) {
             DailyStockInfoDto yesterdayDTO = formers.get(dto.getStockId());
             dto.setYesterdayClosingPrice(yesterdayDTO.getTodayClosingPrice());
-            dto.setYesterdayTradingVolumePiece(yesterdayDTO.getYesterdayTradingVolumePiece());
-            dto.setYesterdayTradingVolumeMoney(yesterdayDTO.getYesterdayTradingVolumeMoney());
+            dto.setYesterdayTradingVolumePiece(yesterdayDTO.getTodayTradingVolumePiece());
+            dto.setYesterdayTradingVolumeMoney(yesterdayDTO.getTodayTradingVolumeMoney());
 
             if (dto.getTodayClosingPrice() == null) {
                 dto.setTodayClosingPrice(yesterdayDTO.getTodayClosingPrice());
@@ -707,28 +604,58 @@ public class ScraperJob {
         log.info("【TWSE-TPEX Routine 爬蟲結束】共抓取{}筆資料，入庫回應: {}", results.size(), JSON.toJSON(innerResponse));
     }
 
-    public static void main(String[] args) {
-        LocalDate now = LocalDate.now();
-        String format = now.format(DatePattern.PURE_DATE_FORMATTER);
-        System.out.println("now: " + format);
-        LocalDate off = now.minusDays(7);
-        String fmtOff = off.format(DatePattern.PURE_DATE_FORMATTER);
-        System.out.println("off: " + fmtOff);
-        List<Long> results = new ArrayList<>();
+    @XxlJob("real-time-price-scrape")
+    public void realTimeHandle() {
 
-//        for(long i = Long.parseLong(format);
-//            i>=Long.parseLong(fmtOff);
-//            i = Long.parseLong(LocalDate.parse(String.valueOf(i), DatePattern.PURE_DATE_FORMATTER).minusDays(1).format(DatePattern.PURE_DATE_FORMATTER))){
-//            System.out.println(i);
-//            results.add(i);
-//        }
+        List<Integer> listed = List.of(1, 2, 3, 4, 6, 7, 9, 10, 11, 12, 13, 19, 20, 21, 22, 24, 25, 30, 37, 38, 40, 41, 42, 43, 44, 45, 46, 47, 49, 93, 94, 95, 96);
+        List<Integer> otc = List.of(97, 98, 121, 122, 123, 124, 125, 126, 130, 138, 139, 140, 141, 142, 145, 151, 153, 154, 155, 156, 157, 158, 159, 160, 161, 169, 170, 171);
 
-        for (LocalDate i = now; !i.isBefore(off); i = i.minusDays(1)) {
-            results.add(
-                    Long.parseLong(i.format(DatePattern.PURE_DATE_FORMATTER))
-            );
+        List<String> urls = new ArrayList<>();
+
+        for(Integer num:listed){
+            urls.add(StrUtil.format("https://tw.stock.yahoo.com/class-quote?sectorId={}&exchange=TAI", num));
         }
 
-        System.out.println("results: " + results);
+        for(Integer num: otc){
+            urls.add(StrUtil.format("https://tw.stock.yahoo.com/class-quote?sectorId={}&exchange=TWO", num));
+        }
+
+//        Long date = Long.parseLong(LocalDate.now().format(DatePattern.PURE_DATE_FORMATTER));
+        Long date = Long.parseLong(LocalDate.of(2024, 7, 12).format(DatePattern.PURE_DATE_FORMATTER));
+//        YahooRealTimeScraper scraper = new YahooRealTimeScraper(urls, date);
+//        YahooRealTimePipeline pipeline = new YahooRealTimePipeline();
+//        Spider.create(scraper)
+//                .addPipeline(pipeline)
+//                .addUrl(scraper.getFirstUrl())
+//                .setDownloader(
+//                        new SeleniumDownloader(
+//                                classpath + driverPath,
+//                                Duration.of(15, ChronoUnit.SECONDS),
+//                                ExpectedConditions.visibilityOfAllElementsLocatedBy(By.xpath("//div[@class='table-body-wrapper']")),
+//                                null
+//                        )
+//                )
+//                .thread(2)
+//                .run();
+//
+//        //取得所有股票即時報價
+//        List<DailyStockInfoDto> results = pipeline.getResults();
+//
+//        //去重
+//        Map<String, DailyStockInfoDto> stockIdToTodayInfo = remoteStockService.getByDate(date, null).getData();
+//        results.forEach(dto -> {
+//            if (stockIdToTodayInfo.get(dto.getStockId()) != null) {
+//                dto.setId(stockIdToTodayInfo.get(dto.getStockId()).getId());
+//            }
+//        });
+//
+//        remoteStockService.saveAll(results, null);
+
+        //計算metrics
+//        remoteReportService.genRealTimeMetricsReport(date, null);
+
+        //計算tag(同上)
+        remoteReportService.genRealTimeDetailReport(date, null);
+
     }
 }

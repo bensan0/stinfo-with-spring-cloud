@@ -15,5 +15,13 @@ public interface GenerateReportService {
 
     InnerResponse<ObjectUtils.Null> generateInitTodayDetailReport();
 
-    DailyStockMetricsDTO generateRoutineMetrics(String stockId, Long date);
+    InnerResponse<ObjectUtils.Null> generateRoutineMetrics(Long date);
+
+    InnerResponse<ObjectUtils.Null> generateRealTimeMetrics(Long date);
+
+    InnerResponse<ObjectUtils.Null> generateRoutineDetail(Long date);
+
+    InnerResponse<ObjectUtils.Null> generateRealTimeDetail(Long date);
+
+    DailyStockMetricsDTO generateRoutineMetricsOldSchool(String stockId, Long date);
 }

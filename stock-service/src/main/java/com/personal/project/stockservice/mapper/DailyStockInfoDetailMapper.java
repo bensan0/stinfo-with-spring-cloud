@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface DailyStockInfoDetailMapper extends BaseMapper<DailyStockInfoDetailDO> {
 
-    List<DailyStockInfoDetailDTO> query4CalDetail(Query4CalDTO query4CalDTO);
+    List<DailyStockInfoDetailDTO> query4CalDetail(Long date);
 
     List<DailyStockInfoDetailDTO> query4CalDetailManual(ManualCalDTO manualCalDTO);
 

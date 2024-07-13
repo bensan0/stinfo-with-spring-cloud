@@ -22,8 +22,8 @@ import java.util.stream.Collectors;
 public class DailyStockInfoDetailServiceImpl extends ServiceImpl<DailyStockInfoDetailMapper, DailyStockInfoDetailDO> implements DailyStockInfoDetailService {
 
     @Override
-    public Map<String, List<DailyStockInfoDetailDTO>> query4CalDetail(Query4CalDTO query4CalDTO) {
-        List<DailyStockInfoDetailDTO> dtos = baseMapper.query4CalDetail(query4CalDTO);
+    public Map<String, List<DailyStockInfoDetailDTO>> query4CalDetail(Long date) {
+        List<DailyStockInfoDetailDTO> dtos = baseMapper.query4CalDetail(date);
         Map<String, List<DailyStockInfoDetailDTO>> results = new HashMap<>();
         dtos.forEach(dto -> {
             results.computeIfAbsent(dto.getStockId(), k -> new ArrayList<>()).add(dto);

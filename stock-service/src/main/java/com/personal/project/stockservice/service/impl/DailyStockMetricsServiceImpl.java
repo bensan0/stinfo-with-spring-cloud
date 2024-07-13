@@ -21,8 +21,8 @@ public class DailyStockMetricsServiceImpl extends ServiceImpl<DailyStockMetricsM
         implements DailyStockMetricsService {
 
     @Override
-    public Map<String, List<DailyStockMetricsDTO>> query4CalMetrics(Query4CalDTO query4CalDto) {
-        List<DailyStockMetricsDTO> metrics = baseMapper.query4CalMetrics(query4CalDto);
+    public Map<String, List<DailyStockMetricsDTO>> query4CalMetrics(Long date) {
+        List<DailyStockMetricsDTO> metrics = baseMapper.query4CalMetrics(date);
         Map<String, List<DailyStockMetricsDTO>> stockIdToMetrics = new HashMap<>();
         metrics.forEach(dto -> stockIdToMetrics.computeIfAbsent(dto.getStockId(), k -> new ArrayList<>()).add(dto));
 
@@ -30,8 +30,8 @@ public class DailyStockMetricsServiceImpl extends ServiceImpl<DailyStockMetricsM
     }
 
     @Override
-    public Map<String, List<DailyStockMetricsDTO>> query4CalDetail(Query4CalDTO query4CalDto) {
-        List<DailyStockMetricsDTO> dtos = baseMapper.query4CalDetail(query4CalDto);
+    public Map<String, List<DailyStockMetricsDTO>> query4CalDetail(Long date) {
+        List<DailyStockMetricsDTO> dtos = baseMapper.query4CalDetail(date);
         Map<String, List<DailyStockMetricsDTO>> results = new HashMap<>();
         dtos.forEach(dto -> {
             results.computeIfAbsent(dto.getStockId(), k -> new ArrayList<>()).add(dto);

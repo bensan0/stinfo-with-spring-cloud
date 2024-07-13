@@ -13,18 +13,18 @@ public interface DailyStockMetricsService extends IService<DailyStockMetricsDO> 
      * 報表服務獲取產出報告所需資料
      * 今日metrics(可能為空, 除非於定時任務前有手動按過)
      * 前一個交易日資料
-     * @param query4CalDto
+     * @param date
      * @return
      */
-    Map<String, List<DailyStockMetricsDTO>> query4CalMetrics(Query4CalDTO query4CalDto);
+    Map<String, List<DailyStockMetricsDTO>> query4CalMetrics(Long date);
 
     /**
      * 取得今日個股指標 & 上一個交易日個股指標
      *
-     * @param query4CalDto
+     * @param date
      * @return
      */
-    Map<String, List<DailyStockMetricsDTO>> query4CalDetail(Query4CalDTO query4CalDto);
+    Map<String, List<DailyStockMetricsDTO>> query4CalDetail(Long date);
 
     /**
      * 取得今日個股指標 & 上一個交易日個股指標

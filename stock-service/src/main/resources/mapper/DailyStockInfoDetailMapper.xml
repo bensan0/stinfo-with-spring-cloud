@@ -48,7 +48,7 @@
                 (
                      SELECT s.*
                      from daily_stock_info_detail s
-                     WHERE s.date &lt; 20240709 and today_closing_price IS not null
+                     WHERE s.date &lt; #{date} and today_closing_price IS not null
                 ) tt
 
         ) T

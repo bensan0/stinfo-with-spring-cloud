@@ -8,6 +8,8 @@ import java.math.BigDecimal;
 @Data
 public class DailyStockInfoDetailDTO {
 
+    private Long id;
+
     private String stockId;
 
     private Long date;

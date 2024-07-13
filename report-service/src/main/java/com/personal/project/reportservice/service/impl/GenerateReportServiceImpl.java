@@ -3,7 +3,9 @@ package com.personal.project.reportservice.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.personal.project.commoncore.constants.CommonTerm;
+import com.personal.project.commoncore.constants.ResponseCode;
 import com.personal.project.commoncore.response.InnerResponse;
 import com.personal.project.reportservice.model.dto.*;
 import com.personal.project.reportservice.remote.RemoteStockService;
@@ -18,10 +20,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -569,8 +568,380 @@ public class GenerateReportServiceImpl implements GenerateReportService {
         return remoteStockService.saveDetail(results, null);
     }
 
+    public InnerResponse<ObjectUtils.Null> generateRoutineMetrics(Long date){
+        InnerResponse<CalMetricsUnionDTO> response = remoteStockService.getCalMetricsInfo(new Query4CalMetricsDTO(date), null);
+        Map<String, List<DailyStockMetricsDTO>> stockIdToMetrics = response.getData().getStockIdToMetrics();
+        Map<String, List<DailyStockInfoDTO>> stockIdToInfos = response.getData().getStockIdToInfos();
+        List<DailyStockMetricsDTO> results = new ArrayList<>();
+        DailyMetricsCalculator metricsCalculator = new DailyMetricsCalculator(remoteStockService);
+
+        stockIdToInfos.forEach((k, v) -> {
+            v.sort(Comparator.comparingLong(DailyStockInfoDTO::getDate).reversed());
+            List<DailyStockMetricsDTO> metrics = stockIdToMetrics.get(k);
+            metrics.sort(Comparator.comparingLong(DailyStockMetricsDTO::getDate).reversed());
+            DailyStockMetricsDTO todayMetrics = null;
+            DailyStockMetricsDTO yesterdayMetrics = null;
+
+            //0 = 沒提前按 沒昨天(今天剛剛上市櫃)
+            //1 = 沒提前按 有昨天 or 提前按 沒昨天
+            //2 = 提前按 有昨天
+            if(metrics.isEmpty()){
+                todayMetrics = new DailyStockMetricsDTO();
+                todayMetrics.setStockId(k);
+                todayMetrics.setStockName(v.getFirst().getStockName());
+                todayMetrics.setDate(date);
+            }else if (metrics.size() == 1) {
+                if(metrics.getFirst().getDate().longValue() != date){
+                    todayMetrics = new DailyStockMetricsDTO();
+                    todayMetrics.setStockId(k);
+                    todayMetrics.setStockName(v.getFirst().getStockName());
+                    todayMetrics.setDate(date);
+                    yesterdayMetrics = metrics.getFirst();
+                }else{
+                    todayMetrics = metrics.getFirst();
+                }
+            } else {
+                todayMetrics = metrics.getFirst();
+                yesterdayMetrics = metrics.getLast();
+            }
+
+            todayMetrics.setTodayClosingPrice(v.getFirst().getTodayClosingPrice());
+
+            //今日上市櫃
+            if(v.size() == 1){
+                results.add(todayMetrics);
+                return;
+            }
+
+            //此個股今天沒開市
+            if (v.getFirst().getTodayClosingPrice() == null) {
+                todayMetrics.setTodayClosingPrice(null);
+                todayMetrics.setMa5(yesterdayMetrics.getMa5());
+                todayMetrics.setLastMA5price(yesterdayMetrics.getLastMA5price());
+                todayMetrics.setMa10(yesterdayMetrics.getMa10());
+                todayMetrics.setLastMA10price(yesterdayMetrics.getLastMA10price());
+                todayMetrics.setMa20(yesterdayMetrics.getMa20());
+                todayMetrics.setLastMA20price(yesterdayMetrics.getLastMA20price());
+                todayMetrics.setMa60(yesterdayMetrics.getMa60());
+                todayMetrics.setLastMA60price(yesterdayMetrics.getLastMA60price());
+                todayMetrics.setMa120(yesterdayMetrics.getMa120());
+                todayMetrics.setLastMA120price(yesterdayMetrics.getLastMA120price());
+                todayMetrics.setMa240(yesterdayMetrics.getMa240());
+                todayMetrics.setLastMA240price(yesterdayMetrics.getLastMA240price());
+                results.add(todayMetrics);
+                return;
+            }
+
+            //因yesterday metrics一旦有值為null, 則往後的metrics並不會重新計算而導致該值永遠為null, 因此先行檢查,
+            //若有發現值為null, 則以重新獲取過去info計算本日metrics
+            if(yesterdayMetrics.getMa5() == null || yesterdayMetrics.getMa10() == null || yesterdayMetrics.getMa20() == null || yesterdayMetrics.getMa60() == null) {
+                DailyStockMetricsDTO dailyStockMetricsDTO = generateRoutineMetricsOldSchool(k, date);
+                dailyStockMetricsDTO.setId(todayMetrics.getId());
+                todayMetrics = dailyStockMetricsDTO;
+            }else{
+                metricsCalculator.cal(todayMetrics,
+                        BeanUtil.copyProperties(v.getFirst(), StockInfo4InitMetricsDTO.class),
+                        BeanUtil.copyProperties(v.get(1), StockInfo4InitMetricsDTO.class),
+                        BeanUtil.copyProperties(v.get(2), StockInfo4InitMetricsDTO.class),
+                        BeanUtil.copyProperties(v.get(3), StockInfo4InitMetricsDTO.class),
+                        BeanUtil.copyProperties(v.get(4), StockInfo4InitMetricsDTO.class),
+//                    BeanUtil.copyProperties(v.get(5), StockInfo4InitMetricsDTO.class),
+//                    BeanUtil.copyProperties(v.getLast(), StockInfo4InitMetricsDTO.class),
+                        yesterdayMetrics);
+            }
+
+            results.add(todayMetrics);
+        });
+
+        //call feign save
+        return remoteStockService.saveMetrics(results, null);
+    }
+
     @Override
-    public DailyStockMetricsDTO generateRoutineMetrics(String stockId, Long date) {
+    public InnerResponse<ObjectUtils.Null> generateRealTimeMetrics(Long date) {
+        InnerResponse<CalMetricsUnionDTO> response = remoteStockService.get4CalRealTimeMetrics(date, null);
+        Map<String, List<DailyStockMetricsDTO>> stockIdToMetrics = response.getData().getStockIdToMetrics();
+        Map<String, List<DailyStockInfoDTO>> stockIdToInfos = response.getData().getStockIdToInfos();
+        List<DailyStockMetricsDTO> results = new ArrayList<>();
+        DailyMetricsCalculator metricsCalculator = new DailyMetricsCalculator(remoteStockService);
+
+        stockIdToInfos.forEach((k, v) -> {
+            v.sort(Comparator.comparingLong(DailyStockInfoDTO::getDate).reversed());
+            List<DailyStockMetricsDTO> metrics = stockIdToMetrics.get(k);
+            metrics.sort(Comparator.comparingLong(DailyStockMetricsDTO::getDate).reversed());
+            DailyStockMetricsDTO todayMetrics = null;
+            DailyStockMetricsDTO yesterdayMetrics = null;
+
+            //0 = 沒提前按 沒昨天(今天剛剛上市櫃)
+            //1 = 沒提前按 有昨天 or 提前按 沒昨天
+            //2 = 提前按 有昨天
+            if(metrics.isEmpty()){
+                todayMetrics = new DailyStockMetricsDTO();
+                todayMetrics.setStockId(k);
+                todayMetrics.setStockName(v.getFirst().getStockName());
+                todayMetrics.setDate(date);
+            }else if (metrics.size() == 1) {
+                if(metrics.getFirst().getDate().longValue() != date){
+                    todayMetrics = new DailyStockMetricsDTO();
+                    todayMetrics.setStockId(k);
+                    todayMetrics.setStockName(v.getFirst().getStockName());
+                    todayMetrics.setDate(date);
+                    yesterdayMetrics = metrics.getFirst();
+                }else{
+                    todayMetrics = metrics.getFirst();
+                }
+            } else {
+                todayMetrics = metrics.getFirst();
+                yesterdayMetrics = metrics.getLast();
+            }
+
+            todayMetrics.setTodayClosingPrice(v.getFirst().getTodayClosingPrice());
+
+            //今日上市櫃
+            if(v.size() == 1){
+                results.add(todayMetrics);
+                return;
+            }
+
+            //此個股今天沒開市
+            if (v.getFirst().getTodayClosingPrice() == null) {
+                todayMetrics.setTodayClosingPrice(null);
+                todayMetrics.setMa5(yesterdayMetrics.getMa5());
+                todayMetrics.setLastMA5price(yesterdayMetrics.getLastMA5price());
+                todayMetrics.setMa10(yesterdayMetrics.getMa10());
+                todayMetrics.setLastMA10price(yesterdayMetrics.getLastMA10price());
+                todayMetrics.setMa20(yesterdayMetrics.getMa20());
+                todayMetrics.setLastMA20price(yesterdayMetrics.getLastMA20price());
+                todayMetrics.setMa60(yesterdayMetrics.getMa60());
+                todayMetrics.setLastMA60price(yesterdayMetrics.getLastMA60price());
+                todayMetrics.setMa120(yesterdayMetrics.getMa120());
+                todayMetrics.setLastMA120price(yesterdayMetrics.getLastMA120price());
+                todayMetrics.setMa240(yesterdayMetrics.getMa240());
+                todayMetrics.setLastMA240price(yesterdayMetrics.getLastMA240price());
+                results.add(todayMetrics);
+                return;
+            }
+
+            //因yesterday metrics一旦有值為null, 則往後的metrics並不會重新計算而導致該值永遠為null, 因此先行檢查,
+            //若有發現值為null, 則以重新獲取過去info計算本日metrics
+            if(yesterdayMetrics.getMa5() == null || yesterdayMetrics.getMa10() == null || yesterdayMetrics.getMa20() == null || yesterdayMetrics.getMa60() == null) {
+                DailyStockMetricsDTO dailyStockMetricsDTO = generateRoutineMetricsOldSchool(k, date);
+                dailyStockMetricsDTO.setId(todayMetrics.getId());
+                todayMetrics = dailyStockMetricsDTO;
+            }else{
+                metricsCalculator.cal(todayMetrics,
+                        BeanUtil.copyProperties(v.getFirst(), StockInfo4InitMetricsDTO.class),
+                        BeanUtil.copyProperties(v.get(1), StockInfo4InitMetricsDTO.class),
+                        BeanUtil.copyProperties(v.get(2), StockInfo4InitMetricsDTO.class),
+                        BeanUtil.copyProperties(v.get(3), StockInfo4InitMetricsDTO.class),
+                        BeanUtil.copyProperties(v.get(4), StockInfo4InitMetricsDTO.class),
+//                    BeanUtil.copyProperties(v.get(5), StockInfo4InitMetricsDTO.class),
+//                    BeanUtil.copyProperties(v.getLast(), StockInfo4InitMetricsDTO.class),
+                        yesterdayMetrics);
+            }
+
+            results.add(todayMetrics);
+        });
+
+        //call feign save
+        return remoteStockService.saveMetrics(results, null);
+    }
+
+    @Override
+    public InnerResponse<ObjectUtils.Null> generateRoutineDetail(Long date) {
+        Query4CalMetricsDTO dto = new Query4CalMetricsDTO(date);
+        InnerResponse<CalDetailUnionDTO> calDetailInfo = remoteStockService.getCalDetailInfo(dto, null);
+
+        Map<String, List<DailyStockInfoDTO>> stockIdToInfos = calDetailInfo.getData().getStockIdToInfos();
+        Map<String, List<DailyStockMetricsDTO>> stockIdToMetrics = calDetailInfo.getData().getStockIdToMetrics();
+        Map<String, List<DailyStockInfoDetailDTO>> stockIdToDetails = calDetailInfo.getData().getStockIdToDetails();
+        List<DailyStockInfoDetailDTO> results = new ArrayList<>();
+        DailyDetailCalculator calculator = new DailyDetailCalculator();
+
+        stockIdToInfos.forEach((k, v) -> {
+            v.sort(Comparator.comparingLong(DailyStockInfoDTO::getDate).reversed());
+            List<DailyStockMetricsDTO> metrics = stockIdToMetrics.get(k);
+            metrics.sort(Comparator.comparingLong(DailyStockMetricsDTO::getDate).reversed());
+            List<DailyStockInfoDetailDTO> details = stockIdToDetails.get(k);
+            details.sort(Comparator.comparingLong(DailyStockInfoDetailDTO::getDate).reversed());
+            DailyStockInfoDetailDTO todayDetail = null;
+            DailyStockInfoDetailDTO yesterdayDetail = null;
+
+            //本日有沒有提前按過
+            //0 = 沒提前按 沒昨天(今天剛剛上市櫃)
+            //1 = 沒提前按 有昨天 or 提前按 沒昨天
+            //2 = 提前按 有昨天
+            if (details.isEmpty()) {
+                todayDetail = new DailyStockInfoDetailDTO();
+                todayDetail.setStockId(k);
+                todayDetail.setDate(date);
+            } else if(details.size() == 1){
+                if(Objects.equals(details.getFirst().getDate(), date)){
+                    todayDetail = details.getFirst();
+                }else{
+                    todayDetail = new DailyStockInfoDetailDTO();
+                    todayDetail.setStockId(k);
+                    todayDetail.setDate(date);
+                    yesterdayDetail = details.getFirst();
+                }
+            }else{
+                todayDetail = details.getFirst();
+                yesterdayDetail = details.get(1);
+            }
+
+            //本日有沒有開市
+            if (v.getFirst().getTodayClosingPrice() == null) {
+                todayDetail.setUpperShadow(yesterdayDetail.getUpperShadow());
+                todayDetail.setRealBody(yesterdayDetail.getRealBody());
+                todayDetail.setLowerShadow(yesterdayDetail.getLowerShadow());
+                todayDetail.setTags(yesterdayDetail.getTags());
+                results.add(todayDetail);
+                return;
+            } else {
+                todayDetail.setTodayClosingPrice(v.getFirst().getTodayClosingPrice());
+            }
+
+            DailyStockInfoDTO yesterdayInfo = null;
+            try{
+                yesterdayInfo = v.get(1);
+            }catch (Exception ignored){}
+
+            DailyStockInfoDTO twoDaysAgoInfo = null;
+            try{
+                twoDaysAgoInfo = v.get(2);
+            }catch (Exception ignored){}
+
+            DailyStockInfoDTO fourDaysAgoInfo = null;
+            try{
+                fourDaysAgoInfo = v.get(3);
+            }catch (Exception ignored){}
+
+            DailyStockMetricsDTO todayMetrics = null;
+            try{
+                todayMetrics = metrics.getFirst();
+            }catch (Exception ignored){}
+
+            DailyStockMetricsDTO yesterdayMetrics = null;
+            try{
+                yesterdayMetrics = metrics.get(1);
+            }catch (Exception ignored){}
+
+            calculator.cal(
+                    todayDetail,
+                    v.getFirst(),
+                    yesterdayInfo,
+                    twoDaysAgoInfo,
+                    fourDaysAgoInfo,
+                    todayMetrics,
+                    yesterdayMetrics,
+                    yesterdayDetail
+            );
+
+            results.add(todayDetail);
+        });
+
+        //call feign save
+        return remoteStockService.saveDetail(results, null);
+    }
+
+    @Override
+    public InnerResponse<ObjectUtils.Null> generateRealTimeDetail(Long date) {
+        InnerResponse<CalDetailUnionDTO> calDetailInfo = remoteStockService.get4CalRealTimeDetailInfo(date, null);
+
+        Map<String, List<DailyStockInfoDTO>> stockIdToInfos = calDetailInfo.getData().getStockIdToInfos();
+        Map<String, List<DailyStockMetricsDTO>> stockIdToMetrics = calDetailInfo.getData().getStockIdToMetrics();
+        Map<String, List<DailyStockInfoDetailDTO>> stockIdToDetails = calDetailInfo.getData().getStockIdToDetails();
+        List<DailyStockInfoDetailDTO> results = new ArrayList<>();
+        DailyDetailCalculator calculator = new DailyDetailCalculator();
+
+        stockIdToInfos.forEach((k, v) -> {
+            v.sort(Comparator.comparingLong(DailyStockInfoDTO::getDate).reversed());
+            List<DailyStockMetricsDTO> metrics = stockIdToMetrics.get(k);
+            metrics.sort(Comparator.comparingLong(DailyStockMetricsDTO::getDate).reversed());
+            List<DailyStockInfoDetailDTO> details = stockIdToDetails.get(k);
+            details.sort(Comparator.comparingLong(DailyStockInfoDetailDTO::getDate).reversed());
+            DailyStockInfoDetailDTO todayDetail = null;
+            DailyStockInfoDetailDTO yesterdayDetail = null;
+
+            //本日有沒有提前按過
+            //0 = 沒提前按 沒昨天
+            //1 = 沒提前按 有昨天 or 提前按 沒昨天
+            //2 = 提前按 有昨天
+            if (details.size() == 0) {
+                todayDetail = new DailyStockInfoDetailDTO();
+                todayDetail.setStockId(k);
+                todayDetail.setDate(date);
+            } else if(details.size() == 1){
+                if(Objects.equals(details.getFirst().getDate(), date)){
+                    todayDetail = details.getFirst();
+                }else{
+                    todayDetail = new DailyStockInfoDetailDTO();
+                    todayDetail.setStockId(k);
+                    todayDetail.setDate(date);
+                    yesterdayDetail = details.getFirst();
+                }
+            }else{
+                todayDetail = details.getFirst();
+                yesterdayDetail = details.get(1);
+            }
+
+            //本日有沒有開市
+            if (v.getFirst().getTodayClosingPrice() == null) {
+                todayDetail.setUpperShadow(yesterdayDetail.getUpperShadow());
+                todayDetail.setRealBody(yesterdayDetail.getRealBody());
+                todayDetail.setLowerShadow(yesterdayDetail.getLowerShadow());
+                todayDetail.setTags(yesterdayDetail.getTags());
+                results.add(todayDetail);
+                return;
+            } else {
+                todayDetail.setTodayClosingPrice(v.getFirst().getTodayClosingPrice());
+            }
+
+            DailyStockInfoDTO yesterdayInfo = null;
+            try{
+                yesterdayInfo = v.get(1);
+            }catch (Exception ignored){}
+
+            DailyStockInfoDTO twoDaysAgoInfo = null;
+            try{
+                twoDaysAgoInfo = v.get(2);
+            }catch (Exception ignored){}
+
+            DailyStockInfoDTO fourDaysAgoInfo = null;
+            try{
+                fourDaysAgoInfo = v.get(3);
+            }catch (Exception ignored){}
+
+            DailyStockMetricsDTO todayMetrics = null;
+            try{
+                todayMetrics = metrics.getFirst();
+            }catch (Exception ignored){}
+
+            DailyStockMetricsDTO yesterdayMetrics = null;
+            try{
+                yesterdayMetrics = metrics.get(1);
+            }catch (Exception ignored){}
+
+            calculator.cal(
+                    todayDetail,
+                    v.getFirst(),
+                    yesterdayInfo,
+                    twoDaysAgoInfo,
+                    fourDaysAgoInfo,
+                    todayMetrics,
+                    yesterdayMetrics,
+                    yesterdayDetail
+            );
+
+            results.add(todayDetail);
+        });
+
+        //call feign save
+        return remoteStockService.saveDetail(results, null);
+    }
+
+    @Override
+    public DailyStockMetricsDTO generateRoutineMetricsOldSchool(String stockId, Long date) {
         InnerResponse<List<DailyStockInfoDTO>> response = remoteStockService.getInfosByCond(date, stockId);
 
         List<DailyStockInfoDTO> infos = response.getData();
@@ -634,14 +1005,5 @@ public class GenerateReportServiceImpl implements GenerateReportService {
         }
 
         return dto;
-    }
-
-    public static void main(String[] args) {
-        List<BigDecimal> integers = List.of(BigDecimal.ONE, BigDecimal.TWO, BigDecimal.valueOf(3), BigDecimal.valueOf(4), BigDecimal.valueOf(5));
-        BigDecimal divide = integers.stream()
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-//                .divide(BigDecimal.valueOf(integers.size()), 4, RoundingMode.FLOOR);
-
-        System.out.println(divide);
     }
 }

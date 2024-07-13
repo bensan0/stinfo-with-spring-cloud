@@ -103,9 +103,11 @@ class WebDriverPool {
             cOps.addArguments("--incognito");
             cOps.addArguments("--no-sandbox");
             cOps.addArguments("--disable-gpu");
+            cOps.addArguments("--enable-javascript");
             cOps.addArguments("blink-settings=imagesEnabled=false");
             cOps.addArguments("--headless");
             cOps.setBinary(classpath + "chrome-headless-shell-mac-arm64/chrome-headless-shell");
+//            cOps.setBinary("C:\\Users\\USER\\Desktop\\chrome-headless-shell-win64\\chrome-headless-shell.exe");
             mDriver = new ChromeDriver(cOps);
         }
     }

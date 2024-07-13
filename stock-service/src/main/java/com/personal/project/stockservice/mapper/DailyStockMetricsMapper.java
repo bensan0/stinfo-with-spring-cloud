@@ -10,9 +10,9 @@ import java.util.List;
 
 public interface DailyStockMetricsMapper extends BaseMapper<DailyStockMetricsDO> {
 
-    List<DailyStockMetricsDTO> query4CalMetrics(Query4CalDTO query4CalDto);
+    List<DailyStockMetricsDTO> query4CalMetrics(Long date);
 
-    List<DailyStockMetricsDTO> query4CalDetail(Query4CalDTO query4CalDto);
+    List<DailyStockMetricsDTO> query4CalDetail(Long date);
 
     List<DailyStockMetricsDTO> query4ManualCalDetail(ManualCalDTO manualCalDTO);
 

@@ -73,8 +73,8 @@
                     row_number() over (partition by stock_id order by date desc) as sequence
                 from (
                         select *
-                        from daily_stock_metrics
-                        where date &lt; #{date} and today_closing_price is not null
+                        from daily_stock_metrics s
+                        where s.date &lt; #{date} and s.today_closing_price is not null
                      ) T
             ) t1
         where t1.sequence = 1

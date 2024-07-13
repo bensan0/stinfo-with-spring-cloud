@@ -12,11 +12,11 @@ import java.util.Map;
 public interface DailyStockInfoDetailService extends IService<DailyStockInfoDetailDO> {
 
     /**
-     * 獲取前一個交易日個股標籤數據
+     * 獲取今日, 前一個交易日個股標籤數據
      *
      * @return
      */
-    Map<String, List<DailyStockInfoDetailDTO>> query4CalDetail(Query4CalDTO query4CalDTO);
+    Map<String, List<DailyStockInfoDetailDTO>> query4CalDetail(Long date);
 
     /**
      * 獲取前一個交易日個股標籤數據
