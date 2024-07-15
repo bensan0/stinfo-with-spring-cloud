@@ -48,8 +48,7 @@ public class ReportJob {
      */
     @XxlJob("generateDailyMetrics")
     public void generateDailyMetrics() {
-//        LocalDate now = LocalDate.now();
-        LocalDate now = LocalDate.of(2024,7,12);
+        LocalDate now = LocalDate.now();
         String nowStr = now.format(DatePattern.PURE_DATE_FORMATTER);
         //todo 先檢查redis flag
 
@@ -74,8 +73,7 @@ public class ReportJob {
     @XxlJob("generateDailyDetail")
     public void generateDailyDetail() {
         //todo 先檢查redis flag
-//        LocalDate now = LocalDate.now();
-        LocalDate now = LocalDate.of(2024,7,12);
+        LocalDate now = LocalDate.now();
         String nowStr = now.format(DatePattern.PURE_DATE_FORMATTER);
 
         if (now.getDayOfWeek() == DayOfWeek.SATURDAY || now.getDayOfWeek() == DayOfWeek.SUNDAY) {

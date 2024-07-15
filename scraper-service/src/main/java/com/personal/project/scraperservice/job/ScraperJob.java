@@ -498,8 +498,7 @@ public class ScraperJob {
     @XxlJob("twse-tpex-routine-scrape")
     public void twseJobHandle() {
         log.info("爬蟲任務 twse-routine-scrape 開始執行");
-//        LocalDate now = LocalDate.now();
-        LocalDate now = LocalDate.of(2024,7,12);
+        LocalDate now = LocalDate.now();
         String nowStr = now.format(DatePattern.PURE_DATE_FORMATTER);
 
         List<DailyStockInfoDto> results = new ArrayList<>();
@@ -620,39 +619,38 @@ public class ScraperJob {
             urls.add(StrUtil.format("https://tw.stock.yahoo.com/class-quote?sectorId={}&exchange=TWO", num));
         }
 
-//        Long date = Long.parseLong(LocalDate.now().format(DatePattern.PURE_DATE_FORMATTER));
-        Long date = Long.parseLong(LocalDate.of(2024, 7, 12).format(DatePattern.PURE_DATE_FORMATTER));
-//        YahooRealTimeScraper scraper = new YahooRealTimeScraper(urls, date);
-//        YahooRealTimePipeline pipeline = new YahooRealTimePipeline();
-//        Spider.create(scraper)
-//                .addPipeline(pipeline)
-//                .addUrl(scraper.getFirstUrl())
-//                .setDownloader(
-//                        new SeleniumDownloader(
-//                                classpath + driverPath,
-//                                Duration.of(15, ChronoUnit.SECONDS),
-//                                ExpectedConditions.visibilityOfAllElementsLocatedBy(By.xpath("//div[@class='table-body-wrapper']")),
-//                                null
-//                        )
-//                )
-//                .thread(2)
-//                .run();
-//
-//        //取得所有股票即時報價
-//        List<DailyStockInfoDto> results = pipeline.getResults();
-//
-//        //去重
-//        Map<String, DailyStockInfoDto> stockIdToTodayInfo = remoteStockService.getByDate(date, null).getData();
-//        results.forEach(dto -> {
-//            if (stockIdToTodayInfo.get(dto.getStockId()) != null) {
-//                dto.setId(stockIdToTodayInfo.get(dto.getStockId()).getId());
-//            }
-//        });
-//
-//        remoteStockService.saveAll(results, null);
+        Long date = Long.parseLong(LocalDate.now().format(DatePattern.PURE_DATE_FORMATTER));
+        YahooRealTimeScraper scraper = new YahooRealTimeScraper(urls, date);
+        YahooRealTimePipeline pipeline = new YahooRealTimePipeline();
+        Spider.create(scraper)
+                .addPipeline(pipeline)
+                .addUrl(scraper.getFirstUrl())
+                .setDownloader(
+                        new SeleniumDownloader(
+                                classpath + driverPath,
+                                Duration.of(15, ChronoUnit.SECONDS),
+                                ExpectedConditions.visibilityOfAllElementsLocatedBy(By.xpath("//div[@class='table-body-wrapper']")),
+                                null
+                        )
+                )
+                .thread(2)
+                .run();
+
+        //取得所有股票即時報價
+        List<DailyStockInfoDto> results = pipeline.getResults();
+
+        //去重
+        Map<String, DailyStockInfoDto> stockIdToTodayInfo = remoteStockService.getByDate(date, null).getData();
+        results.forEach(dto -> {
+            if (stockIdToTodayInfo.get(dto.getStockId()) != null) {
+                dto.setId(stockIdToTodayInfo.get(dto.getStockId()).getId());
+            }
+        });
+
+        remoteStockService.saveAll(results, null);
 
         //計算metrics
-//        remoteReportService.genRealTimeMetricsReport(date, null);
+        remoteReportService.genRealTimeMetricsReport(date, null);
 
         //計算tag(同上)
         remoteReportService.genRealTimeDetailReport(date, null);

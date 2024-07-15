@@ -29,6 +29,7 @@
 
     <select id="query4CalMetrics" parameterType="com.personal.project.stockservice.model.dto.Query4CalDTO" resultType="com.personal.project.stockservice.model.dto.DailyStockMetricsDTO">
         select
+            t.id as id,
             t.stock_id as stockId,
             t.date as date,
             t.stock_name as stockName,
@@ -51,6 +52,7 @@
             t.date = #{date}
         union
         select
+            t1.id as id,
             t1.stock_id as stockId,
             t1.date as date,
             t1.stock_name as stockName,
