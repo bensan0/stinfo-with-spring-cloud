@@ -25,5 +25,11 @@ public interface DailyStockInfoMapper extends BaseMapper<DailyStockInfoDO> {
     List<DailyStockInfoDTO> query4RealTimeMetrics(Long date);
 
     List<DailyStockInfoDTO> query4RealTimeDetail(Long date);
+
+    List<DailyStockInfoDTO> queryLatest();
+
+    List<DailyStockInfoDTO> queryByStockId(String stockId);
+
+    List<CompleteStockDTO> queryByConditions(QueryConditionDTO dto);
 }
 

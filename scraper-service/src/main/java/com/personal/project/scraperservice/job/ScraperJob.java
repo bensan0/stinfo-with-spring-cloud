@@ -547,7 +547,8 @@ public class ScraperJob {
 
         //獲取昨天
         Map<String, DailyStockInfoDto> formers = remoteStockService.getFormer(Long.parseLong(nowStr), null).getData();
-
+        System.out.println("昨天長度：" + formers.size());
+        System.out.println("今天長度：" + results.size());
         //清洗
         for (DailyStockInfoDto dto : results) {
             DailyStockInfoDto yesterdayDTO = formers.get(dto.getStockId());
@@ -585,6 +586,7 @@ public class ScraperJob {
 
         //獲取本日資料, 以防已經手動執行過任務
         Map<String, DailyStockInfoDto> stockIdToTodayInfo = remoteStockService.getByDate(Long.parseLong(nowStr), null).getData();
+        System.out.println("本日已存在長度：" + stockIdToTodayInfo.size());
         results.forEach(dto -> {
             if (stockIdToTodayInfo.get(dto.getStockId()) != null) {
                 dto.setId(stockIdToTodayInfo.get(dto.getStockId()).getId());

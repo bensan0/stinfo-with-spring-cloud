@@ -2,12 +2,13 @@ package com.personal.project.stockservice.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.personal.project.stockservice.mapper.DailyStockInfoMapper;
-import com.personal.project.stockservice.model.dto.DailyStockInfoDTO;
-import com.personal.project.stockservice.model.dto.Query4CalDTO;
-import com.personal.project.stockservice.model.dto.StockInfo4InitDetailDTO;
-import com.personal.project.stockservice.model.dto.StockInfo4InitMetricsDTO;
+import com.personal.project.stockservice.model.dto.*;
 import com.personal.project.stockservice.model.entity.DailyStockInfoDO;
 import com.personal.project.stockservice.service.DailyStockInfoService;
 import org.springframework.context.ApplicationContext;
@@ -176,4 +177,41 @@ public class DailyStockInfoServiceImpl extends ServiceImpl<DailyStockInfoMapper,
 
         return stockIdToDTOs;
     }
+
+    @Override
+    public PageInfo<DailyStockInfoDTO> queryByStockId(String stockId, int current, int size) {
+        PageHelper.startPage(current, size);
+        List<DailyStockInfoDTO> dtos = baseMapper.queryByStockId(stockId);
+
+        return new PageInfo<>(dtos);
+    }
+
+    @Override
+    public PageInfo<CompleteStockDTO> conditionQuery(int current, int size, QueryConditionDTO dto) {
+        PageHelper.startPage(current, size);
+        List<CompleteStockDTO> dtos = baseMapper.queryByConditions(dto);
+
+        return new PageInfo<>(dtos);
+    }
+
+//    @Override
+//    public PageDTO<DailyStockInfoDTO> queryTodayInfos(Integer current, Integer size) {
+//        LambdaQueryWrapper<DailyStockInfoDO> wrapper = new LambdaQueryWrapper<>();
+//        wrapper.eq(DailyStockInfoDO::getDate, 20240715);
+//        wrapper.orderByDesc(DailyStockInfoDO::getStockId);
+//
+//        Page<DailyStockInfoDO> page = new Page<>(current, size);
+//        Page<DailyStockInfoDO> pageDO = baseMapper.selectPage(page, wrapper);
+//        System.out.println("do: " + pageDO.getRecords());
+//
+//        wrapper.select(DailyStockInfoDO::getStockId);
+//        Page<Map<String, Object>> page1 = new Page<>(current, size);
+//        Page<Map<String, Object>> pageMapDTO = baseMapper.selectMapsPage(page1, wrapper);
+//        System.out.println("mapDTO: " + pageMapDTO.getRecords());
+//
+//        Page<DailyStockInfoDO> pageDTO = baseMapper.selectPage(page, wrapper);
+//        System.out.println("dto: " + pageDTO.getRecords());
+//
+//        return null;
+//    }
 }

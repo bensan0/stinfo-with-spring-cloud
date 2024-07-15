@@ -340,4 +340,109 @@
         ) T2
         where T2.sequence in (1, 2, 4)
     </select>
+    <select id="queryLatest" resultType="com.personal.project.stockservice.model.dto.DailyStockInfoDTO">
+
+
+    </select>
+    <select id="queryByStockId" resultType="com.personal.project.stockservice.model.dto.DailyStockInfoDTO">
+        select
+            T.stock_id as stockId,
+            T.stock_name as stockName,
+            T.date as 'date',
+            T.market as market,
+            T.price_gap_percent as priceGapPercent,
+            T.today_closing_price as todayClosingPrice,
+            T.today_closing_price as todayClosingPrice,
+            T.yesterday_closing_price as yesterdayClosingPrice,
+            T.opening_price as openingPrice,
+            T.highest_price as highestPrice,
+            T.lowest_price as lowestPrice,
+            T.today_trading_volume_piece as todayTradingVolumePiece,
+            T.yesterday_trading_volume_piece as yesterdayTradingVolumePiece,
+            T.today_trading_volume_money as todayTradingVolumeMoney,
+            T.yesterday_trading_volume_money as yesterdayTradingVolumeMoney
+        from
+            daily_stock_info T
+        where
+            T.stock_id = #{stockId}
+        order by
+            T.date desc
+    </select>
+    <select id="queryByConditions" resultType="com.personal.project.stockservice.model.dto.CompleteStockDTO">
+        select
+            t1.stock_id as stockId,
+            t1.stock_name as stockName,
+            t1.date as date,
+            t1.today_closing_price as todayClosingPrice,
+            t1.yesterday_closing_price as yesterdayClosingPrice,
+            t1.price_gap as priceGap,
+            t1.price_gap_percent as priceGapPercent,
+            t1.today_trading_volume_piece as todayTradingVolumePiece,
+            t1.today_trading_volume_money as todayTradingVolumeMoney,
+            t2.upper_shadow as upperShadow,
+            t2.real_body as realBody,
+            t2.lower_shadow as lowerShadow,
+            t2.tags,
+            t3.ma_5 as ma5,
+            t3.ma_10 as ma10,
+            t3.ma_20 as ma20
+        from
+            (
+                select
+                    tt.*,
+                    row_number() over (partition by stock_id order by date desc) as sequence
+                from
+                    daily_stock_info tt
+                where
+                    tt.today_closing_price is not null
+            ) t1
+        left join
+            daily_stock_info_detail t2
+        on
+            t1.stock_id = t2.stock_id and
+            t1.date = t2.date
+        left join
+            daily_stock_metrics t3
+        on
+            t1.date = t3.date and
+            t1.stock_id = t3.stock_id
+        <where>
+            t1.sequence = 1
+            <if test = "tradingVolumePieceStart != null">
+                and t1.today_trading_volume_piece &gt;= #{tradingVolumePieceStart}
+            </if>
+            <if test="tradingVolumePieceEnd != null">
+                and t1.today_trading_volume_piece &lt;= #{tradingVolumePieceEnd}
+            </if>
+            <if test="conPriceDays != null and conPriceStatus != null">
+                and JSON_CONTAINS(
+                                    t2.tags->'$.consecutivePrice',
+                                    JSON_ARRAY(#{conPriceDays}, #{conPriceStatus})
+                                 )
+            </if>
+            <if test="conVolDays != null and tradingVolumeStatus != null">
+                and JSON_CONTAINS(
+                                    t2.tags->'$.consecutiveTradingVolume',
+                                    JSON_ARRAY(#{conVolDays}, #{tradingVolumeStatus})
+                                 )
+            </if>
+            <if test="conAmountDays != null and tradingAmountStatus != null">
+                and JSON_CONTAINS(
+                                    t2.tags->'$.consecutiveTradingAmount',
+                                    JSON_ARRAY(#{conVolDays}, #{tradingVolumeStatus})
+                                 )
+            </if>
+            <if test="extraTags != null and extraTags.size() > 0">
+                and JSON_CONTAINS(
+                                    t2.tags->'$.extraTags',
+                                    JSON_ARRAY(
+                                                <foreach collection="extraTags" index="index" item="item" open="" separator="," close="">
+                                                        #{item}
+                                                </foreach>
+                                                )
+                                 )
+            </if>
+        </where>
+
+    </select>
 </mapper>

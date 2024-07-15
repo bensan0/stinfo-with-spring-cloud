@@ -1,6 +1,7 @@
 package com.personal.project.stockservice.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.github.pagehelper.PageInfo;
 import com.personal.project.stockservice.model.dto.*;
 import com.personal.project.stockservice.model.entity.DailyStockInfoDO;
 
@@ -65,4 +66,8 @@ public interface DailyStockInfoService extends IService<DailyStockInfoDO> {
     Map<String, List<DailyStockInfoDTO>> query4CalRealTimeMetrics(Long date);
 
     Map<String, List<DailyStockInfoDTO>> queryInfo4CalRealTimeDetail(Long date);
+
+    PageInfo<DailyStockInfoDTO> queryByStockId(String stockId, int current, int size);
+
+    PageInfo<CompleteStockDTO> conditionQuery(int current, int size, QueryConditionDTO dto);
 }
