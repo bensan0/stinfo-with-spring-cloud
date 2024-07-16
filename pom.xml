@@ -26,7 +26,6 @@
         <module>auth-service</module>
         <module>stock-service</module>
         <module>report-service</module>
-        <module>cache-service</module>
         <module>console-service</module>
     </modules>
 
@@ -128,6 +127,12 @@
                         <artifactId>mybatis-spring</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.redisson</groupId>
+                <artifactId>redisson-spring-boot-starter</artifactId>
+                <version>3.32.0</version>
             </dependency>
 
             <dependency>

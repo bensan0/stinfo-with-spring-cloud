@@ -2,9 +2,8 @@ package com.personal.project.stockservice.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.personal.project.stockservice.mapper.DailyStockMetricsMapper;
-import com.personal.project.stockservice.model.dto.DailyStockMetricsDTO;
+import com.personal.project.stockservice.model.dto.response.DailyStockMetricsDTO;
 import com.personal.project.stockservice.model.dto.ManualCalDTO;
-import com.personal.project.stockservice.model.dto.Query4CalDTO;
 import com.personal.project.stockservice.model.entity.DailyStockMetricsDO;
 import com.personal.project.stockservice.service.DailyStockMetricsService;
 import org.springframework.stereotype.Service;

@@ -1,9 +1,8 @@
 package com.personal.project.stockservice.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.personal.project.stockservice.model.dto.DailyStockMetricsDTO;
+import com.personal.project.stockservice.model.dto.response.DailyStockMetricsDTO;
 import com.personal.project.stockservice.model.dto.ManualCalDTO;
-import com.personal.project.stockservice.model.dto.Query4CalDTO;
 import com.personal.project.stockservice.model.entity.DailyStockMetricsDO;
 
 import java.util.List;

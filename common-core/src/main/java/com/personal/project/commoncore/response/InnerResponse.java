@@ -12,16 +12,6 @@ public class InnerResponse<T> implements Serializable {
 
     private T data;
 
-    private int total;
-
-    public int getTotal() {
-        return total;
-    }
-
-    public void setTotal(int total) {
-        this.total = total;
-    }
-
     public String getCode() {
         return code;
     }

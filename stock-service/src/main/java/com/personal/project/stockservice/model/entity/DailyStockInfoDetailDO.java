@@ -1,9 +1,6 @@
 package com.personal.project.stockservice.model.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import com.personal.project.stockservice.typehandler.TagsHandler;
 import lombok.Data;
 import lombok.ToString;
@@ -36,4 +33,7 @@ public class DailyStockInfoDetailDO {
 
     @TableField(typeHandler = TagsHandler.class)
     private Tags tags;
+
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private Long updatedAt;
 }

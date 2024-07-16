@@ -3,12 +3,14 @@ package com.personal.project.stockservice.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.personal.project.stockservice.mapper.DailyStockInfoMapper;
-import com.personal.project.stockservice.model.dto.*;
+import com.personal.project.stockservice.model.dto.request.Query4CalDTO;
+import com.personal.project.stockservice.model.dto.request.QueryConditionDTO;
+import com.personal.project.stockservice.model.dto.request.QueryConditionRealTimeDTO;
+import com.personal.project.stockservice.model.dto.response.*;
 import com.personal.project.stockservice.model.entity.DailyStockInfoDO;
 import com.personal.project.stockservice.service.DailyStockInfoService;
 import org.springframework.context.ApplicationContext;
@@ -45,16 +47,6 @@ public class DailyStockInfoServiceImpl extends ServiceImpl<DailyStockInfoMapper,
         List<DailyStockInfoDO> pojoList = data.stream().map(dto -> BeanUtil.copyProperties(dto, DailyStockInfoDO.class)).toList();
 
         return applicationContext.getBean(DailyStockInfoService.class).saveOrUpdateBatch(pojoList);
-    }
-
-    @Override
-    public Map<String, String> queryExist() {
-        LambdaQueryWrapper<DailyStockInfoDO> wrapper  = new LambdaQueryWrapper<>();
-        wrapper.select(DailyStockInfoDO::getStockId, DailyStockInfoDO::getMarket);
-        wrapper.groupBy(DailyStockInfoDO::getStockId);
-        List<DailyStockInfoDO> dailyStockInfoDOS = dailyStockInfoMapper.selectList(wrapper);
-
-        return dailyStockInfoDOS.stream().collect(Collectors.toMap(DailyStockInfoDO::getStockId, DailyStockInfoDO::getMarket));
     }
 
     @Override
@@ -192,6 +184,20 @@ public class DailyStockInfoServiceImpl extends ServiceImpl<DailyStockInfoMapper,
         List<CompleteStockDTO> dtos = baseMapper.queryByConditions(dto);
 
         return new PageInfo<>(dtos);
+    }
+
+    @Override
+    public List<RealTimeStockDTO> conditionRealTimeQuery(Long date, QueryConditionRealTimeDTO dto) {
+
+        return baseMapper.queryRealTimeByConditions(date, dto);
+    }
+
+    @Override
+    public long checkInit() {
+        LambdaQueryWrapper<DailyStockInfoDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.isNotNull(DailyStockInfoDO::getId);
+
+        return baseMapper.selectCount(wrapper);
     }
 
 //    @Override

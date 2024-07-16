@@ -4,6 +4,9 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.personal.project.stockservice.model.dto.*;
+import com.personal.project.stockservice.model.dto.request.ConditionQueryUnionInfoDTO;
+import com.personal.project.stockservice.model.dto.request.QueryConditionDTO;
+import com.personal.project.stockservice.model.dto.response.DailyStockInfoDetailDTO;
 import com.personal.project.stockservice.model.entity.DailyStockInfoDetailDO;
 
 import java.util.List;

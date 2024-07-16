@@ -20,9 +20,11 @@ create table if not exists daily_stock_info
     today_trading_volume_piece      bigint unsigned                                   null     comment '今日交易量(張)',
     today_trading_volume_money      decimal(14,2) unsigned                            null     comment '今日交易量(元)',
     yesterday_trading_volume_piece  bigint unsigned                                   null     comment '昨日交易量(張)',
-    yesterday_trading_volume_money  decimal(14,2) unsigned                            null     comment '昨日交易量(元)'
+    yesterday_trading_volume_money  decimal(14,2) unsigned                            null     comment '昨日交易量(元)',
+    updated_at                      bigint unsigned                 default 0         not null comment 'yyyyMMddHHmmss'
     )
     comment '每日股票概要' charset = utf8mb4;
+    create index idx_daily_stock_info_stockid on daily_stock_info (stock_id);
 
 create table if not exists daily_stock_metrics
 (
@@ -42,9 +44,11 @@ create table if not exists daily_stock_metrics
     ma_120                          decimal(7,2) unsigned                             null     comment '120日均價',
     last_ma_120_price               decimal(7,2) unsigned                             null     comment '用以計算本次均價的最舊一次收盤價',
     ma_240                          decimal(7,2) unsigned                             null     comment '240日均價',
-    last_ma_240_price               decimal(7,2) unsigned                             null     comment '用以計算本次均價的最舊一次收盤價'
+    last_ma_240_price               decimal(7,2) unsigned                             null     comment '用以計算本次均價的最舊一次收盤價',
+    updated_at                      bigint       unsigned           default 0         not null comment 'yyyyMMddHHmmss'
     )
     comment '每日股票指標數據' charset = utf8mb4;
+    create index idx_daily_stock_metrics_stockid on daily_stock_metrics (stock_id);
 
 create table if not exists daily_stock_info_detail
 (
@@ -55,6 +59,8 @@ create table if not exists daily_stock_info_detail
     upper_shadow                    decimal(5,2) unsigned                             null     comment '上影線佔長(%)',
     lower_shadow                    decimal(5,2) unsigned                             null     comment '下影線佔長(%)',
     real_body                       decimal(5,2) unsigned                             null     comment '實體佔長(%)',
-    tags                            json                                              null     comment 'json, 標籤詳細資訊'
+    tags                            json                                              null     comment 'json, 標籤詳細資訊',
+    updated_at                      bigint unsigned                 default 0         not null comment 'yyyyMMddHHmmss'
     )
     comment '每日股票標籤詳細數據' charset = utf8mb4;
+    create index idx_daily_stock_detail_stockid on daily_stock_detail (stock_id);

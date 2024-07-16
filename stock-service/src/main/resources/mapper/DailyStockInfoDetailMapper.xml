@@ -10,13 +10,14 @@
         <result property="lowerShadow" column="lower_shadow" jdbcType="DECIMAL"/>
         <result property="realBody" column="real_body" jdbcType="DECIMAL"/>
         <result property="tags" column="tags" typeHandler="com.personal.project.stockservice.typehandler.TagsHandler"/>
+        <result property="updatedAt" column="updated_at" jdbcType="BIGINT"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,stock_id,date,today_closing_price,upper_shadow,lower_shadow,real_body,tags
+        id,stock_id,date,today_closing_price,upper_shadow,lower_shadow,real_body,tags,updated_at
     </sql>
 
-    <select id="query4CalDetail" parameterType="com.personal.project.stockservice.model.dto.Query4CalDTO" resultType="com.personal.project.stockservice.model.dto.DailyStockInfoDetailDTO">
+    <select id="query4CalDetail" parameterType="com.personal.project.stockservice.model.dto.request.Query4CalDTO" resultType="com.personal.project.stockservice.model.dto.response.DailyStockInfoDetailDTO">
         select
             t.id as id,
             t.stock_id as stockId,
@@ -55,7 +56,7 @@
         where T.sequence = 1
     </select>
 
-    <select id="query4CalDetailManual" parameterType="com.personal.project.stockservice.model.dto.ManualCalDTO" resultType="com.personal.project.stockservice.model.dto.DailyStockInfoDetailDTO">
+    <select id="query4CalDetailManual" parameterType="com.personal.project.stockservice.model.dto.ManualCalDTO" resultType="com.personal.project.stockservice.model.dto.response.DailyStockInfoDetailDTO">
         select
             T.stock_id as stockId,
             T.date as 'date',
@@ -79,7 +80,7 @@
         where T.sequence = 1
     </select>
 
-    <select id="queryCondition" resultType="com.personal.project.stockservice.model.dto.ConditionQueryUnionInfoDTO">
+    <select id="queryCondition" resultType="com.personal.project.stockservice.model.dto.request.ConditionQueryUnionInfoDTO">
         select
         i.stock_id as stockId,
         i.stock_name as stockName,
@@ -161,7 +162,7 @@
         order by stock_id
     </select>
 
-    <select id="query4InitTodayDetail" resultType="com.personal.project.stockservice.model.dto.DailyStockInfoDetailDTO">
+    <select id="query4InitTodayDetail" resultType="com.personal.project.stockservice.model.dto.response.DailyStockInfoDetailDTO">
         select
             T.stock_id as stockId,
             T.date as date,

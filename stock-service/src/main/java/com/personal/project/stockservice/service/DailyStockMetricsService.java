@@ -2,6 +2,7 @@ package com.personal.project.stockservice.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.personal.project.stockservice.model.dto.*;
+import com.personal.project.stockservice.model.dto.response.DailyStockMetricsDTO;
 import com.personal.project.stockservice.model.entity.DailyStockMetricsDO;
 
 import java.util.List;

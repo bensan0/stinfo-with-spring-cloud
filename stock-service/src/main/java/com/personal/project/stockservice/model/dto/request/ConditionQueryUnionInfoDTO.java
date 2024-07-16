@@ -1,4 +1,4 @@
-package com.personal.project.stockservice.model.dto;
+package com.personal.project.stockservice.model.dto.request;
 
 import com.personal.project.stockservice.model.entity.Tags;
 import lombok.Data;

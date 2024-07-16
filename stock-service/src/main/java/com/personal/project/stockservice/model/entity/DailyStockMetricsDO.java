@@ -1,9 +1,6 @@
 package com.personal.project.stockservice.model.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -66,4 +63,7 @@ public class DailyStockMetricsDO {
 
     @TableField(value = "last_ma_240_price")
     private BigDecimal lastMA240price;
+
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private Long updatedAt;
 }

@@ -4,6 +4,9 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.personal.project.stockservice.model.dto.*;
+import com.personal.project.stockservice.model.dto.request.ConditionQueryUnionInfoDTO;
+import com.personal.project.stockservice.model.dto.request.QueryConditionDTO;
+import com.personal.project.stockservice.model.dto.response.DailyStockInfoDetailDTO;
 import com.personal.project.stockservice.model.entity.DailyStockInfoDetailDO;
 import org.apache.ibatis.annotations.Param;
 

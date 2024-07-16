@@ -4,7 +4,14 @@ spring:
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
-
+  data:
+    redis:
+      database: 1
+      host: localhost
+      port: 6379
+      #      password:
+      timeout: 10s
+      connect-timeout: 10s
 mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: com.personal.project.scraperservice.model.entity
@@ -28,4 +35,4 @@ xxl:
 #      ip:
 #      port:
       logpath: logs
-      logretentiondays: 30
+      logretentiondays: 7

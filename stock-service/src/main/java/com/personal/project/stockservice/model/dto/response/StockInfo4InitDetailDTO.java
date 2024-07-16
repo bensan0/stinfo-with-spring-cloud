@@ -1,4 +1,4 @@
-package com.personal.project.stockservice.model.dto;
+package com.personal.project.stockservice.model.dto.response;
 
 import lombok.Data;
 

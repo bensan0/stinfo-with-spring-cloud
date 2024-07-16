@@ -35,7 +35,7 @@ public class RemoteStockFallbackFactory implements FallbackFactory<RemoteStockSe
             }
 
             @Override
-            public InnerResponse<Map<String, String>> getExist() {
+            public InnerResponse<Boolean> checkInit(String token) {
                 return getBasicFailedResp(cause);
             }
 

@@ -19,15 +19,16 @@
         <result property="lastMA120price" column="last_ma_120_price" jdbcType="DECIMAL"/>
         <result property="ma240" column="ma240" jdbcType="DECIMAL"/>
         <result property="lastMA240price" column="last_ma_240_price" jdbcType="DECIMAL"/>
+        <result property="updatedAt" column="updated_at" jdbcType="BIGINT"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id,stock_id,stock_name,today_closing_price,date,ma_5,last_ma_5_price,ma_10,
         last_ma_10_price,ma_20,last_ma_20_price,ma_60,last_ma_60_price,ma_120,
-        last_ma_120_price,ma_240,last_ma_240_price
+        last_ma_120_price,ma_240,last_ma_240_price,updated_at
     </sql>
 
-    <select id="query4CalMetrics" parameterType="com.personal.project.stockservice.model.dto.Query4CalDTO" resultType="com.personal.project.stockservice.model.dto.DailyStockMetricsDTO">
+    <select id="query4CalMetrics" parameterType="com.personal.project.stockservice.model.dto.request.Query4CalDTO" resultType="com.personal.project.stockservice.model.dto.response.DailyStockMetricsDTO">
         select
             t.id as id,
             t.stock_id as stockId,
@@ -82,7 +83,7 @@
         where t1.sequence = 1
     </select>
 
-    <select id="query4CalDetail" parameterType="com.personal.project.stockservice.model.dto.Query4CalDTO" resultType="com.personal.project.stockservice.model.dto.DailyStockMetricsDTO">
+    <select id="query4CalDetail" parameterType="com.personal.project.stockservice.model.dto.request.Query4CalDTO" resultType="com.personal.project.stockservice.model.dto.response.DailyStockMetricsDTO">
         select
             t.stock_id as stockId,
             t.date as date,
@@ -136,7 +137,7 @@
         where T.sequence = 1
     </select>
 
-    <select id="query4ManualCalDetail" parameterType="com.personal.project.stockservice.model.dto.ManualCalDTO" resultType="com.personal.project.stockservice.model.dto.DailyStockMetricsDTO">
+    <select id="query4ManualCalDetail" parameterType="com.personal.project.stockservice.model.dto.ManualCalDTO" resultType="com.personal.project.stockservice.model.dto.response.DailyStockMetricsDTO">
         select
             T.stock_id as stockId,
             T.date as date,
@@ -169,7 +170,7 @@
     </select>
 
     <select id="query4CalInitTodayMetrics"
-            resultType="com.personal.project.stockservice.model.dto.DailyStockMetricsDTO">
+            resultType="com.personal.project.stockservice.model.dto.response.DailyStockMetricsDTO">
         select
             T.stock_id as stockId,
             T.date as date,
@@ -201,7 +202,7 @@
         where T.sequence = 1;
     </select>
 
-    <select id="query4CalInitTodayDetail" resultType="com.personal.project.stockservice.model.dto.DailyStockMetricsDTO">
+    <select id="query4CalInitTodayDetail" resultType="com.personal.project.stockservice.model.dto.response.DailyStockMetricsDTO">
         select
             T.stock_id as stockId,
             T.date as date,

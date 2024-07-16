@@ -10,7 +10,7 @@ spring:
         - id: stock-service
           uri: lb://stock-service
           predicates:
-            - Path=/gateway/stock/**
+            - Path=/gw/stock/**
           filters:
             - StripPrefix=2
   profiles:

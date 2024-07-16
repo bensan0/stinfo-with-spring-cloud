@@ -2,7 +2,10 @@ package com.personal.project.stockservice.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.github.pagehelper.PageInfo;
-import com.personal.project.stockservice.model.dto.*;
+import com.personal.project.stockservice.model.dto.request.Query4CalDTO;
+import com.personal.project.stockservice.model.dto.request.QueryConditionDTO;
+import com.personal.project.stockservice.model.dto.request.QueryConditionRealTimeDTO;
+import com.personal.project.stockservice.model.dto.response.*;
 import com.personal.project.stockservice.model.entity.DailyStockInfoDO;
 
 import java.util.List;
@@ -14,8 +17,6 @@ public interface DailyStockInfoService extends IService<DailyStockInfoDO> {
     boolean initSaveAll(List<DailyStockInfoDTO> data);
 
     boolean saveAll(List<DailyStockInfoDTO> data);
-
-    Map<String, String> queryExist();
 
     /**
      * 獲取前一個交易日資料
@@ -70,4 +71,8 @@ public interface DailyStockInfoService extends IService<DailyStockInfoDO> {
     PageInfo<DailyStockInfoDTO> queryByStockId(String stockId, int current, int size);
 
     PageInfo<CompleteStockDTO> conditionQuery(int current, int size, QueryConditionDTO dto);
+
+    List<RealTimeStockDTO> conditionRealTimeQuery(Long date, QueryConditionRealTimeDTO dto);
+
+	long checkInit();
 }

@@ -1,4 +1,4 @@
-package com.personal.project.stockservice.model.dto;
+package com.personal.project.stockservice.model.dto.request;
 
 import lombok.Data;
 
@@ -11,6 +11,8 @@ public class QueryConditionDTO {
     private Long tradingVolumePieceStart;
 
     private Long tradingVolumePieceEnd;
+
+    private BigDecimal priceGapPercent;
 
     //價格連漲/跌/平
     private String conPriceDays;

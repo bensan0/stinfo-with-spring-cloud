@@ -1,7 +1,10 @@
 package com.personal.project.stockservice.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.personal.project.stockservice.model.dto.*;
+import com.personal.project.stockservice.model.dto.request.Query4CalDTO;
+import com.personal.project.stockservice.model.dto.request.QueryConditionDTO;
+import com.personal.project.stockservice.model.dto.request.QueryConditionRealTimeDTO;
+import com.personal.project.stockservice.model.dto.response.*;
 import com.personal.project.stockservice.model.entity.DailyStockInfoDO;
 
 import java.util.List;
@@ -31,5 +34,7 @@ public interface DailyStockInfoMapper extends BaseMapper<DailyStockInfoDO> {
     List<DailyStockInfoDTO> queryByStockId(String stockId);
 
     List<CompleteStockDTO> queryByConditions(QueryConditionDTO dto);
+
+    List<RealTimeStockDTO> queryRealTimeByConditions(Long date, QueryConditionRealTimeDTO dto);
 }
 

@@ -53,7 +53,6 @@ public class TPEXRoutineScraper implements PageProcessor {
 
         List<DailyStockInfoDto> results = new ArrayList<>();
         for (Selectable row : rows) {
-
             String stockId = row.xpath("//tr/td[1]/text()").get().trim();
             if (!StrUtil.isNumeric(stockId) || stockId.length() > 4) {
                 continue;

@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/scraper")
-public class Controller {
+public class BackendController {
 
 
     @PostMapping("/calculate")

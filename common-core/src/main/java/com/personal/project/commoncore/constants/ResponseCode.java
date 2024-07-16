@@ -6,6 +6,7 @@ public enum ResponseCode {
 
 
     Success("200", null),
+    Not_Valid("403", "not valid"),
     Not_Found("404", "data not found"),
     Invalid_Args("405", "params invalid"),
     Failed("500", "server error");
