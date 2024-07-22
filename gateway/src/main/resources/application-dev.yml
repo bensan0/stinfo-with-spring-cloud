@@ -1,0 +1,6 @@
+custom:
+  gateway:
+    skip:
+      - /gw/auth/p/login
+      - /gw/auth/sign/sign-in
+      - /gw/auth/sign/sign-up

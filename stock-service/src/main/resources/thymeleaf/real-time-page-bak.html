@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>即時頁面</title>
+    <style>
+        body {
+            display: flex;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .sidebar {
+            width: 12.5%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            padding-left: 20px;
+            background-color: #f0f0f0;
+        }
+        .sidebar a {
+            margin: 10px 0;
+        }
+        .main-content {
+            width: 75%;
+            padding: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <a href="http://localhost:8999/gw/stock/p/main-page">主頁面</a>
+    <a href="http://localhost:8999/gw/stock/p/real-time-page">即時頁面</a>
+</div>
+<div class="main-content">
+    <form id="searchForm">
+        交易量(張)<input type="number" id="volume"><br>
+        漲跌幅(%)<input type="number" id="priceChange"><br>
+        標籤<input type="text" id="tags"><br>
+        <button type="button" onclick="search()">提交</button>
+    </form>
+    <table id="resultTable">
+        <thead>
+        <tr>
+            <th>股票代碼</th>
+            <th>股票名稱</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<script>
+    function search() {
+        const formData = {
+            volume: document.getElementById('volume').value || null,
+            priceChange: document.getElementById('priceChange').value || null,
+            tags: document.getElementById('tags').value ? document.getElementById('tags').value.split(',') : null
+        };
+
+        fetch('http://localhost:8999/gw/stock/v1/stock/condition/real-time/list', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(formData),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "200") {
+                const tableBody = document.querySelector('#resultTable tbody');
+                tableBody.innerHTML = '';
+                data.data.forEach(item => {
+                    const row = `<tr><td>${item.stockId}</td><td>${item.stockName}</td></tr>`;
+                    tableBody.innerHTML += row;
+                });
+            } else {
+                alert(data.msg);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // 頁面加載時檢查 token
+<!--    window.onload = function() {-->
+<!--        const token = localStorage.getItem('token');-->
+<!--        if (!token) {-->
+<!--            window.location.href = 'login.html';  // 假設登入頁面的文件名為 login.html-->
+<!--        }-->
+<!--    }-->
+</script>
+</body>
+</html>

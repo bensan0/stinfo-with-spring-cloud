@@ -3,9 +3,9 @@ package com.personal.project.userservice.model.dto.common;
 import lombok.Data;
 
 @Data
-public class UserRegularCommentRequestDTO extends UserRequestDTO {
+public class UserRegularCommentRequestDTO {
 
-    private Long id;
+	private Long id;
 
-    private String comment;
+	private String comment;
 }

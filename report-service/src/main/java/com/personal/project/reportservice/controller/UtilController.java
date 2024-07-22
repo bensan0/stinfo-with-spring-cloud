@@ -18,46 +18,12 @@ public class UtilController {
     @GetMapping("/tags")
     public CommonResponse<TagsDTO> getTags() {
         TagsDTO dto = new TagsDTO();
-        dto.setPriceSelections(
-                List.of(
-                        CommonTerm.RISE,
-                        CommonTerm.FALL,
-                        CommonTerm.UNCHANGED
-                )
-        );
-
-        dto.setPriceStatusSelections(
-                List.of(
-                        CommonTerm.RISE,
-                        CommonTerm.FALL,
-                        CommonTerm.UNCHANGED
-//                        CommonTerm.TURN_TO + CommonTerm.RISE,
-//                        CommonTerm.TURN_TO + CommonTerm.FALL
-                )
-        );
-
-        dto.setTradingVolumeSelections(
-                List.of(
-                        CommonTerm.RISE,
-                        CommonTerm.FALL,
-                        CommonTerm.UNCHANGED
-                )
-        );
-
-        dto.setTradingAmountSelections(
-                List.of(
-                        CommonTerm.RISE,
-                        CommonTerm.FALL,
-                        CommonTerm.UNCHANGED
-                )
-        );
-
         dto.setExtraTagsSelections(
                 Arrays.stream(DetailTagEnum.values())
                         .map(DetailTagEnum::getTag)
                         .toList()
         );
-
+        System.out.println(dto);
 
         return CommonResponse.ok(dto);
     }

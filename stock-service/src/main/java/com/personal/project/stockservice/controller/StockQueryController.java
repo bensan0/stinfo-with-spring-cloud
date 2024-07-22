@@ -1,6 +1,7 @@
 package com.personal.project.stockservice.controller;
 
 import cn.hutool.core.date.DatePattern;
+import cn.hutool.json.JSONUtil;
 import com.github.pagehelper.PageInfo;
 import com.personal.project.commoncore.constants.ResponseCode;
 import com.personal.project.commoncore.response.CommonResponse;
@@ -14,6 +15,7 @@ import jakarta.validation.constraints.Min;
 import org.hibernate.validator.constraints.Range;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -70,4 +72,17 @@ public class StockQueryController {
 		return CommonResponse.ok(results);
 	}
 
+	public static void main(String[] args) {
+		RealTimeStockDTO dto = new RealTimeStockDTO();
+		dto.setStockId("2330");
+		dto.setStockName("台ＧＧ");
+		dto.setTodayClosingPrice(BigDecimal.ONE.toPlainString());
+		dto.setPriceGap(BigDecimal.ONE.toPlainString());
+		dto.setPriceGapPercent(BigDecimal.ONE.toPlainString());
+		dto.setTags("{\"hohoho\":\"123456\"}");
+
+		List<RealTimeStockDTO> l = List.of(dto);
+		CommonResponse<List<RealTimeStockDTO>> c = CommonResponse.ok(l);
+		System.out.println(JSONUtil.toJsonStr(c));
+	}
 }

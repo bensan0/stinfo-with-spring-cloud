@@ -59,7 +59,8 @@ public class YahooRealTimeScraper implements PageProcessor {
 				try {
 					String stockName = row.xpath("//li//div[@class='Lh(20px) Fw(600) Fz(16px) Ell']/text()").get().trim();
 					dto.setStockName(stockName);
-				} catch (Exception ignored) {}
+				} catch (Exception ignored) {
+				}
 
 				dto.setDate(date);
 
@@ -91,7 +92,11 @@ public class YahooRealTimeScraper implements PageProcessor {
 
 				//漲跌幅
 				String pGapP = udNode.getLast().xpath("//div/span/text()").get().trim().replace("%", "");
-				dto.setPriceGapPercent(new BigDecimal(pGapP));
+				if (dto.getPriceGap().compareTo(BigDecimal.ZERO) < 0) {
+					dto.setPriceGapPercent(BigDecimal.ZERO.subtract(new BigDecimal(pGapP)));
+				} else {
+					dto.setPriceGapPercent(new BigDecimal(pGapP));
+				}
 
 				//開
 				try {

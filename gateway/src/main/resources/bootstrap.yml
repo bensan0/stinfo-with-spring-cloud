@@ -7,10 +7,22 @@ spring:
         locator:
           enabled: true
       routes:
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/gw/auth/**
+          filters:
+            - StripPrefix=2
         - id: stock-service
           uri: lb://stock-service
           predicates:
             - Path=/gw/stock/**
+          filters:
+            - StripPrefix=2
+        - id: report-service
+          uri: lb://report-service
+          predicates:
+            - Path=/gw/report/**
           filters:
             - StripPrefix=2
   profiles:

@@ -730,7 +730,7 @@ concluded that weaker conditions might promote sharing better.
 users of those programs of all benefit from the free status of the
 libraries themselves.  This Library General Public License is intended to
 permit developers of non-free programs to use free libraries, while
-preserving your freedom as a user of such programs to change the free
+preserving your freedom as a userDO of such programs to change the free
 libraries that are incorporated in them.  (We have not seen how to achieve
 this as regards changes in header files, but we have achieved it as regards
 changes in the actual functions of the Library.)  The hope is that this
@@ -913,7 +913,7 @@ Library is used in it and that the Library and its use are covered by
 this License.  You must supply a copy of this License.  If the work
 during execution displays copyright notices, you must include the
 copyright notice for the Library among them, as well as a reference
-directing the user to the copy of this License.  Also, you must do one
+directing the userDO to the copy of this License.  Also, you must do one
 of these things:
 
     a) Accompany the work with the complete corresponding
@@ -922,14 +922,14 @@ of these things:
     Sections 1 and 2 above); and, if the work is an executable linked
     with the Library, with the complete machine-readable "work that
     uses the Library", as object code and/or source code, so that the
-    user can modify the Library and then relink to produce a modified
+    userDO can modify the Library and then relink to produce a modified
     executable containing the modified Library.  (It is understood
-    that the user who changes the contents of definitions files in the
+    that the userDO who changes the contents of definitions files in the
     Library will not necessarily be able to recompile the application
     to use the modified definitions.)
 
     b) Accompany the work with a written offer, valid for at
-    least three years, to give the same user the materials
+    least three years, to give the same userDO the materials
     specified in Subsection 6a, above, for a charge no more
     than the cost of performing this distribution.
 
@@ -937,8 +937,8 @@ of these things:
     from a designated place, offer equivalent access to copy the above
     specified materials from the same place.
 
-    d) Verify that the user has already received a copy of these
-    materials or that you have already sent this user a copy.
+    d) Verify that the userDO has already received a copy of these
+    materials or that you have already sent this userDO a copy.
 
   For an executable, the required form of the "work that uses the
 Library" must include any data and utility programs needed for
@@ -1163,7 +1163,7 @@ Public License permits more lax criteria for linking other code with
 the library.
 
   We call this license the "Lesser" General Public License because it
-does Less to protect the user's freedom than the ordinary General
+does Less to protect the userDO's freedom than the ordinary General
 Public License.  It also provides other free software developers Less
 of an advantage over competing non-free programs.  These disadvantages
 are the reason we use the ordinary General Public License for many
@@ -1186,7 +1186,7 @@ operating system, as well as its variant, the GNU/Linux operating
 system.
 
   Although the Lesser General Public License is Less protective of the
-users' freedom, it does ensure that the user of a program that is
+users' freedom, it does ensure that the userDO of a program that is
 linked with the Library has the freedom and the wherewithal to run
 that program using a modified version of the Library.
 
@@ -1364,7 +1364,7 @@ Library is used in it and that the Library and its use are covered by
 this License.  You must supply a copy of this License.  If the work
 during execution displays copyright notices, you must include the
 copyright notice for the Library among them, as well as a reference
-directing the user to the copy of this License.  Also, you must do one
+directing the userDO to the copy of this License.  Also, you must do one
 of these things:
 
     a) Accompany the work with the complete corresponding
@@ -1373,22 +1373,22 @@ of these things:
     Sections 1 and 2 above); and, if the work is an executable linked
     with the Library, with the complete machine-readable "work that
     uses the Library", as object code and/or source code, so that the
-    user can modify the Library and then relink to produce a modified
+    userDO can modify the Library and then relink to produce a modified
     executable containing the modified Library.  (It is understood
-    that the user who changes the contents of definitions files in the
+    that the userDO who changes the contents of definitions files in the
     Library will not necessarily be able to recompile the application
     to use the modified definitions.)
 
     b) Use a suitable shared library mechanism for linking with the
     Library.  A suitable mechanism is one that (1) uses at run time a
-    copy of the library already present on the user's computer system,
+    copy of the library already present on the userDO's computer system,
     rather than copying library functions into the executable, and (2)
     will operate properly with a modified version of the library, if
-    the user installs one, as long as the modified version is
+    the userDO installs one, as long as the modified version is
     interface-compatible with the version that the work was made with.
 
     c) Accompany the work with a written offer, valid for at
-    least three years, to give the same user the materials
+    least three years, to give the same userDO the materials
     specified in Subsection 6a, above, for a charge no more
     than the cost of performing this distribution.
 
@@ -1396,8 +1396,8 @@ of these things:
     from a designated place, offer equivalent access to copy the above
     specified materials from the same place.
 
-    e) Verify that the user has already received a copy of these
-    materials or that you have already sent this user a copy.
+    e) Verify that the userDO has already received a copy of these
+    materials or that you have already sent this userDO a copy.
 
   For an executable, the required form of the "work that uses the
 Library" must include any data and utility programs needed for
@@ -2506,7 +2506,7 @@ This file is part of the Independent JPEG Group's software.
 The authors make NO WARRANTY or representation, either express or implied,
 with respect to this software, its quality, accuracy, merchantability, or
 fitness for a particular purpose.  This software is provided "AS IS", and
-you, its user, assume the entire risk as to its quality and accuracy.
+you, its userDO, assume the entire risk as to its quality and accuracy.
 
 This software is copyright (C) 1994-1996, Thomas G. Lane.
 All Rights Reserved except as specified below.
@@ -2521,7 +2521,7 @@ files must be clearly indicated in accompanying documentation.
 (2) If only executable code is distributed, then the accompanying
 documentation must state that "this software is based in part on the work
 of the Independent JPEG Group".
-(3) Permission for use of this software is granted only if the user accepts
+(3) Permission for use of this software is granted only if the userDO accepts
 full responsibility for any undesirable consequences; the authors accept
 NO LIABILITY for damages of any kind.
 
@@ -2698,7 +2698,7 @@ Public License permits more lax criteria for linking other code with
 the library.
 
   We call this license the "Lesser" General Public License because it
-does Less to protect the user's freedom than the ordinary General
+does Less to protect the userDO's freedom than the ordinary General
 Public License.  It also provides other free software developers Less
 of an advantage over competing non-free programs.  These disadvantages
 are the reason we use the ordinary General Public License for many
@@ -2721,7 +2721,7 @@ operating system, as well as its variant, the GNU/Linux operating
 system.
 
   Although the Lesser General Public License is Less protective of the
-users' freedom, it does ensure that the user of a program that is
+users' freedom, it does ensure that the userDO of a program that is
 linked with the Library has the freedom and the wherewithal to run
 that program using a modified version of the Library.
 
@@ -2899,7 +2899,7 @@ Library is used in it and that the Library and its use are covered by
 this License.  You must supply a copy of this License.  If the work
 during execution displays copyright notices, you must include the
 copyright notice for the Library among them, as well as a reference
-directing the user to the copy of this License.  Also, you must do one
+directing the userDO to the copy of this License.  Also, you must do one
 of these things:
 
     a) Accompany the work with the complete corresponding
@@ -2908,22 +2908,22 @@ of these things:
     Sections 1 and 2 above); and, if the work is an executable linked
     with the Library, with the complete machine-readable "work that
     uses the Library", as object code and/or source code, so that the
-    user can modify the Library and then relink to produce a modified
+    userDO can modify the Library and then relink to produce a modified
     executable containing the modified Library.  (It is understood
-    that the user who changes the contents of definitions files in the
+    that the userDO who changes the contents of definitions files in the
     Library will not necessarily be able to recompile the application
     to use the modified definitions.)
 
     b) Use a suitable shared library mechanism for linking with the
     Library.  A suitable mechanism is one that (1) uses at run time a
-    copy of the library already present on the user's computer system,
+    copy of the library already present on the userDO's computer system,
     rather than copying library functions into the executable, and (2)
     will operate properly with a modified version of the library, if
-    the user installs one, as long as the modified version is
+    the userDO installs one, as long as the modified version is
     interface-compatible with the version that the work was made with.
 
     c) Accompany the work with a written offer, valid for at
-    least three years, to give the same user the materials
+    least three years, to give the same userDO the materials
     specified in Subsection 6a, above, for a charge no more
     than the cost of performing this distribution.
 
@@ -2931,8 +2931,8 @@ of these things:
     from a designated place, offer equivalent access to copy the above
     specified materials from the same place.
 
-    e) Verify that the user has already received a copy of these
-    materials or that you have already sent this user a copy.
+    e) Verify that the userDO has already received a copy of these
+    materials or that you have already sent this userDO a copy.
 
   For an executable, the required form of the "work that uses the
 Library" must include any data and utility programs needed for
@@ -3601,10 +3601,10 @@ Chinese/Japanese Word Break Dictionary Data (cjdict.txt)
  #  the program and the nonexistence of any infringement or violation of
  #  any right of any third party.
  #
- #  Each user of the program will agree and understand, and be deemed to
+ #  Each userDO of the program will agree and understand, and be deemed to
  #  have agreed and understood, that there is no warranty whatsoever for
  #  the program and, accordingly, the entire risk arising from or
- #  otherwise connected with the program is assumed by the user.
+ #  otherwise connected with the program is assumed by the userDO.
  #
  #  Therefore, neither ICOT, the copyright holder, or any other
  #  organization that participated in or was otherwise related to the
@@ -3616,18 +3616,18 @@ Chinese/Japanese Word Break Dictionary Data (cjdict.txt)
  #  or result produced or otherwise obtained by using the program,
  #  regardless of whether they have been advised of, or otherwise had
  #  knowledge of, the possibility of such damages at any time during the
- #  project or thereafter.  Each user will be deemed to have agreed to the
+ #  project or thereafter.  Each userDO will be deemed to have agreed to the
  #  foregoing by his or her commencement of use of the program.  The term
  #  "use" as used herein includes, but is not limited to, the use,
  #  modification, copying and distribution of the program and the
  #  production of secondary products from the program.
  #
  #  In the case where the program, whether in its original form or
- #  modified, was distributed or delivered to or received by a user from
+ #  modified, was distributed or delivered to or received by a userDO from
  #  any person, organization or entity other than ICOT, unless it makes or
- #  grants independently of ICOT any specific warranty to the user in
+ #  grants independently of ICOT any specific warranty to the userDO in
  #  writing, such person, organization or entity, will also be exempted
- #  from and not be held liable to the user for any such damages as noted
+ #  from and not be held liable to the userDO for any such damages as noted
  #  above as far as the program is concerned.
  #
  #  ---------------COPYING.ipadic-----END----------------------------------
@@ -3900,7 +3900,7 @@ In jurisdictions which do not recognize Public Domain property (e.g. Germany as 
 2010), this software is Copyright (c) 2007-2010 by Baptiste Lepilleur, and is
 released under the terms of the MIT License (see below).
 
-In jurisdictions which recognize Public Domain property, the user of this 
+In jurisdictions which recognize Public Domain property, the userDO of this
 software may choose to accept it either as 1) Public Domain, 2) under the 
 conditions of the MIT License (see below), or 3) under the terms of dual 
 Public Domain/MIT License conditions described here, as they choose.
@@ -4384,7 +4384,7 @@ and with the following additions to the disclaimer:
     efforts or the library will fulfill any of your particular purposes
     or needs.  This library is provided with all faults, and the entire
     risk of satisfactory quality, performance, accuracy, and effort is
-    with the user.
+    with the userDO.
 
 Some files in the "contrib" directory and some configure-generated
 files that are distributed with libpng have other copyright owners, and

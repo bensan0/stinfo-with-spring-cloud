@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主頁面</title> <!-- 或 "即時頁面" -->
+    <style>
+        body {
+            display: flex;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .sidebar {
+            width: 12.5%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            padding-left: 20px;
+            background-color: #f0f0f0;
+        }
+        .sidebar a {
+            margin: 10px 0;
+        }
+        .main-content {
+            width: 75%;
+            padding: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <a href="http://localhost:8999/gw/stock/p/main-page">主頁面</a>
+    <a href="http://localhost:8999/gw/stock/p/real-time-page">即時頁面</a>
+</div>
+<div class="main-content">
+    <form id="searchForm">
+        交易量(張)<input type="number" id="tradingVolumePieceStart"> ~ <input type="number"
+                                                                              id="tradingVolumePieceEnd"><br>
+        漲跌幅(%)<input type="number" id="priceGapPercent"><br>
+        價格連<input type="number" id="conPriceDays">天<select id="conPriceStatus">
+        <option value="">請選擇</option>
+        <option value="漲">漲</option>
+        <option value="跌">跌</option>
+        <option value="平">平</option>
+    </select><br>
+        交易量連<input type="number" id="conVolDays">天<select id="tradingVolumeStatus">
+        <option value="">請選擇</option>
+        <option value="漲">漲</option>
+        <option value="跌">跌</option>
+        <option value="平">平</option>
+    </select><br>
+        交易額連<input type="number" id="conAmountDays">天<select id="tradingAmountStatus">
+        <option value="">請選擇</option>
+        <option value="漲">漲</option>
+        <option value="跌">跌</option>
+        <option value="平">平</option>
+    </select><br>
+        標籤<input type="text" id="extraTags"><br>
+        <div id="tagsSelect"></div>
+        第<input type="number" id="current">頁<br>
+        每頁<input type="number" id="size">條<br>
+        <button type="button" onclick="search()">提交</button>
+    </form>
+    <table id="resultTable">
+        <thead>
+        <tr>
+            <th>代碼</th>
+            <th>名稱</th>
+            <th>日期</th>
+            <th>收盤</th>
+            <th>昨收</th>
+            <th>價差</th>
+            <th>張跌幅</th>
+            <th>成交量(張)</th>
+            <th>交易額</th>
+            <th>上影</th>
+            <th>實體</th>
+            <th>下影</th>
+            <th>5均</th>
+            <th>10均</th>
+            <th>20均</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <div id="pagination"></div>
+</div>
+
+<script>
+    window.onload = () => {
+  fetch('/gw/report/util/tags')
+    .then(response => response.json())
+    .then(data => {
+      const div = document.getElementById('tagsSelect');
+      if (data.status === '200') {
+        div.textContent = '標籤列表:[' + data.data.extraTagsSelections.join(', ') + ']';
+      } else {
+        div.textContent = data.msg;
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching data:', error);
+      const div = document.getElementById('tagsSelect');
+      div.textContent = '標籤獲取失敗！';
+    });
+};
+
+    function search() {
+            const formData = {
+                tradingVolumePieceStart: document.getElementById('tradingVolumePieceStart').value || null,
+                tradingVolumePieceEnd: document.getElementById('tradingVolumePieceEnd').value || null,
+                priceGapPercent: document.getElementById('priceGapPercent').value || null,
+                conPriceDays: document.getElementById('conPriceDays').value || null,
+                conPriceStatus: document.getElementById('conPriceStatus').value || null,
+                conVolDays: document.getElementById('conVolDays').value || null,
+                tradingVolumeStatus: document.getElementById('tradingVolumeStatus').value || null,
+                conAmountDays: document.getElementById('conAmountDays').value || null,
+                tradingAmountStatus: document.getElementById('tradingAmountStatus').value || null,
+                extraTags: document.getElementById('extraTags').value ? document.getElementById('extraTags').value.split(',') : null
+            };
+
+            const current = document.getElementById('current').value || 1;
+            const size = document.getElementById('size').value || 10;
+
+            fetch(`http://localhost:8999/gw/stock/v1/stock/condition/list?current=${current}&size=${size}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(formData),
+            })
+            .then(response => response.json())
+            .then(commonRes => {
+                if (commonRes.status === "200") {
+                    const tableBody = document.querySelector('#resultTable tbody');
+                    tableBody.innerHTML = '';
+                    commonRes.data.list.forEach(item => {
+                        const row = `<tr><td>${item.stockId}</td>` +
+                        `<td>${item.stockName}</td>` +
+                        `<td>${item.date}</td>` +
+                        `<td>${item.todayClosingPrice}</td>` +
+                        `<td>${item.yesterdayClosingPrice}</td>` +
+                        `<td>${item.priceGap}</td>` +
+                        `<td>${item.priceGapPercent}</td>` +
+                        `<td>${item.todayTradingVolumePiece}</td>` +
+                        `<td>${item.todayTradingVolumeMoney}</td>` +
+                        `<td>${item.upperShadow}</td>` +
+                        `<td>${item.realBody}</td>` +
+                        `<td>${item.lowerShadow}</td>` +
+                        `<td>${item.ma5}</td>` +
+                        `<td>${item.ma10}</td>` +
+                        `<td>${item.ma20}</td></tr>`
+                        ;
+                        tableBody.innerHTML += row;
+                    });
+                    document.getElementById('pagination').textContent =
+                        `現在為第${commonRes.data.pageNum}頁,共${commonRes.data.size}條,總頁數為${commonRes.data.pages}`;
+                } else {
+                    alert(data.msg);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+</script>
+</body>
+</html>

@@ -11,4 +11,6 @@ public class ServiceNameConstants {
     public static final String REPORT_SERVICE = "report-service";
 
     public static final String CACHE_SERVICE = "cache-service";
+
+    public static final String AUTH_SERVICE = "auth-service";
 }
