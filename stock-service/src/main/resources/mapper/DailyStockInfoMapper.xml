@@ -46,6 +46,27 @@
             T.today_trading_volume_money as todayTradingVolumeMoney,
             T.yesterday_trading_volume_piece as yesterdayTradingVolumePiece,
             T.yesterday_trading_volume_money as yesterdayTradingVolumeMoney
+        from
+            daily_stock_info T
+        where
+            T.date = #{date}
+        union
+        select
+            T.id as id,
+            T.stock_id as stockId,
+            T.stock_name as stockName,
+            T.date as date,
+            T.today_closing_price as todayClosingPrice,
+            T.yesterday_closing_price as yesterdayClosingPrice,
+            T.price_gap as priceGap,
+            T.price_gap_percent as priceGapPercent,
+            T.opening_price as openingPrice,
+            T.highest_price as highestPrice,
+            T.lowest_price as lowestPrice,
+            T.today_trading_volume_piece as todayTradingVolumePiece,
+            T.today_trading_volume_money as todayTradingVolumeMoney,
+            T.yesterday_trading_volume_piece as yesterdayTradingVolumePiece,
+            T.yesterday_trading_volume_money as yesterdayTradingVolumeMoney
         from (
             select
                 tt.*,
@@ -53,10 +74,10 @@
             from (
                 select *
                 from daily_stock_info s
-                where s.date &lt;= #{date} and today_closing_price is not null
+                where s.date &lt; #{date} and today_closing_price is not null
                  ) tt
              ) T
-        where T.sequence in (1, 5, 10, 20, 60, 120, 240)
+        where T.sequence in (4, 9, 19, 59, 119, 239)
     </select>
 
     <select id="queryInfo4CalDetail" parameterType="com.personal.project.stockservice.model.dto.request.Query4CalDTO" resultType="com.personal.project.stockservice.model.dto.response.DailyStockInfoDTO">
@@ -116,6 +137,7 @@
             T.stock_id as stockId,
             T.stock_name as stockName,
             T.date as 'date',
+            T.market as market,
             T.today_closing_price as todayClosingPrice,
             T.yesterday_closing_price as yesterdayClosingPrice,
             T.opening_price as openingPrice,

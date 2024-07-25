@@ -41,7 +41,7 @@ public class TPEXRoutineScraper implements PageProcessor {
 
         List<Selectable> rows = page.getHtml().xpath("/html/body/table/tbody/tr").nodes();
 
-        if(rows.size() == 0){
+        if(rows.isEmpty()){
             ScraperErrorMessageDO error = new ScraperErrorMessageDO();
             error.setDate(date.toString());
             error.setErrorMessage("本日tpex無收盤行情");

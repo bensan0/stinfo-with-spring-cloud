@@ -23,7 +23,6 @@ public class UtilController {
                         .map(DetailTagEnum::getTag)
                         .toList()
         );
-        System.out.println(dto);
 
         return CommonResponse.ok(dto);
     }

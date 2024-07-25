@@ -6,15 +6,16 @@ import us.codecraft.webmagic.ResultItems;
 import us.codecraft.webmagic.Task;
 import us.codecraft.webmagic.pipeline.Pipeline;
 
+import java.util.ArrayList;
 import java.util.List;
 
+@Getter
 public class TWSERoutinePipeline implements Pipeline {
 
-    @Getter
-    private List<DailyStockInfoDto> results;
+	private final List<DailyStockInfoDto> results = new ArrayList<>();
 
-    @Override
-    public void process(ResultItems resultItems, Task task) {
-        results = resultItems.get("dtos");
-    }
+	@Override
+	public void process(ResultItems resultItems, Task task) {
+		results.addAll(resultItems.get("dtos"));
+	}
 }

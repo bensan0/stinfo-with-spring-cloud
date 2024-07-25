@@ -69,7 +69,12 @@ public class ReportJob {
 			return;
 		}
 
-		generateReportService.generateRoutineDetail(Long.parseLong(nowStr));
+		InnerResponse<ObjectUtils.Null> saved = generateReportService.generateRoutineDetail(Long.parseLong(nowStr));
+
+		if (!ResponseCode.Success.getCode().equals(saved.getCode())) {
+			log.error("Calculate detail save detail failed");
+			generateAndSaveReportErrorMessage(DAILY_STOCK_DETAIL, saved.getMsg(), null, null, JSONUtil.toJsonStr(saved));
+		}
 	}
 
 	private void generateAndSaveReportErrorMessage(String reportName,

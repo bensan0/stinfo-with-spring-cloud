@@ -20,6 +20,8 @@ import com.personal.project.scraperservice.scraper.webmagic.twse.TWSEInitPipelin
 import com.personal.project.scraperservice.scraper.webmagic.twse.TWSEInitScraper;
 import com.personal.project.scraperservice.scraper.webmagic.twse.TWSERoutinePipeline;
 import com.personal.project.scraperservice.scraper.webmagic.twse.TWSERoutineScraper;
+import com.personal.project.scraperservice.scraper.webmagic.yahoo.YahooRealTimeDateCheckPipeline;
+import com.personal.project.scraperservice.scraper.webmagic.yahoo.YahooRealTimeDateCheckScraper;
 import com.personal.project.scraperservice.scraper.webmagic.yahoo.YahooRealTimePipeline;
 import com.personal.project.scraperservice.scraper.webmagic.yahoo.YahooRealTimeScraper;
 import com.personal.project.scraperservice.service.CacheService;
@@ -509,7 +511,6 @@ public class ScraperJob {
 		});
 	}
 
-
 	@XxlJob("twse-tpex-routine-scrape")
 	public void twseJobHandle() {
 		RLock lock = cacheService.getLock(CacheKeys.SCRAPE_INFO_CACHE.getLock());
@@ -519,8 +520,8 @@ public class ScraperJob {
 				LocalDate now = LocalDate.now();
 				String nowStr = now.format(DatePattern.PURE_DATE_FORMATTER);
 
-				List<DailyStockInfoDto> results = new ArrayList<>();
-				List<ScraperErrorMessageDO> errors = new ArrayList<>();
+				List<DailyStockInfoDto> results;
+				List<ScraperErrorMessageDO> errors;
 
 				try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
 
@@ -557,8 +558,8 @@ public class ScraperJob {
 					});
 					Pair<List<DailyStockInfoDto>, List<ScraperErrorMessageDO>> twsePair = twseResults.get();
 					Pair<List<DailyStockInfoDto>, List<ScraperErrorMessageDO>> tpexPair = tpexResults.get();
-					results.addAll(twsePair.getLeft());
-					errors.addAll(twsePair.getRight());
+					results = new ArrayList<>(twsePair.getLeft());
+					errors = new ArrayList<>(twsePair.getRight());
 					results.addAll(tpexPair.getLeft());
 					errors.addAll(tpexPair.getRight());
 
@@ -603,6 +604,7 @@ public class ScraperJob {
 					result.setStockId(k);
 					result.setStockName(v.getStockName());
 					result.setDate(Long.parseLong(nowStr));
+					result.setMarket(v.getMarket());
 					results.add(result);
 				});
 
@@ -652,6 +654,27 @@ public class ScraperJob {
 
 				for (Integer num : otc) {
 					urls.add(StrUtil.format("https://tw.stock.yahoo.com/class-quote?sectorId={}&exchange=TWO", num));
+				}
+
+				//颱風假沒開市
+				YahooRealTimeDateCheckPipeline dateCheckPipeline = new YahooRealTimeDateCheckPipeline();
+				Spider.create(new YahooRealTimeDateCheckScraper())
+						.addPipeline(dateCheckPipeline)
+						.addUrl(urls.getLast())
+						.setDownloader(
+								new SeleniumDownloader(
+										classpath + driverPath,
+										Duration.of(15, ChronoUnit.SECONDS),
+										ExpectedConditions.visibilityOfAllElementsLocatedBy(By.xpath("//div[@class='table-body-wrapper']")),
+										null
+								)
+						)
+						.thread(1)
+						.run();
+
+				if(dateCheckPipeline.getPageDate() != date){
+					log.warn("real-time-price-scrape, 今日沒開市, 不爬");
+					return;
 				}
 
 				YahooRealTimeScraper scraper = new YahooRealTimeScraper(urls, date);
