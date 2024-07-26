@@ -1,4 +1,4 @@
-package com.personal.project.gateway.model;
+package com.personal.project.gateway.model.dto;
 
 import lombok.Data;
 

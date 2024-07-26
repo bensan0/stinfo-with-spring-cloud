@@ -2,7 +2,7 @@ package com.personal.project.gateway.remote;
 
 import cn.hutool.json.JSONUtil;
 import com.personal.project.commoncore.response.InnerResponse;
-import com.personal.project.gateway.model.TokenDTO;
+import com.personal.project.gateway.model.dto.TokenDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;

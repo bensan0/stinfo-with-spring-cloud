@@ -1,4 +1,4 @@
-package com.personal.project.gateway;
+package com.personal.project.gateway.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

@@ -575,7 +575,7 @@ public class GenerateReportServiceImpl implements GenerateReportService {
 
 		stockIdToInfos.forEach((k, v) -> {
 			v.sort(Comparator.comparingLong(DailyStockInfoDTO::getDate).reversed());
-			List<DailyStockMetricsDTO> metrics = stockIdToMetrics.get(k);
+			List<DailyStockMetricsDTO> metrics = stockIdToMetrics.get(k) == null ? Collections.emptyList() : stockIdToMetrics.get(k);
 			metrics.sort(Comparator.comparingLong(DailyStockMetricsDTO::getDate).reversed());
 			DailyStockMetricsDTO todayMetrics = null;
 			DailyStockMetricsDTO yesterdayMetrics = null;
@@ -665,7 +665,7 @@ public class GenerateReportServiceImpl implements GenerateReportService {
 
 		stockIdToInfos.forEach((k, v) -> {
 			v.sort(Comparator.comparingLong(DailyStockInfoDTO::getDate).reversed());
-			List<DailyStockMetricsDTO> metrics = stockIdToMetrics.get(k);
+			List<DailyStockMetricsDTO> metrics = stockIdToMetrics.get(k) == null ? Collections.emptyList() : stockIdToMetrics.get(k);
 			metrics.sort(Comparator.comparingLong(DailyStockMetricsDTO::getDate).reversed());
 			DailyStockMetricsDTO todayMetrics = null;
 			DailyStockMetricsDTO yesterdayMetrics = null;
@@ -760,7 +760,7 @@ public class GenerateReportServiceImpl implements GenerateReportService {
 			v.sort(Comparator.comparingLong(DailyStockInfoDTO::getDate).reversed());
 			List<DailyStockMetricsDTO> metrics = stockIdToMetrics.get(k);
 			metrics.sort(Comparator.comparingLong(DailyStockMetricsDTO::getDate).reversed());
-			List<DailyStockInfoDetailDTO> details = stockIdToDetails.get(k);
+			List<DailyStockInfoDetailDTO> details = stockIdToDetails.get(k) == null ? Collections.emptyList() : stockIdToDetails.get(k);
 			details.sort(Comparator.comparingLong(DailyStockInfoDetailDTO::getDate).reversed());
 			DailyStockInfoDetailDTO todayDetail = null;
 			DailyStockInfoDetailDTO yesterdayDetail = null;
@@ -861,7 +861,7 @@ public class GenerateReportServiceImpl implements GenerateReportService {
 			v.sort(Comparator.comparingLong(DailyStockInfoDTO::getDate).reversed());
 			List<DailyStockMetricsDTO> metrics = stockIdToMetrics.get(k);
 			metrics.sort(Comparator.comparingLong(DailyStockMetricsDTO::getDate).reversed());
-			List<DailyStockInfoDetailDTO> details = stockIdToDetails.get(k);
+			List<DailyStockInfoDetailDTO> details = stockIdToDetails.get(k) == null ? Collections.emptyList() : stockIdToDetails.get(k);
 			details.sort(Comparator.comparingLong(DailyStockInfoDetailDTO::getDate).reversed());
 			DailyStockInfoDetailDTO todayDetail;
 			DailyStockInfoDetailDTO yesterdayDetail = null;

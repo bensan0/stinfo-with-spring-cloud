@@ -520,8 +520,8 @@ public class ScraperJob {
 				LocalDate now = LocalDate.now();
 				String nowStr = now.format(DatePattern.PURE_DATE_FORMATTER);
 
-				List<DailyStockInfoDto> results;
-				List<ScraperErrorMessageDO> errors;
+				List<DailyStockInfoDto> results = new ArrayList<>();
+				List<ScraperErrorMessageDO> errors = new ArrayList<>();
 
 				try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
 
@@ -558,8 +558,8 @@ public class ScraperJob {
 					});
 					Pair<List<DailyStockInfoDto>, List<ScraperErrorMessageDO>> twsePair = twseResults.get();
 					Pair<List<DailyStockInfoDto>, List<ScraperErrorMessageDO>> tpexPair = tpexResults.get();
-					results = new ArrayList<>(twsePair.getLeft());
-					errors = new ArrayList<>(twsePair.getRight());
+					results.addAll(twsePair.getLeft());
+					errors.addAll(twsePair.getRight());
 					results.addAll(tpexPair.getLeft());
 					errors.addAll(tpexPair.getRight());
 
@@ -575,24 +575,31 @@ public class ScraperJob {
 				//清洗
 				for (DailyStockInfoDto dto : results) {
 					DailyStockInfoDto yesterdayDTO = formers.get(dto.getStockId());
-					dto.setYesterdayClosingPrice(yesterdayDTO.getTodayClosingPrice());
-					dto.setYesterdayTradingVolumePiece(yesterdayDTO.getTodayTradingVolumePiece());
-					dto.setYesterdayTradingVolumeMoney(yesterdayDTO.getTodayTradingVolumeMoney());
-
-					if (dto.getTodayClosingPrice() == null) {
-						dto.setTodayClosingPrice(yesterdayDTO.getTodayClosingPrice());
-						dto.setOpeningPrice(dto.getTodayClosingPrice());
-						dto.setHighestPrice(dto.getTodayClosingPrice());
-						dto.setLowestPrice(dto.getTodayClosingPrice());
+					if (yesterdayDTO == null) {//今天上市櫃
+						dto.setYesterdayClosingPrice(dto.getTodayClosingPrice());
+						dto.setYesterdayTradingVolumePiece(dto.getTodayTradingVolumePiece());
+						dto.setYesterdayTradingVolumeMoney(dto.getTodayTradingVolumeMoney());
 						dto.setPriceGap(BigDecimal.ZERO);
 						dto.setPriceGapPercent(BigDecimal.ZERO);
 					} else {
-						dto.setPriceGap(
-								dto.getTodayClosingPrice().subtract(yesterdayDTO.getTodayClosingPrice())
-						);
-						dto.setPriceGapPercent(
-								dto.getPriceGap().divide(yesterdayDTO.getTodayClosingPrice(), 4, RoundingMode.FLOOR).multiply(BigDecimal.valueOf(100))
-						);
+						dto.setYesterdayClosingPrice(yesterdayDTO.getTodayClosingPrice());
+						dto.setYesterdayTradingVolumePiece(yesterdayDTO.getTodayTradingVolumePiece());
+						dto.setYesterdayTradingVolumeMoney(yesterdayDTO.getTodayTradingVolumeMoney());
+						if (dto.getTodayClosingPrice() == null) {
+							dto.setTodayClosingPrice(yesterdayDTO.getTodayClosingPrice());
+							dto.setOpeningPrice(dto.getTodayClosingPrice());
+							dto.setHighestPrice(dto.getTodayClosingPrice());
+							dto.setLowestPrice(dto.getTodayClosingPrice());
+							dto.setPriceGap(BigDecimal.ZERO);
+							dto.setPriceGapPercent(BigDecimal.ZERO);
+						} else {
+							dto.setPriceGap(
+									dto.getTodayClosingPrice().subtract(yesterdayDTO.getTodayClosingPrice())
+							);
+							dto.setPriceGapPercent(
+									dto.getPriceGap().divide(yesterdayDTO.getTodayClosingPrice(), 4, RoundingMode.FLOOR).multiply(BigDecimal.valueOf(100))
+							);
+						}
 					}
 
 					formers.remove(dto.getStockId());
@@ -672,7 +679,7 @@ public class ScraperJob {
 						.thread(1)
 						.run();
 
-				if(dateCheckPipeline.getPageDate() != date){
+				if (dateCheckPipeline.getPageDate() != date) {
 					log.warn("real-time-price-scrape, 今日沒開市, 不爬");
 					return;
 				}

@@ -1,18 +1,18 @@
 package com.personal.project.gateway.filter.global;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.util.StrUtil;
-import com.personal.project.commoncore.response.InnerResponse;
-import com.personal.project.gateway.CustomConfig;
-import com.personal.project.gateway.model.TokenDTO;
-import com.personal.project.gateway.model.UserCacheDTO;
+import com.personal.project.gateway.config.CustomConfig;
+import com.personal.project.gateway.model.dto.ConnectionInfoDTO;
+import com.personal.project.gateway.model.dto.TokenDTO;
+import com.personal.project.gateway.model.dto.UserCacheDTO;
+import com.personal.project.gateway.msgqueue.ConnectionProducer;
 import com.personal.project.gateway.remote.RemoteAuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
-import org.springframework.cloud.gateway.filter.factory.AddRequestHeaderGatewayFilterFactory;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpHeaders;
@@ -24,28 +24,35 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import java.util.HashMap;
+import java.net.URI;
+import java.time.LocalDateTime;
 
 @Component
 @Slf4j
-@RequiredArgsConstructor(onConstructor_ = {@Lazy})//使用延遲注入以解決filter引用feign造成的循環依賴問題
+@RequiredArgsConstructor
 public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
 	private final RemoteAuthService remoteAuthService;
 
 	private final CustomConfig customConfig;
 
+	private final ConnectionProducer producer;
+
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+		ServerHttpRequest request = exchange.getRequest();
+
+		logConnectionInfo(request);
+
 		//跳過不需驗證的路由
-		if (customConfig.getSkip().contains(exchange.getRequest().getURI().getPath())) {
+		if (customConfig.getSkip().contains(request.getURI().getPath())) {
 
 			return chain.filter(exchange);
 		}
 
 //		String token = exchange.getRequest().getHeaders().getFirst("token");
 		// 獲取所有 cookie
-		MultiValueMap<String, HttpCookie> cookies = exchange.getRequest().getCookies();
+		MultiValueMap<String, HttpCookie> cookies = request.getCookies();
 
 		// 獲取特定的 cookie，例如名為 "token" 的 cookie
 		String token = cookies.getFirst("token") != null ? cookies.getFirst("token").getValue() : null;
@@ -83,11 +90,11 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 						return redirectToLogin(exchange.getResponse());
 					}
 
-					ServerHttpRequest request = exchange.getRequest().mutate()
+					ServerHttpRequest mutate = request.mutate()
 							.headers(httpHeaders -> httpHeaders.add("userId", userCache.getId().toString()))
 							.build();
 
-					return chain.filter(exchange.mutate().request(request).build());
+					return chain.filter(exchange.mutate().request(mutate).build());
 				})
 				.onErrorResume(e -> {
 					log.error("Error during authentication", e);
@@ -105,5 +112,43 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 		response.getHeaders().set(HttpHeaders.LOCATION, redirectUrl);
 		response.setStatusCode(HttpStatus.FOUND);
 		return response.setComplete();
+	}
+
+	private void logConnectionInfo(ServerHttpRequest request) {
+		URI uri = request.getURI();
+		String ip = getIp(request);
+		String date = LocalDateTime.now().format(DatePattern.PURE_DATETIME_FORMATTER);
+		producer.send(new ConnectionInfoDTO(ip, uri.getPath(), date));
+	}
+
+	private String getIp(ServerHttpRequest request) {
+		HttpHeaders headers = request.getHeaders();
+		String ip = headers.getFirst("x-forwarded-for");
+		if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
+			// 多次反向代理后会有多个ip值，第一个ip才是真实ip
+			if (ip.contains(",")) {
+				ip = ip.split(",")[0];
+			}
+		}
+		if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+			ip = headers.getFirst("Proxy-Client-IP");
+		}
+		if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+			ip = headers.getFirst("WL-Proxy-Client-IP");
+		}
+		if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+			ip = headers.getFirst("HTTP_CLIENT_IP");
+		}
+		if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+			ip = headers.getFirst("HTTP_X_FORWARDED_FOR");
+		}
+		if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+			ip = headers.getFirst("X-Real-IP");
+		}
+		if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+			ip = request.getRemoteAddress().getAddress().getHostAddress();
+		}
+
+		return ip.replaceAll(":", ".");
 	}
 }
