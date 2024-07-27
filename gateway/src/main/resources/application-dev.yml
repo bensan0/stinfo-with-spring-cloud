@@ -11,6 +11,15 @@ mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
+  data:
+    redis:
+      database: 0
+      host: localhost
+      port: 6379
+      #      password:
+      timeout: 10s
+      connect-timeout: 10s
+
   rabbitmq:
     host: localhost
     port: 5672
@@ -24,6 +33,12 @@ logging:
 custom:
   gateway:
     skip:
+      visit:
+        - /gw/auth/p/login
+        - /gw/report/util/tags
+        - /gw/stock/p/main-page
+        - /gw/stock/p/real-time-page
+      auth:
       - /gw/auth/p/login
       - /gw/auth/sign/sign-in
       - /gw/auth/sign/sign-up

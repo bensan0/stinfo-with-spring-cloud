@@ -8,8 +8,10 @@ import java.util.List;
 
 @Data
 @Component
-@ConfigurationProperties("custom.gateway")
-public class CustomConfig {
+@ConfigurationProperties("custom.gateway.skip")
+public class SkipFilterConfig {
 
-	private List<String> skip;
+	private List<String> visit;
+
+	private List<String> auth;
 }

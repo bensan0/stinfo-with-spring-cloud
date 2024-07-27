@@ -3,12 +3,13 @@ package com.personal.project.gateway.filter.global;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.util.StrUtil;
-import com.personal.project.gateway.config.CustomConfig;
+import com.personal.project.gateway.config.SkipFilterConfig;
 import com.personal.project.gateway.model.dto.ConnectionInfoDTO;
 import com.personal.project.gateway.model.dto.TokenDTO;
 import com.personal.project.gateway.model.dto.UserCacheDTO;
 import com.personal.project.gateway.msgqueue.ConnectionProducer;
 import com.personal.project.gateway.remote.RemoteAuthService;
+import com.personal.project.gateway.utils.IPUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -17,6 +18,7 @@ import org.springframework.core.Ordered;
 import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
@@ -34,7 +36,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
 	private final RemoteAuthService remoteAuthService;
 
-	private final CustomConfig customConfig;
+	private final SkipFilterConfig skipFilterConfig;
 
 	private final ConnectionProducer producer;
 
@@ -45,16 +47,15 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 		logConnectionInfo(request);
 
 		//跳過不需驗證的路由
-		if (customConfig.getSkip().contains(request.getURI().getPath())) {
+		if (skipFilterConfig.getAuth().contains(request.getURI().getPath())) {
 
 			return chain.filter(exchange);
 		}
 
-//		String token = exchange.getRequest().getHeaders().getFirst("token");
 		// 獲取所有 cookie
 		MultiValueMap<String, HttpCookie> cookies = request.getCookies();
 
-		// 獲取特定的 cookie，例如名為 "token" 的 cookie
+		// 獲取特定cookie
 		String token = cookies.getFirst("token") != null ? cookies.getFirst("token").getValue() : null;
 		if (StrUtil.isBlank(token)) {
 			ServerHttpResponse response = exchange.getResponse();
@@ -79,15 +80,18 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 				.flatMap(remoteAuthService::authToken)
 				.flatMap(response -> {
 					if (response == null || response.getData() == null || response.getData().toString().equals("null")) {
-
-						return redirectToLogin(exchange.getResponse());
+						//有cookie 無cache
+						ServerHttpResponse exResponse = exchange.getResponse();
+						expireCookie(exResponse);
+						return redirectToLogin(exResponse);
 					}
 
 					UserCacheDTO userCache = BeanUtil.copyProperties(response.getData(), UserCacheDTO.class);
 
 					if (userCache == null) {
-
-						return redirectToLogin(exchange.getResponse());
+						ServerHttpResponse exResponse = exchange.getResponse();
+						expireCookie(exResponse);
+						return redirectToLogin(exResponse);
 					}
 
 					ServerHttpRequest mutate = request.mutate()
@@ -104,7 +108,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
 	@Override
 	public int getOrder() {
-		return -1;
+		return -2;
 	}
 
 	private Mono<Void> redirectToLogin(ServerHttpResponse response) {
@@ -116,39 +120,16 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
 	private void logConnectionInfo(ServerHttpRequest request) {
 		URI uri = request.getURI();
-		String ip = getIp(request);
+		String ip = IPUtil.getIp(request);
 		String date = LocalDateTime.now().format(DatePattern.PURE_DATETIME_FORMATTER);
 		producer.send(new ConnectionInfoDTO(ip, uri.getPath(), date));
 	}
 
-	private String getIp(ServerHttpRequest request) {
-		HttpHeaders headers = request.getHeaders();
-		String ip = headers.getFirst("x-forwarded-for");
-		if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
-			// 多次反向代理后会有多个ip值，第一个ip才是真实ip
-			if (ip.contains(",")) {
-				ip = ip.split(",")[0];
-			}
-		}
-		if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-			ip = headers.getFirst("Proxy-Client-IP");
-		}
-		if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-			ip = headers.getFirst("WL-Proxy-Client-IP");
-		}
-		if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-			ip = headers.getFirst("HTTP_CLIENT_IP");
-		}
-		if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-			ip = headers.getFirst("HTTP_X_FORWARDED_FOR");
-		}
-		if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-			ip = headers.getFirst("X-Real-IP");
-		}
-		if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-			ip = request.getRemoteAddress().getAddress().getHostAddress();
-		}
-
-		return ip.replaceAll(":", ".");
+	private void expireCookie(ServerHttpResponse response){
+		ResponseCookie cookie = ResponseCookie.from("token", "")
+				.maxAge(0)
+				.path("/")
+				.build();
+		response.addCookie(cookie);
 	}
 }

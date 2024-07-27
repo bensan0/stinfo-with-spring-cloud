@@ -43,8 +43,8 @@
 </head>
 <body>
 <div class="sidebar">
-    <a href="http://localhost:8999/gw/stock/p/main-page">主頁面</a>
-    <a href="http://localhost:8999/gw/stock/p/real-time-page">即時頁面</a>
+    <a href="/gw/stock/p/main-page">主頁面</a>
+    <a href="/gw/stock/p/real-time-page">即時頁面</a>
 </div>
 <div class="main-content">
     <form id="searchForm">
@@ -136,11 +136,11 @@
             const current = document.getElementById('current').value || 1;
             const size = document.getElementById('size').value || 10;
 
-            fetch(`http://localhost:8999/gw/stock/v1/stock/condition/list?current=${current}&size=${size}`, {
+            fetch(`/gw/stock/v1/stock/condition/list?current=${current}&size=${size}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+<!--                    'Authorization': `Bearer ${localStorage.getItem('token')}`-->
                 },
                 body: JSON.stringify(formData),
             })
@@ -171,7 +171,7 @@
                     document.getElementById('pagination').textContent =
                         `現在為第${commonRes.data.pageNum}頁,共${commonRes.data.size}條,總頁數為${commonRes.data.pages}`;
                 } else {
-                    alert(data.msg);
+                    alert(commonRes.msg);
                 }
             })
             .catch(error => console.error('Error:', error));
