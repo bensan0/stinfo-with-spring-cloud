@@ -1,10 +1,13 @@
 package com.personal.project.stockservice.controller;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.util.IdUtil;
 import com.personal.project.commoncore.constants.ResponseCode;
+import com.personal.project.commoncore.response.CommonResponse;
 import com.personal.project.commoncore.response.InnerResponse;
 import com.personal.project.stockservice.model.dto.request.Query4CalDTO;
+import com.personal.project.stockservice.model.dto.request.QueryConditionRealTimeDTO;
 import com.personal.project.stockservice.model.dto.response.*;
 import com.personal.project.stockservice.model.entity.DailyStockInfoDetailDO;
 import com.personal.project.stockservice.model.entity.DailyStockMetricsDO;
@@ -15,6 +18,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.DayOfWeek;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 
@@ -289,5 +295,22 @@ public class FeignController {
 		CalDetailUnionDTO dto = new CalDetailUnionDTO(stockIdToInfos, stockIdToMetrics, stockIdToDetails);
 
 		return InnerResponse.ok(dto);
+	}
+
+	@PostMapping("/condition/real-time/list")
+	InnerResponse<List<FRealTimeStockDTO>> conditionFRealTimeQuery(@RequestBody QueryConditionRealTimeDTO dto){
+		LocalDateTime now = LocalDateTime.now();
+		String nowStr = now.format(DatePattern.PURE_DATE_FORMATTER);
+		if (now.getDayOfWeek() == DayOfWeek.SATURDAY || now.getDayOfWeek() == DayOfWeek.SUNDAY) {
+			return InnerResponse.failed(ResponseCode.Not_Valid.getCode(), "Today is not trading day");
+		}
+
+//		if (now.toLocalTime().isAfter(LocalTime.of(14, 0))) {
+//			return InnerResponse.failed(ResponseCode.Not_Valid.getCode(), "Now is off trading, use other api to check today's data");
+//		}
+
+		List<FRealTimeStockDTO> results = dailyStockInfoService.conditionFRealTimeQuery(Long.parseLong(nowStr), dto);
+
+		return InnerResponse.ok(results);
 	}
 }

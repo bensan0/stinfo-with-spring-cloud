@@ -193,6 +193,12 @@ public class DailyStockInfoServiceImpl extends ServiceImpl<DailyStockInfoMapper,
     }
 
     @Override
+    public List<FRealTimeStockDTO> conditionFRealTimeQuery(Long date, QueryConditionRealTimeDTO dto) {
+
+        return baseMapper.queryFRealTimeByConditions(date, dto);
+    }
+
+    @Override
     public long checkInit() {
         LambdaQueryWrapper<DailyStockInfoDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.isNotNull(DailyStockInfoDO::getId);

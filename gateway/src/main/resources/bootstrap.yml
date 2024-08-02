@@ -2,6 +2,11 @@ spring:
   application:
     name: gateway
   cloud:
+    nacos:
+      config:
+        file-extension: yml
+        shared-configs:
+          - application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
     gateway:
       discovery:
         locator:
@@ -23,6 +28,12 @@ spring:
           uri: lb://report-service
           predicates:
             - Path=/gw/report/**
+          filters:
+            - StripPrefix=2
+        - id: chat-service
+          uri: lb://chat-service
+          predicates:
+            - Path=/gw/chat/**
           filters:
             - StripPrefix=2
   profiles:

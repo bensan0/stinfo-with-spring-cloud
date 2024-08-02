@@ -74,5 +74,7 @@ public interface DailyStockInfoService extends IService<DailyStockInfoDO> {
 
     List<RealTimeStockDTO> conditionRealTimeQuery(Long date, QueryConditionRealTimeDTO dto);
 
+    List<FRealTimeStockDTO> conditionFRealTimeQuery(Long date, QueryConditionRealTimeDTO dto);
+
 	long checkInit();
 }

@@ -44,6 +44,7 @@ public class VisitLimitGlobalFilter implements GlobalFilter, Ordered {
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 		ServerHttpRequest request = exchange.getRequest();
 		if (skipFilterConfig.getVisit().contains(request.getURI().getPath())) {
+
 			return chain.filter(exchange);
 		}
 

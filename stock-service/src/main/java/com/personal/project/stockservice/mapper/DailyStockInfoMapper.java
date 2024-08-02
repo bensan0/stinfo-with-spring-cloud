@@ -36,5 +36,7 @@ public interface DailyStockInfoMapper extends BaseMapper<DailyStockInfoDO> {
     List<CompleteStockDTO> queryByConditions(QueryConditionDTO dto);
 
     List<RealTimeStockDTO> queryRealTimeByConditions(Long date, QueryConditionRealTimeDTO dto);
+
+	List<FRealTimeStockDTO> queryFRealTimeByConditions(Long date, QueryConditionRealTimeDTO dto);
 }
 

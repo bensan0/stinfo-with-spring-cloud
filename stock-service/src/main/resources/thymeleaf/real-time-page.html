@@ -48,8 +48,8 @@
 </div>
 <div class="main-content">
     <form id="searchForm">
-        交易量(張)<input type="number" id="volume"><br>
-        漲跌幅(%)<input type="number" id="priceChange"><br>
+        交易量(張)<input type="number" id="tradingVolumePieceStart"><br>
+        漲跌幅(%)<input type="number" id="priceGapPercent"><br>
         標籤<input type="text" id="tags"><br>
         <button type="button" onclick="search()">提交</button>
     </form>
@@ -58,6 +58,11 @@
         <tr>
             <th>股票代碼</th>
             <th>股票名稱</th>
+            <th>價格</th>
+            <th>差額</th>
+            <th>漲跌幅</th>
+            <th>交易量</th>
+            <th>標籤</th>
         </tr>
         </thead>
         <tbody></tbody>
@@ -67,8 +72,8 @@
 <script>
     function search() {
             const formData = {
-                volume: document.getElementById('volume').value || null,
-                priceChange: document.getElementById('priceChange').value || null,
+                tradingVolumePieceStart: document.getElementById('tradingVolumePieceStart').value || null,
+                priceGapPercent: document.getElementById('priceGapPercent').value || null,
                 tags: document.getElementById('tags').value ? document.getElementById('tags').value.split(',') : null
             };
 
@@ -76,7 +81,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+<!--                    'Authorization': `Bearer ${localStorage.getItem('token')}`-->
                 },
                 body: JSON.stringify(formData),
             })
@@ -86,7 +91,14 @@
                     const tableBody = document.querySelector('#resultTable tbody');
                     tableBody.innerHTML = '';
                     data.data.forEach(item => {
-                        const row = `<tr><td>${item.stockId}</td><td>${item.stockName}</td></tr>`;
+                        const row = `<tr><td>${item.stockId}</td>`+
+                        `<td>${item.stockName}</td>` +
+                        `<td>${item.todayClosingPrice}</td>` +
+                        `<td>${item.priceGap}</td>` +
+                        `<td>${item.priceGapPercent}</td>` +
+                        `<td>${item.todayTradingVolumePiece}</td>` +
+                        `<td>${item.tags}</td><tr>`
+                        ;
                         tableBody.innerHTML += row;
                     });
                 } else {
