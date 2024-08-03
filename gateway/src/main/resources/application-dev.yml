@@ -26,9 +26,9 @@ mybatis-plus:
     username: guest
     password: guest
 
-logging:
-  level:
-    com.personal.project.gateway.mapper: debug
+#logging:
+#  level:
+#    com.personal.project.gateway.mapper: debug
 
 custom:
   gateway:
@@ -38,7 +38,9 @@ custom:
         - /gw/report/util/tags
         - /gw/stock/p/main-page
         - /gw/stock/p/real-time-page
+        - /gw/chat/tg/command
       auth:
-      - /gw/auth/p/login
-      - /gw/auth/sign/sign-in
-      - /gw/auth/sign/sign-up
+        - /gw/auth/p/login
+        - /gw/auth/sign/sign-in
+        - /gw/auth/sign/sign-up
+        - /gw/chat/tg/command

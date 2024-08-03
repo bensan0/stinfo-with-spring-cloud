@@ -28,6 +28,6 @@ mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
-logging:
-  level:
-    com.personal.project.authservice.mapper: debug
+#logging:
+#  level:
+#    com.personal.project.authservice.mapper: debug

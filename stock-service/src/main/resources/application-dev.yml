@@ -20,6 +20,6 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   type-handlers-package: com.personal.project.stockservice.typehandler
 
-logging:
-  level:
-    com.personal.project.stockservice.mapper: debug
+#logging:
+#  level:
+#    com.personal.project.stockservice.mapper: debug

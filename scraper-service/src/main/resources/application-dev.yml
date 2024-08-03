@@ -21,20 +21,20 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   type-handlers-package: com.personal.project.scraperservice.typehandler
 
-logging:
-  level:
-    com.personal.project.stockservice.mapper: debug
+#logging:
+#  level:
+#    com.personal.project.stockservice.mapper: debug
 
 xxl:
   job:
 #    enabled: true
     accessToken: personal
     admin:
-      addresses: http://127.0.0.1:8080/xxl-job-admin
+      addresses: http://127.0.0.1:8998/xxl-job-admin
     executor:
       appName: scraper-service
 #      address:
 #      ip:
 #      port:
-      logpath: logs
-      logretentiondays: 7
+#      logpath:
+#      logretentiondays:
