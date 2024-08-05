@@ -26,5 +26,5 @@ xxl:
 #      address:
 #      ip:
 #      port:
-#      logpath:
-#      logretentiondays:
+      logpath:
+      logretentiondays:
