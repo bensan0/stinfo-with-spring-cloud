@@ -99,6 +99,7 @@
                 </configuration>
             </plugin>
         </plugins>
+        <finalName>report-service</finalName>
     </build>
 
 </project>

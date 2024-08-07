@@ -1,7 +1,6 @@
-package com.personal.project.authservice.exception.handler;
+package com.personal.project.reportservice.exception.handler;
 
 import cn.hutool.core.util.IdUtil;
-import com.personal.project.authservice.exception.CustomException;
 import com.personal.project.commoncore.constants.ResponseCode;
 import com.personal.project.commoncore.response.CommonResponse;
 import jakarta.validation.ConstraintViolation;
@@ -25,7 +24,7 @@ import java.util.Set;
 public class CommonExceptionHandler {
 
 	@ExceptionHandler(value = Exception.class)
-    @ResponseStatus(value = HttpStatus.OK)
+	@ResponseStatus(value = HttpStatus.OK)
 	public CommonResponse<ObjectUtils.Null> handleDefaultException(Exception e) {
 		String traceCode = IdUtil.getSnowflake(1, 1).nextIdStr();
 
@@ -49,7 +48,7 @@ public class CommonExceptionHandler {
 	}
 
 	@ExceptionHandler(value = ConstraintViolationException.class)
-    @ResponseStatus(value = HttpStatus.OK)
+	@ResponseStatus(value = HttpStatus.OK)
 	public CommonResponse<ObjectUtils.Null> handleConstraintViolationException(ConstraintViolationException e) {
 		StringBuilder sb = new StringBuilder();
 		Set<ConstraintViolation<?>> conSet = e.getConstraintViolations();
@@ -68,14 +67,5 @@ public class CommonExceptionHandler {
 		log.error("something is null, trace: {}", traceCode, e);
 
 		return CommonResponse.error(ResponseCode.Failed, "NPE, trace:" + traceCode, null);
-	}
-
-	@ExceptionHandler(value = CustomException.class)
-	public CommonResponse<ObjectUtils.Null> handleCustomException(CustomException e) {
-		String traceCode = IdUtil.getSnowflake(1, 1).nextIdStr();
-
-		log.error("Exception: {} happened, message: {}, data, {}, trace: {}", e.getClass().getSimpleName(), e.getDefaultMessage(), e.getExtraData(), traceCode);
-
-		return CommonResponse.error(ResponseCode.Failed, e.getDefaultMessage() + ", trace: " + traceCode, null);
 	}
 }

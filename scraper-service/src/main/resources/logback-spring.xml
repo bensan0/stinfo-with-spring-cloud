@@ -2,6 +2,7 @@
 <configuration>
     <contextName>stock-service</contextName>
     <property name="LOG_PATH" value="/Users/phillip/Desktop/stinfo/logs/scraper-service"/>
+<!--    <property name="LOG_PATH" value="/app/logs"/>-->
     <property name="PATTERN" value="%green(%d{yyyy-MM-dd HH:mm:ss.SSS}) %yellow(%-5level) %red([%thread])  %highlight(%logger{50}) - %cyan(%msg%n)"/>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
