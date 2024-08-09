@@ -6,6 +6,7 @@ import cn.hutool.core.date.TimeInterval;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson2.JSON;
 import com.personal.project.commoncore.response.InnerResponse;
+import com.personal.project.scraperservice.config.BrowserConfig;
 import com.personal.project.scraperservice.constant.CacheKeys;
 import com.personal.project.scraperservice.model.dto.DailyStockInfoDto;
 import com.personal.project.scraperservice.model.entity.ScraperErrorMessageDO;
@@ -27,6 +28,7 @@ import com.personal.project.scraperservice.scraper.webmagic.yahoo.YahooRealTimeS
 import com.personal.project.scraperservice.service.CacheService;
 import com.personal.project.scraperservice.service.ErrorMessageService;
 import com.xxl.job.core.handler.annotation.XxlJob;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ClassPathUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -51,6 +53,7 @@ import java.util.concurrent.*;
 
 @Component
 @Slf4j
+@AllArgsConstructor
 public class ScraperJob {
 
 	private final CacheService cacheService;
@@ -61,16 +64,7 @@ public class ScraperJob {
 
 	private final ErrorMessageService errorMessageService;
 
-	private static final String classpath = ClassPathUtils.class.getClassLoader().getResource("").getFile();
-
-	private static final String driverPath = "driver/chrome-driver-mac-arm64/chromedriver";
-
-	public ScraperJob(RemoteStockService remoteStockService, RemoteReportService remoteReportService, ErrorMessageService errorMessageService, CacheService cacheService) {
-		this.remoteStockService = remoteStockService;
-		this.errorMessageService = errorMessageService;
-		this.remoteReportService = remoteReportService;
-		this.cacheService = cacheService;
-	}
+	private final BrowserConfig browserConfig;
 
 	//半年線,年線都先暫不計算(routine任務關於這部分計算都先去除)
 	//todo 另外分一個任務可帶參數去獲取更久以前的資料(以後計算年線半年線用)
@@ -646,6 +640,7 @@ public class ScraperJob {
 
 	@XxlJob("real-time-price-scrape")
 	public void realTimeHandle() {
+		log.info("bbbbbrrrrrowserConf:" + browserConfig);
 		RLock lock = cacheService.getLock(CacheKeys.SCRAPE_INFO_CACHE.getLock());
 		Long date = Long.parseLong(LocalDate.now().format(DatePattern.PURE_DATE_FORMATTER));
 		try {
@@ -670,7 +665,7 @@ public class ScraperJob {
 						.addUrl(urls.getLast())
 						.setDownloader(
 								new SeleniumDownloader(
-										classpath + driverPath,
+										browserConfig,
 										Duration.of(15, ChronoUnit.SECONDS),
 										ExpectedConditions.visibilityOfAllElementsLocatedBy(By.xpath("//div[@class='table-body-wrapper']")),
 										null
@@ -691,7 +686,7 @@ public class ScraperJob {
 						.addUrl(scraper.getFirstUrl())
 						.setDownloader(
 								new SeleniumDownloader(
-										classpath + driverPath,
+										browserConfig,
 										Duration.of(15, ChronoUnit.SECONDS),
 										ExpectedConditions.visibilityOfAllElementsLocatedBy(By.xpath("//div[@class='table-body-wrapper']")),
 										null

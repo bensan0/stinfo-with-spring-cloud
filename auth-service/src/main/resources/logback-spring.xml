@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <contextName>stock-service</contextName>
-    <property name="LOG_PATH" value="/Users/phillip/Desktop/stinfo/logs/auth-service"/>
-    <property name="PATTERN" value="%green(%d{yyyy-MM-dd HH:mm:ss.SSS}) %yellow(%-5level) %red([%thread])  %highlight(%logger{50}) - %cyan(%msg%n)"/>
+<!--    <property name="LOG_PATH" value="/Users/phillip/Desktop/stinfo/logs/auth-service"/>-->
+    <property name="LOG_PATH" value="/app/logs"/>
+    <property name="PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread]  %logger{50} - %msg%n"/>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">

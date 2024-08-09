@@ -1,6 +1,5 @@
 package com.personal.project.scraperservice.scraper.webmagic;
 
-import org.apache.commons.lang3.ClassPathUtils;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -9,7 +8,6 @@ import org.openqa.selenium.firefox.FirefoxOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileReader;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -27,64 +25,51 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Time: 下午1:41 <br>
  */
 class WebDriverPool {
-    private Logger logger = LoggerFactory.getLogger(getClass());
+	private Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final static int DEFAULT_CAPACITY = 5;
+	private final static int DEFAULT_CAPACITY = 5;
 
-    private final int capacity;
+	private final int capacity;
 
-    private final static int STAT_RUNNING = 1;
+	private final static int STAT_RUNNING = 1;
 
-    private final static int STAT_CLODED = 2;
+	private final static int STAT_CLODED = 2;
 
-    private AtomicInteger stat = new AtomicInteger(STAT_RUNNING);
+	private AtomicInteger stat = new AtomicInteger(STAT_RUNNING);
 
-    /*
-     * new fields for configuring phantomJS
-     */
-    private WebDriver mDriver = null;
-    private boolean mAutoQuitDriver = true;
+	/*
+	 * new fields for configuring phantomJS
+	 */
+	private WebDriver mDriver = null;
+	private boolean mAutoQuitDriver = true;
 
-    private static final String DEFAULT_CONFIG_FILE = ClassPathUtils.class.getClassLoader().getResource("").getFile() + "selenium.properties";
-    private static final String DRIVER_FIREFOX = "firefox";
-    private static final String DRIVER_CHROME = "chrome";
+	//    private static final String DEFAULT_CONFIG_FILE = ClassPathUtils.class.getClassLoader().getResource("").getFile() + "selenium.properties";
+	private static final String DRIVER_FIREFOX = "firefox";
+	private static final String DRIVER_CHROME = "chrome";
 
-    protected static Properties sConfig;
+	protected static Properties sConfig;
 
-    /**
-     * Configure the GhostDriver, and initialize a WebDriver instance. This part
-     * of code comes from GhostDriver.
-     * https://github.com/detro/ghostdriver/tree/master/test/java/src/test/java/ghostdriver
-     *
-     * @throws IOException
-     * @author bob.li.0718@gmail.com
-     */
-    public void configure() throws IOException {
-        String classpath = ClassPathUtils.class.getClassLoader().getResource("").getFile();
+	/**
+	 * Configure the GhostDriver, and initialize a WebDriver instance. This part
+	 * of code comes from GhostDriver.
+	 * https://github.com/detro/ghostdriver/tree/master/test/java/src/test/java/ghostdriver
+	 *
+	 * @throws IOException
+	 * @author bob.li.0718@gmail.com
+	 */
+	public void configure(String driver, String binaryPath) throws IOException {
 
-        // Read config file
-        sConfig = new Properties();
-        String configFile = DEFAULT_CONFIG_FILE;
-//        if (System.getProperty("selenuim_config") != null) {
-//            configFile = System.getProperty("selenuim_config");
-//        }
-        sConfig.load(new FileReader(configFile));
+		if (driver.equals(DRIVER_FIREFOX)) {
+			FirefoxOptions fOps = new FirefoxOptions();
+			fOps.addArguments("--headless");
+			fOps.addArguments("--disable-gpu");
+			fOps.addPreference("permissions.default.image", 2);
+			if(binaryPath != null && !binaryPath.isEmpty()){
+				fOps.setBinary(binaryPath);
+			}
 
-        String driver = sConfig.getProperty("driver", DRIVER_CHROME);
-        // Disable "web-security", enable all possible "ssl-protocols" and
-        // "ignore-ssl-errors" for PhantomJSDriver
-        // sCaps.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS, new
-        // String[] {
-        // "--web-security=false",
-        // "--ssl-protocol=any",
-        // "--ignore-ssl-errors=true"
-        // });
-
-        // Start appropriate Driver
-        if (driver.equals(DRIVER_FIREFOX)) {
-            FirefoxOptions fOps = new FirefoxOptions();
-            mDriver = new FirefoxDriver(fOps);
-        } else if (driver.equals(DRIVER_CHROME)) {
+			mDriver = new FirefoxDriver(fOps);
+		} else if (driver.equals(DRIVER_CHROME)) {
             /*
             --disable-infobars：禁止显示策略化信息条。
             --no-sandbox：解决DevToolsActivePort文件不存在的报错问题。
@@ -98,104 +83,106 @@ class WebDriverPool {
             --headless：浏览器不提供可视化页面（无头模式）。Linux下如果系统不支持可视化不加这条会启动失败。
             lang=en_US：设置语言为英文。
             */
-            ChromeOptions cOps = new ChromeOptions();
-            cOps.addArguments("--disable-infobars");
-            cOps.addArguments("--incognito");
-            cOps.addArguments("--no-sandbox");
-            cOps.addArguments("--disable-gpu");
-            cOps.addArguments("--enable-javascript");
-            cOps.addArguments("blink-settings=imagesEnabled=false");
-            cOps.addArguments("--headless");
-            cOps.setBinary(classpath + "chrome-headless-shell-mac-arm64/chrome-headless-shell");
-//            cOps.setBinary("C:\\Users\\USER\\Desktop\\chrome-headless-shell-win64\\chrome-headless-shell.exe");
-            mDriver = new ChromeDriver(cOps);
-        }
-    }
+			ChromeOptions cOps = new ChromeOptions();
+			cOps.addArguments("--disable-infobars");
+			cOps.addArguments("--incognito");
+			cOps.addArguments("--no-sandbox");
+			cOps.addArguments("--disable-gpu");
+			cOps.addArguments("--enable-javascript");
+			cOps.addArguments("blink-settings=imagesEnabled=false");
+			cOps.addArguments("--headless");
+			if(binaryPath != null && !binaryPath.isEmpty()){
+				cOps.setBinary(binaryPath);
+			}
 
-    /**
-     * check whether input is a valid URL
-     *
-     * @param urlString urlString
-     * @return true means yes, otherwise no.
-     * @author bob.li.0718@gmail.com
-     */
-    private boolean isUrl(String urlString) {
-        try {
-            new URL(urlString);
-            return true;
-        } catch (MalformedURLException mue) {
-            return false;
-        }
-    }
+			mDriver = new ChromeDriver(cOps);
+		}
+	}
 
-    /**
-     * store webDrivers created
-     */
-    private List<WebDriver> webDriverList = Collections
-            .synchronizedList(new ArrayList<>());
+	/**
+	 * check whether input is a valid URL
+	 *
+	 * @param urlString urlString
+	 * @return true means yes, otherwise no.
+	 * @author bob.li.0718@gmail.com
+	 */
+	private boolean isUrl(String urlString) {
+		try {
+			new URL(urlString);
+			return true;
+		} catch (MalformedURLException mue) {
+			return false;
+		}
+	}
 
-    /**
-     * store webDrivers available
-     */
-    private BlockingDeque<WebDriver> innerQueue = new LinkedBlockingDeque<WebDriver>();
+	/**
+	 * store webDrivers created
+	 */
+	private List<WebDriver> webDriverList = Collections
+			.synchronizedList(new ArrayList<>());
 
-    public WebDriverPool(int capacity) {
-        this.capacity = capacity;
-    }
+	/**
+	 * store webDrivers available
+	 */
+	private BlockingDeque<WebDriver> innerQueue = new LinkedBlockingDeque<WebDriver>();
 
-    public WebDriverPool() {
-        this(DEFAULT_CAPACITY);
-    }
+	public WebDriverPool(int capacity) {
+		this.capacity = capacity;
+	}
 
-    /**
-     * @return
-     * @throws InterruptedException
-     */
-    public WebDriver get() throws InterruptedException {
-        checkRunning();
-        WebDriver poll = innerQueue.poll();
-        if (poll != null) {
-            return poll;
-        }
-        if (webDriverList.size() < capacity) {
-            synchronized (webDriverList) {
-                if (webDriverList.size() < capacity) {
-                    // add new WebDriver instance into pool
-                    try {
-                        configure();
-                        innerQueue.add(mDriver);
-                        webDriverList.add(mDriver);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
+	public WebDriverPool() {
+		this(DEFAULT_CAPACITY);
+	}
 
-        }
-        return innerQueue.take();
-    }
+	/**
+	 * @return
+	 * @throws InterruptedException
+	 */
+	public WebDriver get(String driver, String binaryPath) throws InterruptedException {
+		checkRunning();
+		WebDriver poll = innerQueue.poll();
+		if (poll != null) {
+			return poll;
+		}
+		if (webDriverList.size() < capacity) {
+			synchronized (webDriverList) {
+				if (webDriverList.size() < capacity) {
+					// add new WebDriver instance into pool
+					try {
+						configure(driver, binaryPath);
+						innerQueue.add(mDriver);
+						webDriverList.add(mDriver);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
 
-    public void returnToPool(WebDriver webDriver) {
-        checkRunning();
-        innerQueue.add(webDriver);
-    }
+		}
+		return innerQueue.take();
+	}
 
-    protected void checkRunning() {
-        if (!stat.compareAndSet(STAT_RUNNING, STAT_RUNNING)) {
-            throw new IllegalStateException("Already closed!");
-        }
-    }
+	public void returnToPool(WebDriver webDriver) {
+		checkRunning();
+		innerQueue.add(webDriver);
+	}
 
-    public void closeAll() {
-        boolean b = stat.compareAndSet(STAT_RUNNING, STAT_CLODED);
-        if (!b) {
-            throw new IllegalStateException("Already closed!");
-        }
-        for (WebDriver webDriver : webDriverList) {
-            logger.info("Quit webDriver" + webDriver);
-            webDriver.quit();
-            webDriver = null;
-        }
-    }
+	protected void checkRunning() {
+		if (!stat.compareAndSet(STAT_RUNNING, STAT_RUNNING)) {
+			throw new IllegalStateException("Already closed!");
+		}
+	}
+
+	public void closeAll() {
+		boolean b = stat.compareAndSet(STAT_RUNNING, STAT_CLODED);
+		if (!b) {
+			throw new IllegalStateException("Already closed!");
+		}
+		for (WebDriver webDriver : webDriverList) {
+			logger.info("Quit webDriver" + webDriver);
+			webDriver.quit();
+			webDriver = null;
+		}
+	}
 
 }

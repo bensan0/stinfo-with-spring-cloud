@@ -1,5 +1,6 @@
 package com.personal.project.scraperservice.scraper.webmagic;
 
+import com.personal.project.scraperservice.config.BrowserConfig;
 import lombok.Getter;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
@@ -45,6 +46,8 @@ public class SeleniumDownloader extends AbstractDownloader implements Closeable 
 
     private ExpectedCondition waitCondition = null;
 
+    private BrowserConfig browserConfig;
+
     @Getter
     private Set<String> failedUrls;
 
@@ -58,9 +61,12 @@ public class SeleniumDownloader extends AbstractDownloader implements Closeable 
                 chromeDriverPath);
     }
 
-    public SeleniumDownloader(String chromeDriverPath, Duration waitTime, ExpectedCondition waitCondition, Set<String> failedUrls) {
+    public SeleniumDownloader(BrowserConfig browserConfig, Duration waitTime, ExpectedCondition waitCondition, Set<String> failedUrls) {
+
+        this.browserConfig = browserConfig;
+
         System.getProperties().setProperty("webdriver.chrome.driver",
-                chromeDriverPath);
+                browserConfig.getDriverpath());
 
         this.waitTime = waitTime;
 
@@ -94,7 +100,7 @@ public class SeleniumDownloader extends AbstractDownloader implements Closeable 
         WebDriver webDriver = null;
         Page page = Page.fail(request);
         try {
-            webDriver = webDriverPool.get();
+            webDriver = webDriverPool.get(browserConfig.getDriver(), browserConfig.getBinarypath());
             logger.info("downloading page " + request.getUrl());
             webDriver.get(request.getUrl());
             try {

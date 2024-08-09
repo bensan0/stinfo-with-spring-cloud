@@ -5,12 +5,6 @@ spring:
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
 
-mybatis-plus:
-  mapper-locations: classpath:mapper/*.xml
-  type-aliases-package: com.personal.project.gateway.model.entity
-  configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-
   data:
     redis:
       database: 0
@@ -26,9 +20,11 @@ mybatis-plus:
     username: guest
     password: guest
 
-#logging:
-#  level:
-#    com.personal.project.gateway.mapper: debug
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.personal.project.gateway.model.entity
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 custom:
   gateway:

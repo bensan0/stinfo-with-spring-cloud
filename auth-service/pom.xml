@@ -107,6 +107,7 @@
                 </configuration>
             </plugin>
         </plugins>
+        <finalName>auth-service</finalName>
     </build>
 
 </project>

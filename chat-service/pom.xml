@@ -84,6 +84,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
         </plugins>
+        <finalName>chat-service</finalName>
     </build>
 
 </project>

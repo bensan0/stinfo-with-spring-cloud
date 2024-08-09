@@ -32,3 +32,9 @@ xxl:
       #      port:
       logpath: /app/logs/xxl
       logretentiondays: 7
+
+scraper:
+  resource:
+    driver: firefox
+    browserpath:
+    driverpath: /app/browser/driver/geckodriver

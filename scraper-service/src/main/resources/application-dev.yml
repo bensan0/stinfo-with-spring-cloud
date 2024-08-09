@@ -38,3 +38,9 @@ xxl:
 #      port:
       logpath:
       logretentiondays:
+
+scraper:
+  resource:
+    driver:
+    browserpath:
+    driverpath:
