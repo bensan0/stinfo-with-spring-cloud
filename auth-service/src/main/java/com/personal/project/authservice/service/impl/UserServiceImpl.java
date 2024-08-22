@@ -75,6 +75,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
 	}
 
 	@Override
+	public Boolean checkToken(String token) {
+		Object cache = cacheService.getCache(token);
+
+		return cache != null;
+	}
+
+	@Override
 	public UserDTO getByName(String username) {
 		LambdaQueryWrapper<UserDO> wrapper = new LambdaQueryWrapper<>();
 		wrapper.eq(UserDO::getUsername, username)

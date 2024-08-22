@@ -9,7 +9,9 @@ public enum ResponseCode {
     Not_Valid("403", "not valid"),
     Not_Found("404", "data not found"),
     Invalid_Args("405", "params invalid"),
-    Failed("500", "server error");
+    Failed("500", "server error"),
+    Token_Expired("401", "token is expired"),
+    ;
 
     private String code;
     private String msg;

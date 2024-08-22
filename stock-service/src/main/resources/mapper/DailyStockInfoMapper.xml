@@ -401,14 +401,16 @@
             t1.price_gap as priceGap,
             t1.price_gap_percent as priceGapPercent,
             t1.today_trading_volume_piece as todayTradingVolumePiece,
+            t1.yesterday_trading_volume_piece as yesterdayTradingVolumePiece,
             t1.today_trading_volume_money as todayTradingVolumeMoney,
-            t2.upper_shadow as upperShadow,
-            t2.real_body as realBody,
-            t2.lower_shadow as lowerShadow,
-            t2.tags,
-            t3.ma_5 as ma5,
-            t3.ma_10 as ma10,
-            t3.ma_20 as ma20
+            t1.yesterday_trading_volume_money as yesterdayTradingVolumeMoney,
+<!--            t2.upper_shadow as upperShadow,-->
+<!--            t2.real_body as realBody,-->
+<!--            t2.lower_shadow as lowerShadow,-->
+            t2.tags as tags
+<!--            t3.ma_5 as ma5,-->
+<!--            t3.ma_10 as ma10,-->
+<!--            t3.ma_20 as ma20-->
         from
             (
                 select
@@ -481,6 +483,7 @@
             t1.price_gap as priceGap,
             t1.price_gap_percent as priceGapPercent,
             t1.today_trading_volume_piece as todayTradingVolumePiece,
+            t1.market as market,
             t2.tags
         from
             daily_stock_info t1
@@ -496,12 +499,12 @@
                 t1.today_trading_volume_piece &gt;= #{dto.tradingVolumePieceStart}
         </if>
 
-        <if test="dto != null and dto.tags != null">
+        <if test="dto != null and dto.extraTags != null">
             and
                 JSON_CONTAINS(
                     t2.tags->'$.extraTags',
                     JSON_ARRAY(
-                        <foreach collection="dto.tags" index="index" item="item" open="" separator="," close="">
+                        <foreach collection="dto.extraTags" index="index" item="item" open="" separator="," close="">
                             #{item}
                         </foreach>
                     )

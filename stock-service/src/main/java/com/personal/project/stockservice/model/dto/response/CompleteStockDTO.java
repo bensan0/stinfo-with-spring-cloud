@@ -22,17 +22,23 @@ public class CompleteStockDTO {
 
 	private Long todayTradingVolumePiece;
 
+	private Long yesterdayTradingVolumePiece;
+
 	private BigDecimal todayTradingVolumeMoney;
 
-	private BigDecimal upperShadow;
+	private BigDecimal yesterdayTradingVolumeMoney;
 
-	private BigDecimal realBody;
+//	private BigDecimal upperShadow;
+//
+//	private BigDecimal realBody;
+//
+//	private BigDecimal lowerShadow;
+//
+//	private BigDecimal ma5;
+//
+//	private BigDecimal ma10;
+//
+//	private BigDecimal ma20;
 
-	private BigDecimal lowerShadow;
-
-	private BigDecimal ma5;
-
-	private BigDecimal ma10;
-
-	private BigDecimal ma20;
+	private String tags;
 }

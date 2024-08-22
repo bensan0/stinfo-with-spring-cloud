@@ -640,7 +640,6 @@ public class ScraperJob {
 
 	@XxlJob("real-time-price-scrape")
 	public void realTimeHandle() {
-		log.info("bbbbbrrrrrowserConf:" + browserConfig);
 		RLock lock = cacheService.getLock(CacheKeys.SCRAPE_INFO_CACHE.getLock());
 		Long date = Long.parseLong(LocalDate.now().format(DatePattern.PURE_DATE_FORMATTER));
 		try {
@@ -668,7 +667,8 @@ public class ScraperJob {
 										browserConfig,
 										Duration.of(15, ChronoUnit.SECONDS),
 										ExpectedConditions.visibilityOfAllElementsLocatedBy(By.xpath("//div[@class='table-body-wrapper']")),
-										null
+										null,
+										true
 								)
 						)
 						.thread(1)
@@ -689,7 +689,8 @@ public class ScraperJob {
 										browserConfig,
 										Duration.of(15, ChronoUnit.SECONDS),
 										ExpectedConditions.visibilityOfAllElementsLocatedBy(By.xpath("//div[@class='table-body-wrapper']")),
-										null
+										null,
+										true
 								)
 						)
 						.thread(2)

@@ -12,5 +12,7 @@ public interface UserService extends IService<UserDO> {
 
 	String signIn(UserSignUpRequestDTO dto);
 
+	Boolean checkToken(String token);
+
 	UserDTO getByName(String username);
 }

@@ -31,7 +31,7 @@ public class CommonExceptionHandler {
 
 		log.error("{}, Handle default exception, trace: {}", LocalDateTime.now(), traceCode, e);
 
-		return CommonResponse.error(ResponseCode.Failed, traceCode, null);
+		return CommonResponse.error(ResponseCode.Failed, "trace code: " + traceCode, null);
 	}
 
 	@ExceptionHandler(value = MethodArgumentNotValidException.class)

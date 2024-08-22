@@ -30,13 +30,10 @@ custom:
   gateway:
     skip:
       visit:
-        - /gw/auth/p/login
         - /gw/report/util/tags
-        - /gw/stock/p/main-page
-        - /gw/stock/p/real-time-page
         - /gw/chat/tg/command
       auth:
-        - /gw/auth/p/login
+        - /gw/auth/sign/check-token
         - /gw/auth/sign/sign-in
         - /gw/auth/sign/sign-up
         - /gw/chat/tg/command

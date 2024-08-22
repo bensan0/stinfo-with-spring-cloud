@@ -1,6 +1,7 @@
 package com.personal.project.scraperservice.scraper.webmagic.yahoo;
 
 import cn.hutool.core.util.StrUtil;
+import com.personal.project.scraperservice.constant.Term;
 import com.personal.project.scraperservice.model.dto.DailyStockInfoDto;
 import com.personal.project.scraperservice.model.entity.ScraperErrorMessageDO;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +42,7 @@ public class YahooRealTimeScraper implements PageProcessor {
 	@Override
 	public void process(Page page) {
 		page.addTargetRequests(urls);
+		String market = page.getUrl().get().contains("exchange=TAI") ? Term.LISTED.getFieldName() : Term.OTC.getFieldName();
 		Html html = page.getHtml();
 		List<Selectable> rows = html.xpath("//*[@id='main-1-ClassQuotesTable-Proxy']//div[@class='table-body-wrapper']/ul/li").nodes();
 		try {
@@ -125,6 +127,9 @@ public class YahooRealTimeScraper implements PageProcessor {
 				//成量(張)
 				String vol = row.xpath("//li//div[@class='Fxg(1) Fxs(1) Fxb(0%) Miw($w-table-cell-min-width) Ta(end) Mend($m-table-cell-space) Mend(0):lc']/span/text()").get().trim().replace(",", "");
 				dto.setTodayTradingVolumePiece(Long.parseLong(vol));
+
+				//市場
+				dto.setMarket(market);
 
 				results.add(dto);
 			}

@@ -35,7 +35,7 @@ public class QRTArgsProcessor implements ArgsProcessor {
 					List<String> tags = Arrays.stream(value.split(","))
 							.map(String::trim)
 							.toList();
-					dto.setTags(tags);
+					dto.setExtraTags(tags);
 				}
 			});
 		} catch (Exception e) {

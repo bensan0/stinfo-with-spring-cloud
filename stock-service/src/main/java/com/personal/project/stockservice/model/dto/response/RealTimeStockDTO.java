@@ -16,5 +16,7 @@ public class RealTimeStockDTO {
 
 	private String todayTradingVolumePiece;
 
+	private String market;
+
 	private String tags;
 }

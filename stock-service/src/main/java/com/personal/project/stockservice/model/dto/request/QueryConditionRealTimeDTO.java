@@ -12,5 +12,5 @@ public class QueryConditionRealTimeDTO {
 
 	private BigDecimal priceGapPercent;
 
-	private List<String> tags;
+	private List<String> extraTags;
 }

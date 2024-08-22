@@ -11,6 +11,7 @@ import com.personal.project.stockservice.model.dto.response.DailyStockInfoDTO;
 import com.personal.project.stockservice.model.dto.response.RealTimeStockDTO;
 import com.personal.project.stockservice.service.DailyStockInfoService;
 import jakarta.validation.constraints.Min;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.Range;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,6 +22,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/v1/stock")
+@Slf4j
 public class StockQueryController {
 
 	private final DailyStockInfoService dailyStockInfoService;

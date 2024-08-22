@@ -5,6 +5,21 @@ spring:
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+#  cloud:
+#    gateway:
+#      globalcors:
+#        corsConfigurations:
+#          '[/**]':
+#            allowedOrigins: "http://localhost:9999"
+#            allowedMethods:
+#              - GET
+#              - POST
+#              - PUT
+#              - DELETE
+#              - OPTIONS
+#            allowedHeaders: "*"
+#            allowCredentials: true
+
   data:
     redis:
       database: 0
@@ -28,13 +43,9 @@ custom:
   gateway:
     skip:
       visit:
-        - /gw/auth/p/login
         - /gw/report/util/tags
-        - /gw/stock/p/main-page
-        - /gw/stock/p/real-time-page
         - /gw/chat/tg/command
       auth:
-        - /gw/auth/p/login
         - /gw/auth/sign/sign-in
         - /gw/auth/sign/sign-up
         - /gw/chat/tg/command
