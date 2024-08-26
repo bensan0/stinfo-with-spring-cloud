@@ -2,7 +2,7 @@ package com.personal.project.scraperservice.scraper.webmagic.tpex;
 
 import cn.hutool.core.util.StrUtil;
 import com.personal.project.scraperservice.constant.Term;
-import com.personal.project.scraperservice.model.dto.DailyStockInfoDto;
+import com.personal.project.scraperservice.model.dto.DailyStockInfoDTO;
 import com.personal.project.scraperservice.model.entity.ScraperErrorMessageDO;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -62,7 +62,7 @@ public class TPEXInitScraper implements PageProcessor {
             return;
         }
 
-        List<DailyStockInfoDto> results = new ArrayList<>();
+        List<DailyStockInfoDTO> results = new ArrayList<>();
         for (Selectable row : rows) {
 
             String stockId = row.xpath("//tr/td[1]/text()").get().trim();
@@ -70,7 +70,7 @@ public class TPEXInitScraper implements PageProcessor {
                 continue;
             }
 
-            DailyStockInfoDto dto = new DailyStockInfoDto();
+            DailyStockInfoDTO dto = new DailyStockInfoDTO();
             dto.setStockId(stockId);
 
             String stockName = row.xpath("//tr/td[2]/text()").get();

@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @Data
-public class DailyStockInfoDto {
+public class DailyStockInfoDTO {
 
     private Long id;
 

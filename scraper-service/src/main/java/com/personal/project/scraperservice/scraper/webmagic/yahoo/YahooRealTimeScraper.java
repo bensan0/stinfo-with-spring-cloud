@@ -2,7 +2,7 @@ package com.personal.project.scraperservice.scraper.webmagic.yahoo;
 
 import cn.hutool.core.util.StrUtil;
 import com.personal.project.scraperservice.constant.Term;
-import com.personal.project.scraperservice.model.dto.DailyStockInfoDto;
+import com.personal.project.scraperservice.model.dto.DailyStockInfoDTO;
 import com.personal.project.scraperservice.model.entity.ScraperErrorMessageDO;
 import lombok.extern.slf4j.Slf4j;
 import us.codecraft.webmagic.Page;
@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
 
 @Slf4j
 public class YahooRealTimeScraper implements PageProcessor {
@@ -28,28 +29,43 @@ public class YahooRealTimeScraper implements PageProcessor {
 			.addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
 			.addHeader("Accept-Encoding", "gzip, deflate, br");
 
-	private final List<String> urls;
+	private final BlockingQueue<String> urls;
 
 	private final List<ScraperErrorMessageDO> errors = Collections.synchronizedList(new ArrayList<>());
 
 	private final Long date;
 
-	public YahooRealTimeScraper(List<String> urls, Long date) {
+	public YahooRealTimeScraper(BlockingQueue<String> urls, Long date) {
 		this.urls = urls;
 		this.date = date;
 	}
 
 	@Override
 	public void process(Page page) {
-		page.addTargetRequests(urls);
-		String market = page.getUrl().get().contains("exchange=TAI") ? Term.LISTED.getFieldName() : Term.OTC.getFieldName();
 		Html html = page.getHtml();
+		String[] yMdSplit = html.xpath("//time/span[2]/text()").get().split("/");
+		Long pageDate = Long.parseLong(yMdSplit[0] + yMdSplit[1] + yMdSplit[2]);
+
+		if (!pageDate.equals(this.date)) {
+			page.setSkip(true);
+			return;
+		}
+
+		for (int i = 0; i < 2; i++) {
+			if (urls.peek() != null) {
+				page.addTargetRequest(urls.poll());
+			}
+		}
+
+
+		String market = page.getUrl().get().contains("exchange=TAI") ? Term.LISTED.getFieldName() : Term.OTC.getFieldName();
+
 		List<Selectable> rows = html.xpath("//*[@id='main-1-ClassQuotesTable-Proxy']//div[@class='table-body-wrapper']/ul/li").nodes();
 		try {
-			List<DailyStockInfoDto> results = new ArrayList<>();
+			List<DailyStockInfoDTO> results = new ArrayList<>();
 
 			for (Selectable row : rows) {
-				DailyStockInfoDto dto = new DailyStockInfoDto();
+				DailyStockInfoDTO dto = new DailyStockInfoDTO();
 				//id
 				String stockId = row.xpath("//li//span[@class='Fz(14px) C(#979ba7) Ell']/text()").get().trim().replace(".TWO", "").replace(".TW", "");
 				dto.setStockId(stockId);
@@ -69,7 +85,7 @@ public class YahooRealTimeScraper implements PageProcessor {
 				//成交
 				List<Selectable> pNodes = row.xpath("//li//div[@class='Fxg(1) Fxs(1) Fxb(0%) Ta(end) Mend($m-table-cell-space) Mend(0):lc Miw(68px)']").nodes();
 				try {
-					String nowP = pNodes.getFirst().xpath("//div//span/text()").get().trim();
+					String nowP = pNodes.getFirst().xpath("//div//span/text()").get().trim().replace(",", "");
 					dto.setTodayClosingPrice(new BigDecimal(nowP));
 				} catch (Exception ignored) {
 					continue;
@@ -77,7 +93,7 @@ public class YahooRealTimeScraper implements PageProcessor {
 
 				//昨收
 				try {
-					String yesterdayC = pNodes.get(2).xpath("//div/span/text()").get().trim();
+					String yesterdayC = pNodes.get(2).xpath("//div/span/text()").get().trim().replace(",", "");
 					dto.setYesterdayClosingPrice(new BigDecimal(yesterdayC));
 				} catch (Exception ignored) {
 					continue;
@@ -102,7 +118,7 @@ public class YahooRealTimeScraper implements PageProcessor {
 
 				//開
 				try {
-					String op = pNodes.get(1).xpath("//div/span/text()").get().trim();
+					String op = pNodes.get(1).xpath("//div/span/text()").get().trim().replace(",", "");
 					dto.setOpeningPrice(new BigDecimal(op));
 				} catch (Exception ignored) {
 					dto.setOpeningPrice(dto.getYesterdayClosingPrice());
@@ -110,7 +126,7 @@ public class YahooRealTimeScraper implements PageProcessor {
 
 				//高
 				try {
-					String high = pNodes.get(3).xpath("//div/span/text()").get().trim();
+					String high = pNodes.get(3).xpath("//div/span/text()").get().trim().replace(",", "");
 					dto.setHighestPrice(new BigDecimal(high));
 				} catch (Exception ignored) {
 					dto.setHighestPrice(dto.getTodayClosingPrice());
@@ -118,7 +134,7 @@ public class YahooRealTimeScraper implements PageProcessor {
 
 				//低
 				try {
-					String low = pNodes.get(4).xpath("//div/span/text()").get().trim();
+					String low = pNodes.get(4).xpath("//div/span/text()").get().trim().replace(",", "");
 					dto.setLowestPrice(new BigDecimal(low));
 				} catch (Exception ignored) {
 					dto.setLowestPrice(dto.getTodayClosingPrice());
@@ -126,7 +142,12 @@ public class YahooRealTimeScraper implements PageProcessor {
 
 				//成量(張)
 				String vol = row.xpath("//li//div[@class='Fxg(1) Fxs(1) Fxb(0%) Miw($w-table-cell-min-width) Ta(end) Mend($m-table-cell-space) Mend(0):lc']/span/text()").get().trim().replace(",", "");
-				dto.setTodayTradingVolumePiece(Long.parseLong(vol));
+				if (vol.contains("M")) {
+					vol = vol.replace("M", "");
+					dto.setTodayTradingVolumePiece(new BigDecimal(vol).multiply(BigDecimal.valueOf(1000000)).longValue());
+				} else {
+					dto.setTodayTradingVolumePiece(Long.parseLong(vol));
+				}
 
 				//市場
 				dto.setMarket(market);
@@ -145,9 +166,5 @@ public class YahooRealTimeScraper implements PageProcessor {
 	@Override
 	public Site getSite() {
 		return site;
-	}
-
-	public String getFirstUrl() {
-		return urls.getFirst();
 	}
 }

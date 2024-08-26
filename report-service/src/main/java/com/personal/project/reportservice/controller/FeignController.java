@@ -57,6 +57,7 @@ public class FeignController {
     public InnerResponse<ObjectUtils.Null> calRealTimeDetail(
             @RequestBody Long date
     ){
+
         return generateReportService.generateRealTimeDetail(date);
     }
 }

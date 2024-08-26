@@ -1,6 +1,6 @@
 package com.personal.project.scraperservice.scraper.webmagic.tpex;
 
-import com.personal.project.scraperservice.model.dto.DailyStockInfoDto;
+import com.personal.project.scraperservice.model.dto.DailyStockInfoDTO;
 import lombok.Getter;
 import us.codecraft.webmagic.ResultItems;
 import us.codecraft.webmagic.Task;
@@ -12,7 +12,7 @@ import java.util.List;
 public class TPEXRoutinePipeline implements Pipeline {
 
     @Getter
-    private List<DailyStockInfoDto> results = new ArrayList<>();
+    private List<DailyStockInfoDTO> results = new ArrayList<>();
 
     @Override
     public void process(ResultItems resultItems, Task task) {

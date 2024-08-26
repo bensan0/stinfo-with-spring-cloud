@@ -65,6 +65,9 @@ public enum DetailTagEnum {
     LONG_GREEN("長綠"),
     RED_INVERTED_HAMMER("紅倒錘子"),
     GREEN_INVERTED_HAMMER("綠倒錘子"),
+    GREEN_COVER("綠吞噬"),
+    RED_COVER("紅吞噬"),
+    PREGNANT("抱孕"),
     ;
 
 

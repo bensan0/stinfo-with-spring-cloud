@@ -64,3 +64,21 @@ create table if not exists daily_stock_info_detail
     )
     comment '每日股票標籤詳細數據' charset = utf8mb4;
     create index idx_daily_stock_detail_stockid on daily_stock_detail (stock_id);
+
+create table if not exists daily_index_info
+(
+    id                              int unsigned auto_increment                       primary key,
+    index_name                      varchar(20)                     default ''        not null comment '股名',
+    date                            bigint unsigned                 default 0         not null comment 'yyyyMMdd',
+    today_closing             decimal(7,2) unsigned                             null     comment '今日收盤價',
+    yesterday_closing         decimal(7,2) unsigned                             null     comment '昨日收盤價',
+    gap                       decimal(7,2)                                      null     comment '價差(今日收盤-昨日收盤)',
+    gap_percent               decimal(5,2)                                      null     comment '價差百分比(價差/昨收)',
+    opening                   decimal(7,2) unsigned                             null     comment '開盤價',
+    highest                   decimal(7,2) unsigned                             null     comment '盤中最高價',
+    lowest                    decimal(7,2) unsigned                             null     comment '盤中最低價',
+    today_trading_volume      bigint unsigned                                   null     comment '今日交易量(張)',
+    today_trading_amount      decimal(14,2) unsigned                            null     comment '今日交易量(元)',
+    updated_at                      bigint unsigned                 default 0         not null comment 'yyyyMMddHHmmss'
+    )
+    comment '每日市場指數' charset = utf8mb4;

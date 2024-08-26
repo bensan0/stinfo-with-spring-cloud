@@ -4,13 +4,16 @@ import cn.hutool.core.date.DatePattern;
 import com.github.pagehelper.PageInfo;
 import com.personal.project.commoncore.constants.ResponseCode;
 import com.personal.project.commoncore.response.CommonResponse;
+import com.personal.project.stockservice.model.dto.request.DailyIndexInfoDTO;
 import com.personal.project.stockservice.model.dto.request.QueryConditionDTO;
 import com.personal.project.stockservice.model.dto.request.QueryConditionRealTimeDTO;
 import com.personal.project.stockservice.model.dto.response.CompleteStockDTO;
 import com.personal.project.stockservice.model.dto.response.DailyStockInfoDTO;
 import com.personal.project.stockservice.model.dto.response.RealTimeStockDTO;
+import com.personal.project.stockservice.service.DailyIndexInfoService;
 import com.personal.project.stockservice.service.DailyStockInfoService;
 import jakarta.validation.constraints.Min;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.Range;
 import org.springframework.web.bind.annotation.*;
@@ -23,13 +26,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/v1/stock")
 @Slf4j
+@AllArgsConstructor
 public class StockQueryController {
 
 	private final DailyStockInfoService dailyStockInfoService;
 
-	public StockQueryController(DailyStockInfoService dailyStockInfoService) {
-		this.dailyStockInfoService = dailyStockInfoService;
-	}
+	private final DailyIndexInfoService dailyIndexInfoService;
 
 	@GetMapping("/{stockId}/list")
 	public CommonResponse<PageInfo<DailyStockInfoDTO>> getStockList(
@@ -70,5 +72,12 @@ public class StockQueryController {
 		List<RealTimeStockDTO> results = dailyStockInfoService.conditionRealTimeQuery(Long.parseLong(nowStr), dto);
 
 		return CommonResponse.ok(results);
+	}
+
+	@GetMapping("/index/latest")
+	public CommonResponse<List<DailyIndexInfoDTO>> indexQuery() {
+		List<DailyIndexInfoDTO> data = dailyIndexInfoService.queryLatest();
+
+		return CommonResponse.ok(data);
 	}
 }

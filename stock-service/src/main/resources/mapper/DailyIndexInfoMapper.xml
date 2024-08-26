@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.personal.project.stockservice.mapper.DailyIndexInfoMapper">
+    <resultMap id="BaseResultMap" type="com.personal.project.stockservice.model.entity.DailyIndexInfoDO">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="indexName" column="index_name" jdbcType="VARCHAR"/>
+        <result property="date" column="date" jdbcType="BIGINT"/>
+        <result property="todayClosing" column="today_closing" jdbcType="DECIMAL"/>
+        <result property="yesterdayClosing" column="yesterday_closing" jdbcType="DECIMAL"/>
+        <result property="gap" column="gap" jdbcType="DECIMAL"/>
+        <result property="gapPercent" column="gap_percent" jdbcType="DECIMAL"/>
+        <result property="opening" column="opening" jdbcType="DECIMAL"/>
+        <result property="highest" column="highest" jdbcType="DECIMAL"/>
+        <result property="lowest" column="lowest" jdbcType="DECIMAL"/>
+        <result property="todayTradingVolume" column="today_trading_volume" jdbcType="BIGINT"/>
+        <result property="todayTradingAmount" column="today_trading_amount" jdbcType="DECIMAL"/>
+        <result property="updatedAt" column="updated_at" jdbcType="BIGINT"/>
+    </resultMap>
+
+    <select id="queryLatest" resultType="com.personal.project.stockservice.model.entity.DailyIndexInfoDO">
+        select
+            id,
+            index_name as indexName,
+            date,
+            today_closing as todayClosing,
+            yesterday_closing as yesterdayClosing,
+            gap,
+            gap_percent as gapPercent,
+            opening,
+            highest,
+            lowest,
+            today_trading_volume as todayTradingVolume,
+            today_trading_amount as todayTradingAmount
+        FROM
+            daily_index_info
+        WHERE
+            date = (
+                select MAX(date)
+                from daily_index_info
+            );
+    </select>
+</mapper>

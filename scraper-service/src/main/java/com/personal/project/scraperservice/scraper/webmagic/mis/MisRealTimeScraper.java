@@ -1,6 +1,6 @@
 package com.personal.project.scraperservice.scraper.webmagic.mis;
 
-import com.personal.project.scraperservice.model.dto.DailyStockInfoDto;
+import com.personal.project.scraperservice.model.dto.DailyStockInfoDTO;
 import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Site;
 import us.codecraft.webmagic.processor.PageProcessor;
@@ -37,10 +37,10 @@ public class MisRealTimeScraper implements PageProcessor {
         Html html = page.getHtml();
         List<Selectable> rows = html.xpath("//table[@id='group']/tr").nodes();
 
-        List<DailyStockInfoDto> results = new ArrayList<>();
+        List<DailyStockInfoDTO> results = new ArrayList<>();
 
         for (Selectable row : rows) {
-            DailyStockInfoDto dto = new DailyStockInfoDto();
+            DailyStockInfoDTO dto = new DailyStockInfoDTO();
             String[] split = row.xpath("//tr/td[1]/a/text()").get().split(" +");
             String stockId = split[0].trim();
             dto.setStockId(stockId);

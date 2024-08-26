@@ -4,29 +4,32 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.util.IdUtil;
 import com.personal.project.commoncore.constants.ResponseCode;
-import com.personal.project.commoncore.response.CommonResponse;
 import com.personal.project.commoncore.response.InnerResponse;
+import com.personal.project.stockservice.model.dto.request.DailyIndexInfoDTO;
 import com.personal.project.stockservice.model.dto.request.Query4CalDTO;
 import com.personal.project.stockservice.model.dto.request.QueryConditionRealTimeDTO;
 import com.personal.project.stockservice.model.dto.response.*;
 import com.personal.project.stockservice.model.entity.DailyStockInfoDetailDO;
 import com.personal.project.stockservice.model.entity.DailyStockMetricsDO;
+import com.personal.project.stockservice.service.DailyIndexInfoService;
 import com.personal.project.stockservice.service.DailyStockInfoDetailService;
 import com.personal.project.stockservice.service.DailyStockInfoService;
 import com.personal.project.stockservice.service.DailyStockMetricsService;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/feign/stock")
 @Slf4j
+@AllArgsConstructor
 public class FeignController {
 
 	private final DailyStockInfoService dailyStockInfoService;
@@ -35,20 +38,22 @@ public class FeignController {
 
 	private final DailyStockInfoDetailService dailyStockInfoDetailService;
 
-	public FeignController(DailyStockInfoService dailyStockInfoService,
-						   DailyStockMetricsService dailyStockMetricsService,
-						   DailyStockInfoDetailService dailyStockInfoDetailService) {
-		this.dailyStockInfoService = dailyStockInfoService;
-		this.dailyStockMetricsService = dailyStockMetricsService;
-		this.dailyStockInfoDetailService = dailyStockInfoDetailService;
-	}
+	private final DailyIndexInfoService dailyIndexInfoService;
 
 	@GetMapping("/get-by-date")
 	public InnerResponse<Map<String, DailyStockInfoDTO>> getByDate(@RequestParam Long date) {
 
-		Map<String, DailyStockInfoDTO> stockIdToInfo = dailyStockInfoService.queryByDate(date);
+		Map<String, DailyStockInfoDTO> result = dailyStockInfoService.queryByDate(date);
 
-		return InnerResponse.ok(stockIdToInfo);
+		return InnerResponse.ok(result);
+	}
+
+	@GetMapping("/index/get-by-date")
+	public InnerResponse<Map<String, DailyIndexInfoDTO>> getIndexByDate(@RequestParam Long date) {
+
+		Map<String, DailyIndexInfoDTO> result = dailyIndexInfoService.queryByDate(date);
+
+		return InnerResponse.ok(result);
 	}
 
 	/**
@@ -152,33 +157,34 @@ public class FeignController {
 
 	/**
 	 * 新增爬蟲服務當日數據
-	 *
-	 * @param data
-	 * @return
 	 */
 	@PostMapping("/save-all")
 	public InnerResponse<ObjectUtils.Null> saveAll(
 			@RequestBody List<DailyStockInfoDTO> data) {
-		try {
-			boolean saved = dailyStockInfoService.saveAll(data);
-			if (saved) {
-				return InnerResponse.ok(null);
-			} else {
-				return InnerResponse.failed("Stock service feign save-all failed");
-			}
-		} catch (Exception e) {
-			String tc = IdUtil.randomUUID();
-			log.error("Stock service feign save-all failed, trace code: {}", tc, e);
+		boolean saved = dailyStockInfoService.saveAll(data);
 
-			return InnerResponse.failed(ResponseCode.Failed.getCode(), "Stock service feign save-all failed, trace code:" + tc);
+		if (saved) {
+			return InnerResponse.ok(null);
+		} else {
+			return InnerResponse.failed("Stock service feign save-all failed");
 		}
+	}
 
+	@PostMapping("/index/save-all")
+	public InnerResponse<ObjectUtils.Null> indexSaveAll(
+			@RequestBody List<DailyIndexInfoDTO> data) {
+
+		boolean saved = dailyIndexInfoService.saveAll(data);
+
+		if (saved) {
+			return InnerResponse.ok(null);
+		} else {
+			return InnerResponse.failed("Stock service feign index save-all failed, index: " + data);
+		}
 	}
 
 	/**
 	 * 報表服務獲取產出報告所需資料
-	 *
-	 * @return
 	 */
 	@PostMapping("/query-4-cal-metrics")
 	public InnerResponse<CalMetricsUnionDTO> query4CalMetrics(
@@ -249,6 +255,7 @@ public class FeignController {
 							.map(o -> BeanUtil.copyProperties(o, DailyStockInfoDetailDO.class))
 							.toList()
 			);
+
 			if (saved) {
 				return InnerResponse.ok(null);
 			}
@@ -298,7 +305,7 @@ public class FeignController {
 	}
 
 	@PostMapping("/condition/real-time/list")
-	InnerResponse<List<FRealTimeStockDTO>> conditionFRealTimeQuery(@RequestBody QueryConditionRealTimeDTO dto){
+	InnerResponse<List<FRealTimeStockDTO>> conditionFRealTimeQuery(@RequestBody QueryConditionRealTimeDTO dto) {
 		LocalDateTime now = LocalDateTime.now();
 		String nowStr = now.format(DatePattern.PURE_DATE_FORMATTER);
 		if (now.getDayOfWeek() == DayOfWeek.SATURDAY || now.getDayOfWeek() == DayOfWeek.SUNDAY) {

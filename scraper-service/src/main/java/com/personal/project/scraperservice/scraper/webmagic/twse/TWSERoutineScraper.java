@@ -2,7 +2,7 @@ package com.personal.project.scraperservice.scraper.webmagic.twse;
 
 import cn.hutool.core.util.StrUtil;
 import com.personal.project.scraperservice.constant.Term;
-import com.personal.project.scraperservice.model.dto.DailyStockInfoDto;
+import com.personal.project.scraperservice.model.dto.DailyStockInfoDTO;
 import com.personal.project.scraperservice.model.entity.ScraperErrorMessageDO;
 import lombok.Getter;
 import us.codecraft.webmagic.Page;
@@ -60,14 +60,14 @@ public class TWSERoutineScraper implements PageProcessor {
 
         List<Selectable> rows = targetTable.xpath("//table/tbody/tr").nodes();
 
-        List<DailyStockInfoDto> results = new ArrayList<>();
+        List<DailyStockInfoDTO> results = new ArrayList<>();
         for (Selectable row : rows) {
             String stockId = row.xpath("//tr/td[1]/text()").get();
             if (stockId.trim().length() > 4 || !StrUtil.isNumeric(stockId.trim())) {
                 continue;
             }
 
-            DailyStockInfoDto dto = new DailyStockInfoDto();
+            DailyStockInfoDTO dto = new DailyStockInfoDTO();
             dto.setStockId(stockId);
 
             String stockName = row.xpath("//tr/td[2]/text()").get();
