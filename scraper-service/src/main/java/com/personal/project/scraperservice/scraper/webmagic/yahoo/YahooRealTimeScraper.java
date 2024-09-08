@@ -3,7 +3,6 @@ package com.personal.project.scraperservice.scraper.webmagic.yahoo;
 import cn.hutool.core.util.StrUtil;
 import com.personal.project.scraperservice.constant.Term;
 import com.personal.project.scraperservice.model.dto.DailyStockInfoDTO;
-import com.personal.project.scraperservice.model.entity.ScraperErrorMessageDO;
 import lombok.extern.slf4j.Slf4j;
 import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Site;
@@ -13,7 +12,6 @@ import us.codecraft.webmagic.selector.Selectable;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
@@ -30,8 +28,6 @@ public class YahooRealTimeScraper implements PageProcessor {
 			.addHeader("Accept-Encoding", "gzip, deflate, br");
 
 	private final BlockingQueue<String> urls;
-
-	private final List<ScraperErrorMessageDO> errors = Collections.synchronizedList(new ArrayList<>());
 
 	private final Long date;
 

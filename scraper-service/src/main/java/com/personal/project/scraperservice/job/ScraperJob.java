@@ -10,7 +10,6 @@ import com.personal.project.scraperservice.config.BrowserConfig;
 import com.personal.project.scraperservice.constant.CacheKeys;
 import com.personal.project.scraperservice.model.dto.DailyIndexInfoDTO;
 import com.personal.project.scraperservice.model.dto.DailyStockInfoDTO;
-import com.personal.project.scraperservice.model.entity.ScraperErrorMessageDO;
 import com.personal.project.scraperservice.remote.RemoteReportService;
 import com.personal.project.scraperservice.remote.RemoteStockService;
 import com.personal.project.scraperservice.scraper.webmagic.SeleniumDownloader;
@@ -27,12 +26,10 @@ import com.personal.project.scraperservice.scraper.webmagic.yahoo.YahooRealTimeI
 import com.personal.project.scraperservice.scraper.webmagic.yahoo.YahooRealTimePipeline;
 import com.personal.project.scraperservice.scraper.webmagic.yahoo.YahooRealTimeScraper;
 import com.personal.project.scraperservice.service.CacheService;
-import com.personal.project.scraperservice.service.ErrorMessageService;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.openqa.selenium.By;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.redisson.api.RLock;
@@ -62,16 +59,12 @@ public class ScraperJob {
 
 	private final RemoteReportService remoteReportService;
 
-	private final ErrorMessageService errorMessageService;
-
 	private final BrowserConfig browserConfig;
 
-	//半年線,年線都先暫不計算(routine任務關於這部分計算都先去除)
-	//todo 另外分一個任務可帶參數去獲取更久以前的資料(以後計算年線半年線用)
 	@XxlJob("twse-tpex-system-init-scrape")
 	public void twseAndTPEXInitHandle() {
 		//檢查是否已經有資料存在
-		InnerResponse<Boolean> checkRes = remoteStockService.checkInit(null);
+		InnerResponse<Boolean> checkRes = remoteStockService.checkInit();
 		if (checkRes.getData()) {
 			log.error("已存在資料, 資料初始化任務 twse-tpex-system-init-scrape 不執行");
 			return;
@@ -91,7 +84,6 @@ public class ScraperJob {
 					if (i.getDayOfWeek() == DayOfWeek.SATURDAY || i.getDayOfWeek() == DayOfWeek.SUNDAY) {
 						continue;
 					}
-
 					dates.add(i);
 				}
 
@@ -108,9 +100,7 @@ public class ScraperJob {
 						scraper.setUrls(twseUrls);
 						TWSEInitPipeline pipeline = new TWSEInitPipeline();
 
-						Pair<Map<String, List<DailyStockInfoDTO>>, List<ScraperErrorMessageDO>> rawData = scrapeTWSEInitDailyStockInfo(scraper, pipeline);
-						Map<String, List<DailyStockInfoDTO>> data = rawData.getLeft();
-						List<ScraperErrorMessageDO> errors = rawData.getRight();
+						Map<String, List<DailyStockInfoDTO>> data = scrapeTWSEInitDailyStockInfo(scraper, pipeline);
 
 						data.forEach((k, v) -> v.sort(Comparator.comparingLong(DailyStockInfoDTO::getDate).reversed()));
 
@@ -126,17 +116,7 @@ public class ScraperJob {
 						//資料入庫
 						InnerResponse<ObjectUtils.Null> response = remoteStockService.initSaveAll(finalResults);
 						log.info("資料初始化任務 twse-tpex-system-init-scrape 上市個股 入庫結束, {}", JSON.toJSON(response));
-
-						//錯誤入庫
-						if (errors != null && !errors.isEmpty()) {
-							boolean saved = errorMessageService.saveBatch(errors);
-							log.info("資料初始化任務 twse-tpex-system-init-scrape 上市 錯誤入庫結束, {}", saved);
-						} else {
-							log.info("資料初始化任務 twse-tpex-system-init-scrape 上市 無錯誤");
-						}
-
 					});
-
 
 					Future<?> otcFuture = executorService.submit(() -> {
 						log.info("資料初始化任務 twse-tpex-system-init-scrape, 上櫃爬蟲開始");
@@ -148,10 +128,7 @@ public class ScraperJob {
 						TPEXInitPipeline tpexInitPipeline = new TPEXInitPipeline();
 
 						//爬蟲開始
-						Pair<Map<String, List<DailyStockInfoDTO>>, List<ScraperErrorMessageDO>> rawData = scrapeTPEXInitDailyStockInfo(tpexInitScraper, tpexInitPipeline);
-
-						Map<String, List<DailyStockInfoDTO>> data = rawData.getLeft();
-						List<ScraperErrorMessageDO> errors = rawData.getRight();
+						Map<String, List<DailyStockInfoDTO>> data = scrapeTPEXInitDailyStockInfo(tpexInitScraper, tpexInitPipeline);
 
 						data.forEach((k, v) -> v.sort(Comparator.comparingLong(DailyStockInfoDTO::getDate).reversed()));
 
@@ -167,21 +144,13 @@ public class ScraperJob {
 						//資料入庫
 						InnerResponse<ObjectUtils.Null> response = remoteStockService.initSaveAll(finalResults);
 						log.info("資料初始化任務 twse-tpex-system-init-scrape 上櫃個股 入庫結束, {}", JSON.toJSON(response));
-
-						//錯誤入庫
-						if (errors != null && !errors.isEmpty()) {
-							boolean saved = errorMessageService.saveBatch(errors);
-							log.info("資料初始化任務 twse-tpex-system-init-scrape 上櫃 錯誤入庫結束, {}", saved);
-						} else {
-							log.info("資料初始化任務 twse-tpex-system-init-scrape 上櫃個股, 無錯誤");
-						}
 					});
 
 					listedFuture.get();
 					otcFuture.get();
 
 				} catch (InterruptedException | ExecutionException e) {
-					log.error("oh my god", e);
+					log.error("", e);
 				}
 
 				log.info("資料初始化任務 twse-tpex-system-init-scrape 爬蟲部分結束, 花費 {} 毫秒", timer.intervalRestart());
@@ -226,17 +195,14 @@ public class ScraperJob {
 	 * @param twseInitPipeline
 	 * @return
 	 */
-	private Pair<Map<String, List<DailyStockInfoDTO>>, List<ScraperErrorMessageDO>> scrapeTWSEInitDailyStockInfo(TWSEInitScraper twseInitScraper, TWSEInitPipeline twseInitPipeline) {
+	private Map<String, List<DailyStockInfoDTO>> scrapeTWSEInitDailyStockInfo(TWSEInitScraper twseInitScraper, TWSEInitPipeline twseInitPipeline) {
 		Spider.create(twseInitScraper)
 				.addUrl(twseInitScraper.getFirstUrl())
 				.addPipeline(twseInitPipeline)
 				.thread(2)
 				.run();
 
-		Map<String, List<DailyStockInfoDTO>> twseResult = twseInitPipeline.getResult();
-		List<ScraperErrorMessageDO> pipelineErrors = twseInitScraper.getErrors();//pipe line 錯誤
-
-		return Pair.of(twseResult, pipelineErrors);
+		return twseInitPipeline.getResult();
 	}
 
 	/**
@@ -376,17 +342,14 @@ public class ScraperJob {
 	 * @param tpexInitPipeline
 	 * @return
 	 */
-	private Pair<Map<String, List<DailyStockInfoDTO>>, List<ScraperErrorMessageDO>> scrapeTPEXInitDailyStockInfo(TPEXInitScraper tpexInitScraper, TPEXInitPipeline tpexInitPipeline) {
+	private Map<String, List<DailyStockInfoDTO>> scrapeTPEXInitDailyStockInfo(TPEXInitScraper tpexInitScraper, TPEXInitPipeline tpexInitPipeline) {
 		Spider.create(tpexInitScraper)
 				.addUrl(tpexInitScraper.getUrlsFirst())
 				.addPipeline(tpexInitPipeline)
 				.thread(2)
 				.run();
 
-		Map<String, List<DailyStockInfoDTO>> tpexResult = tpexInitPipeline.getResult();
-		List<ScraperErrorMessageDO> errors = tpexInitScraper.getErrors();
-
-		return Pair.of(tpexResult, errors);
+		return tpexInitPipeline.getResult();
 	}
 
 	/**
@@ -515,11 +478,10 @@ public class ScraperJob {
 				String nowStr = now.format(DatePattern.PURE_DATE_FORMATTER);
 
 				List<DailyStockInfoDTO> stockInfos = new ArrayList<>();
-				List<ScraperErrorMessageDO> errors = new ArrayList<>();
 
 				try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
 
-					Future<Pair<List<DailyStockInfoDTO>, List<ScraperErrorMessageDO>>> twseResults = executorService.submit(() -> {
+					Future<List<DailyStockInfoDTO>> twseResults = executorService.submit(() -> {
 						log.info("twse下載執行");
 						TWSERoutineScraper scraper = new TWSERoutineScraper(Long.parseLong(nowStr));
 						TWSERoutinePipeline pipeline = new TWSERoutinePipeline();
@@ -530,10 +492,10 @@ public class ScraperJob {
 								//啟動爬蟲
 								.run();
 
-						return Pair.of(pipeline.getResults(), scraper.getErrors());
+						return pipeline.getResults();
 					});
 
-					Future<Pair<List<DailyStockInfoDTO>, List<ScraperErrorMessageDO>>> tpexResults = executorService.submit(() -> {
+					Future<List<DailyStockInfoDTO>> tpexResults = executorService.submit(() -> {
 						log.info("tpex下載執行");
 						TPEXRoutineScraper scraper = new TPEXRoutineScraper(Long.parseLong(nowStr));
 						TPEXRoutinePipeline pipeline = new TPEXRoutinePipeline();
@@ -548,15 +510,12 @@ public class ScraperJob {
 								.thread(1)
 								.run();
 
-						return Pair.of(pipeline.getResults(), scraper.getErrors());
+						return pipeline.getResults();
 					});
-					Pair<List<DailyStockInfoDTO>, List<ScraperErrorMessageDO>> twsePair = twseResults.get();
-					Pair<List<DailyStockInfoDTO>, List<ScraperErrorMessageDO>> tpexPair = tpexResults.get();
-					stockInfos.addAll(twsePair.getLeft());
-					errors.addAll(twsePair.getRight());
-					stockInfos.addAll(tpexPair.getLeft());
-					errors.addAll(tpexPair.getRight());
-
+					List<DailyStockInfoDTO> twseResult = twseResults.get();
+					List<DailyStockInfoDTO> tpexResult = tpexResults.get();
+					stockInfos.addAll(twseResult);
+					stockInfos.addAll(tpexResult);
 				} catch (Exception e) {
 					log.error("routine job error", e);
 					return;
@@ -616,10 +575,6 @@ public class ScraperJob {
 						dto.setId(data.get(dto.getStockId()).getId());
 					}
 				});
-
-				if (!errors.isEmpty()) {
-					errorMessageService.saveBatch(errors);
-				}
 
 				InnerResponse<ObjectUtils.Null> innerResponse = null;
 				if (!stockInfos.isEmpty()) {

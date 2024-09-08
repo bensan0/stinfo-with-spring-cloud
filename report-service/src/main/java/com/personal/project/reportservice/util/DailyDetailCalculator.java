@@ -18,19 +18,15 @@ public class DailyDetailCalculator {
 			DailyStockInfoDetailDTO result,
 			DailyStockInfoDTO todayInfo,
 			DailyStockInfoDTO yesterdayInfo,
-			DailyStockInfoDTO twoDaysAgoInfo,
-			DailyStockInfoDTO fourDaysAgoInfo,
+//			DailyStockInfoDTO twoDaysAgoInfo,
+//			DailyStockInfoDTO fourDaysAgoInfo,
 			DailyStockMetricsDTO todayMetrics,
-			DailyStockMetricsDTO yesterdayMetrics,
-			DailyStockInfoDetailDTO yesterdayDetail
+			DailyStockMetricsDTO yesterdayMetrics
+//			DailyStockInfoDetailDTO yesterdayDetail
 	) {
 		calShadow(result, todayInfo);
 
 		DailyStockInfoDetailDTO.TagsDTO todayTags = new DailyStockInfoDetailDTO.TagsDTO();
-
-		calConsecutive(todayTags, yesterdayDetail, todayInfo, yesterdayInfo);
-
-		calComparingPassDays(todayTags, todayInfo, twoDaysAgoInfo, fourDaysAgoInfo);
 
 		calExtraTags(result, todayTags, todayInfo, yesterdayInfo, todayMetrics, yesterdayMetrics);
 
@@ -63,177 +59,6 @@ public class DailyDetailCalculator {
 			result.setLowerShadow(BigDecimal.ZERO);
 			result.setRealBody(BigDecimal.ZERO);
 			result.setUpperShadow(BigDecimal.ZERO);
-		}
-	}
-
-	private void calConsecutive(DailyStockInfoDetailDTO.TagsDTO todayTags,
-								DailyStockInfoDetailDTO yesterdayDetail,
-								DailyStockInfoDTO todayInfo,
-								DailyStockInfoDTO yesterdayInfo) {
-		//正常情況下, yesterdayInfo與yesterdayDetail是同有同無
-		if (yesterdayInfo == null) {
-			todayTags.setPriceStatus(StrUtil.format("{}->{}", CommonTerm.UNCHANGED, CommonTerm.UNCHANGED));
-			//金額連
-			todayTags.setConsecutivePrice(new String[]{"1", CommonTerm.UNCHANGED});
-
-			//交易量連
-			todayTags.setConsecutiveTradingVolume(new String[]{"1", CommonTerm.UNCHANGED});
-
-			//交易額連
-			todayTags.setConsecutiveTradingAmount(new String[]{"1", CommonTerm.UNCHANGED});
-		} else {
-			String todayPriceStatus = judgeStatus(todayInfo.getPriceGap());
-			DailyStockInfoDetailDTO.TagsDTO yesterdayTags = yesterdayDetail.getTags();
-			todayTags.setPriceStatus(StrUtil.format("{}->{}", yesterdayTags.getPriceStatus().split("->")[1], todayPriceStatus));
-
-			//金額連
-			if (todayPriceStatus.equals(yesterdayTags.getConsecutivePrice()[1])) {
-				todayTags.setConsecutivePrice(
-						new String[]{
-								String.valueOf(Long.parseLong(yesterdayTags.getConsecutivePrice()[0]) + 1),
-								todayPriceStatus
-						}
-				);
-			} else {
-				todayTags.setConsecutivePrice(
-						new String[]{
-								"1",
-								todayPriceStatus
-						}
-				);
-			}
-
-			//交易量連
-			String todayVolumeStatus = judgeStatus(BigDecimal.valueOf(todayInfo.getTodayTradingVolumePiece() - yesterdayInfo.getTodayTradingVolumePiece()));
-			if (todayVolumeStatus.equals(yesterdayTags.getConsecutiveTradingVolume()[1])) {
-				todayTags.setConsecutiveTradingVolume(
-						new String[]{
-								String.valueOf(Long.parseLong(yesterdayTags.getConsecutiveTradingVolume()[0]) + 1),
-								todayVolumeStatus
-						}
-				);
-			} else {
-				todayTags.setConsecutiveTradingVolume(
-						new String[]{
-								"1",
-								todayVolumeStatus
-						}
-				);
-			}
-
-			//交易額連
-			if (todayInfo.getTodayTradingVolumeMoney() != null) { //考量到即時報價沒有交易額
-				String todayAmountStatus = judgeStatus(todayInfo.getTodayTradingVolumeMoney().subtract(yesterdayInfo.getTodayTradingVolumeMoney()));
-				if (todayAmountStatus.equals(yesterdayTags.getConsecutiveTradingAmount()[1])) {
-					todayTags.setConsecutiveTradingAmount(
-							new String[]{
-									String.valueOf(Long.parseLong(yesterdayTags.getConsecutiveTradingAmount()[0]) + 1),
-									todayAmountStatus
-							}
-					);
-				} else {
-					todayTags.setConsecutiveTradingAmount(
-							new String[]{
-									"1",
-									todayAmountStatus
-							}
-					);
-				}
-			}
-		}
-	}
-
-	private void calComparingPassDays(DailyStockInfoDetailDTO.TagsDTO todayTags, DailyStockInfoDTO todayInfo, DailyStockInfoDTO twoDaysAgoInfo, DailyStockInfoDTO fourDaysAgoInfo) {
-		if (twoDaysAgoInfo != null) {
-			//前第3天
-			BigDecimal vs2DaysPriceDiff = todayInfo.getTodayClosingPrice().subtract(twoDaysAgoInfo.getTodayClosingPrice());
-			String vs2DaysPriceStatus = judgeStatus(vs2DaysPriceDiff);
-			todayTags.setPriceVS2DaysAgo(
-					new String[]{
-							vs2DaysPriceStatus,
-							vs2DaysPriceDiff.divide(twoDaysAgoInfo.getTodayClosingPrice(), 4, RoundingMode.FLOOR).toPlainString()
-					}
-			);
-
-			BigDecimal vs2DaysVolumeDiff = BigDecimal.valueOf(todayInfo.getTodayTradingVolumePiece() - twoDaysAgoInfo.getTodayTradingVolumePiece());
-			String vs2DaysVolumeStatus = judgeStatus(vs2DaysVolumeDiff);
-			todayTags.setTradingVolumeVS2DaysAgo(
-					new String[]{
-							vs2DaysVolumeStatus,
-							vs2DaysVolumeDiff.divide(
-									twoDaysAgoInfo.getTodayTradingVolumePiece() == 0 ? BigDecimal.ONE : BigDecimal.valueOf(twoDaysAgoInfo.getTodayTradingVolumePiece()),
-									4,
-									RoundingMode.FLOOR
-							).toPlainString()
-					}
-			);
-
-			try {//即時報價沒有交易額
-				BigDecimal vs2DaysAmountDiff = todayInfo.getTodayTradingVolumeMoney().subtract(twoDaysAgoInfo.getTodayTradingVolumeMoney());
-				String vs2DaysAmountStatus = judgeStatus(vs2DaysAmountDiff);
-				todayTags.setTradingAmountVS2DaysAgo(
-						new String[]{
-								vs2DaysAmountStatus,
-								vs2DaysAmountDiff.divide(
-										twoDaysAgoInfo.getTodayTradingVolumeMoney().compareTo(BigDecimal.ZERO) == 0 ? BigDecimal.ONE : twoDaysAgoInfo.getTodayTradingVolumeMoney(),
-										4,
-										RoundingMode.FLOOR
-								).toPlainString()
-						}
-				);
-			} catch (Exception ignored) {
-			}
-
-		} else {
-			todayTags.setPriceVS2DaysAgo(new String[]{CommonTerm.UNCHANGED, "0"});
-			todayTags.setTradingVolumeVS2DaysAgo(new String[]{CommonTerm.UNCHANGED, "0"});
-			todayTags.setTradingAmountVS2DaysAgo(new String[]{CommonTerm.UNCHANGED, "0"});
-		}
-
-		if (fourDaysAgoInfo != null) {
-			//前第5天
-			BigDecimal vs4DaysPriceDiff = todayInfo.getTodayClosingPrice().subtract(fourDaysAgoInfo.getTodayClosingPrice());
-			String vs4DaysPriceStatus = judgeStatus(vs4DaysPriceDiff);
-			todayTags.setPriceVS4DaysAgo(
-					new String[]{
-							vs4DaysPriceStatus,
-							vs4DaysPriceDiff.divide(fourDaysAgoInfo.getTodayClosingPrice(), 4, RoundingMode.FLOOR).toPlainString()
-					}
-			);
-
-			BigDecimal vs4DaysVolumeDiff = BigDecimal.valueOf(todayInfo.getTodayTradingVolumePiece() - fourDaysAgoInfo.getTodayTradingVolumePiece());
-			String vs4DaysVolumeStatus = judgeStatus(vs4DaysVolumeDiff);
-			todayTags.setTradingVolumeVS4DaysAgo(
-					new String[]{
-							vs4DaysVolumeStatus,
-							vs4DaysVolumeDiff.divide(
-									fourDaysAgoInfo.getTodayTradingVolumePiece() == 0 ? BigDecimal.ONE : BigDecimal.valueOf(fourDaysAgoInfo.getTodayTradingVolumePiece()),
-									4,
-									RoundingMode.FLOOR
-							).toPlainString()
-					}
-			);
-
-			try {
-				BigDecimal vs4DaysAmountDiff = todayInfo.getTodayTradingVolumeMoney().subtract(fourDaysAgoInfo.getTodayTradingVolumeMoney());
-				String vs4DaysAmountStatus = judgeStatus(vs4DaysAmountDiff);
-				todayTags.setTradingAmountVS4DaysAgo(
-						new String[]{
-								vs4DaysAmountStatus,
-								vs4DaysAmountDiff.divide(
-										fourDaysAgoInfo.getTodayTradingVolumeMoney().compareTo(BigDecimal.ZERO) == 0 ? BigDecimal.ONE : fourDaysAgoInfo.getTodayTradingVolumeMoney(),
-										4,
-										RoundingMode.FLOOR
-								).toPlainString()
-						}
-				);
-			} catch (Exception ignored) {
-			}
-
-		} else {
-			todayTags.setPriceVS4DaysAgo(new String[]{CommonTerm.UNCHANGED, "0"});
-			todayTags.setTradingVolumeVS4DaysAgo(new String[]{CommonTerm.UNCHANGED, "0"});
-			todayTags.setTradingAmountVS4DaysAgo(new String[]{CommonTerm.UNCHANGED, "0"});
 		}
 	}
 

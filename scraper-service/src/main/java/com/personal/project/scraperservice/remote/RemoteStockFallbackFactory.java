@@ -45,7 +45,7 @@ public class RemoteStockFallbackFactory implements FallbackFactory<RemoteStockSe
 			}
 
 			@Override
-			public InnerResponse<Boolean> checkInit(String token) {
+			public InnerResponse<Boolean> checkInit() {
 				return getBasicFailedResp(cause);
 			}
 

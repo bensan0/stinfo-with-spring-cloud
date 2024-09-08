@@ -34,5 +34,5 @@ public interface RemoteStockService {
 	InnerResponse<Map<String, DailyStockInfoDTO>> getFormer(@RequestParam Long date);
 
 	@GetMapping("/feign/stock/init/check")
-	InnerResponse<Boolean> checkInit(@RequestHeader("token") String token);
+	InnerResponse<Boolean> checkInit();
 }

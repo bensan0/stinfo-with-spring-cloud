@@ -55,7 +55,7 @@ public interface DailyStockInfoService extends IService<DailyStockInfoDO> {
     Map<String, List<DailyStockInfoDTO>> query4CalMetrics(Query4CalDTO query4CalDTO);
 
     /**
-     * 取得今日, 上個交易日, 3個交易日前(含今日), 5個交易日前(含今日)個股資料
+     * 取得今日, 上個交易日個股資料
      * @return
      */
     Map<String, List<DailyStockInfoDTO>> queryInfo4CalDetail(Query4CalDTO query4CalDto);

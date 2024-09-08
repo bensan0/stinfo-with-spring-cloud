@@ -128,7 +128,7 @@
                     tt.date &lt; #{date} and
                     tt.today_closing_price is not null
              ) T
-        where T.sequence in (1, 2, 4)
+        where T.sequence = 1
     </select>
 
     <select id="queryFormer" resultType="com.personal.project.stockservice.model.entity.DailyStockInfoDO">
@@ -255,7 +255,7 @@
                         where today_closing_price is not null
                     ) tt
                 ) T
-        where T.sequence in (1, 2, 3, 5);
+        where T.sequence in (1, 2);
     </select>
     <select id="query4RealTimeMetrics"
             resultType="com.personal.project.stockservice.model.dto.response.DailyStockInfoDTO">
@@ -361,7 +361,7 @@
                     tt.today_closing_price is not null and
                     tt.stock_id in (select stock_id from daily_stock_info s where s.date = #{date})
         ) T2
-        where T2.sequence in (1, 2, 4)
+        where T2.sequence = 1
     </select>
     <select id="queryLatest" resultType="com.personal.project.stockservice.model.dto.response.DailyStockInfoDTO">
 
