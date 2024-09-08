@@ -11,6 +11,7 @@ import com.personal.project.authservice.exception.DuplicatedUsernameException;
 import com.personal.project.authservice.exception.UserNotFoundException;
 import com.personal.project.authservice.exception.WrongPasswordException;
 import com.personal.project.authservice.mapper.UserMapper;
+import com.personal.project.authservice.model.dto.ChangePasswordRequestDTO;
 import com.personal.project.authservice.model.dto.UserCacheDTO;
 import com.personal.project.authservice.model.dto.UserDTO;
 import com.personal.project.authservice.model.dto.UserSignUpRequestDTO;
@@ -79,6 +80,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
 		Object cache = cacheService.getCache(token);
 
 		return cache != null;
+	}
+
+	@Override
+	public Boolean changePassword(ChangePasswordRequestDTO dto) {
+		LambdaQueryWrapper<UserDO> wrapper = new LambdaQueryWrapper<>();
+		wrapper.eq(UserDO::getUsername, dto.getUsername());
+		UserDO user = baseMapper.selectOne(wrapper);
+
+		boolean same = PasswordUtil.comparePassword(dto.getNowPassword(), user.getPassword(), user.getSalt());
+
+		if(same){
+			user.setPassword(PasswordUtil.generateUserPassword(dto.getNewPassword(), user.getSalt()));
+			saveOrUpdate(user);
+			return true;
+		}else{
+			return false;
+		}
 	}
 
 	@Override

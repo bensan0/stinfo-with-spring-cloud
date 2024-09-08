@@ -62,11 +62,11 @@ public class StockQueryController {
 		LocalDateTime now = LocalDateTime.now();
 		String nowStr = now.format(DatePattern.PURE_DATE_FORMATTER);
 		if (now.getDayOfWeek() == DayOfWeek.SATURDAY || now.getDayOfWeek() == DayOfWeek.SUNDAY) {
-			return CommonResponse.error(ResponseCode.Not_Valid.getCode(), "Today is not trading day", null);
+			return CommonResponse.error(ResponseCode.Not_Valid.getCode(), "本日非交易日", null);
 		}
 
-		if (now.toLocalTime().isAfter(LocalTime.of(14, 0))) {
-			return CommonResponse.error(ResponseCode.Not_Valid.getCode(), "Now is off trading, use other api to check today's data", null);
+		if (now.toLocalTime().isAfter(LocalTime.of(14, 30))) {
+			return CommonResponse.error(ResponseCode.Not_Valid.getCode(), "本日已收盤", null);
 		}
 
 		List<RealTimeStockDTO> results = dailyStockInfoService.conditionRealTimeQuery(Long.parseLong(nowStr), dto);

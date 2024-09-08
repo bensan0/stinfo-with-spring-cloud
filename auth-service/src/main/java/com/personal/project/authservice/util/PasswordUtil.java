@@ -17,4 +17,8 @@ public class PasswordUtil {
     public static String generateUserPassword(String origin, String salt) {
         return SecureUtil.md5(origin + salt);
     }
+
+    public static boolean comparePassword(String input, String oldPassword, String salt){
+        return oldPassword.equals(SecureUtil.md5(input + salt));
+    }
 }

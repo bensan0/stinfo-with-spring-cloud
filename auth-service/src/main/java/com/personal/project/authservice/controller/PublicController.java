@@ -1,8 +1,10 @@
 package com.personal.project.authservice.controller;
 
+import com.personal.project.authservice.model.dto.ChangePasswordRequestDTO;
 import com.personal.project.authservice.model.dto.CheckTokenRequestDTO;
 import com.personal.project.authservice.model.dto.UserSignUpRequestDTO;
 import com.personal.project.authservice.service.UserService;
+import com.personal.project.commoncore.constants.ResponseCode;
 import com.personal.project.commoncore.response.CommonResponse;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -48,5 +50,17 @@ public class PublicController {
 		Boolean isValid = userService.checkToken(dto.getToken());
 
 		return CommonResponse.ok(isValid);
+	}
+
+	@PostMapping("/change-password")
+	public CommonResponse<ObjectUtils.Null> changePassword(
+			@Valid @RequestBody ChangePasswordRequestDTO dto
+	) {
+		Boolean changed = userService.changePassword(dto);
+		if (changed) {
+			return CommonResponse.ok(null);
+		} else {
+			return CommonResponse.error(ResponseCode.Not_Valid.getCode(), "Now password wrong", null);
+		}
 	}
 }

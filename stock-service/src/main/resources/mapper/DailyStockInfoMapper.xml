@@ -442,24 +442,6 @@
             <if test="priceGapPercent != null">
                 and t1.price_gap_percent >= #{priceGapPercent}
             </if>
-            <if test="conPriceDays != null and conPriceStatus != null">
-                and JSON_CONTAINS(
-                                    t2.tags->'$.consecutivePrice',
-                                    JSON_ARRAY(#{conPriceDays}, #{conPriceStatus})
-                                 )
-            </if>
-            <if test="conVolDays != null and tradingVolumeStatus != null">
-                and JSON_CONTAINS(
-                                    t2.tags->'$.consecutiveTradingVolume',
-                                    JSON_ARRAY(#{conVolDays}, #{tradingVolumeStatus})
-                                 )
-            </if>
-            <if test="conAmountDays != null and tradingAmountStatus != null">
-                and JSON_CONTAINS(
-                                    t2.tags->'$.consecutiveTradingAmount',
-                                    JSON_ARRAY(#{dto.conVolDays}, #{tradingVolumeStatus})
-                                 )
-            </if>
             <if test="extraTags != null and extraTags.size() > 0">
                 and JSON_CONTAINS(
                                     t2.tags->'$.extraTags',
@@ -483,6 +465,7 @@
             t1.price_gap as priceGap,
             t1.price_gap_percent as priceGapPercent,
             t1.today_trading_volume_piece as todayTradingVolumePiece,
+            t1.yesterday_trading_volume_piece as yesterdayTradingVolumePiece,
             t1.market as market,
             t2.tags
         from
