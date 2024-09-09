@@ -44,8 +44,10 @@ custom:
     skip:
       visit:
         - /gw/report/util/tags
-        - /gw/chat/tg/command
+        - /gw/auth/sign/sign-in
+        - /gw/auth/sign/sign-up
       auth:
+        - /gw/auth/sign/check-token
         - /gw/auth/sign/sign-in
         - /gw/auth/sign/sign-up
         - /gw/chat/tg/command

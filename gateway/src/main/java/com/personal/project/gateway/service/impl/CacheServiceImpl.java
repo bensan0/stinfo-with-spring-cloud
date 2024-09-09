@@ -30,12 +30,12 @@ public class CacheServiceImpl implements CacheService {
 	public boolean setCacheWithChangingTTL(String key, String value) {
 		RBucket<Object> bucket = redissonClient.getBucket(key);
 		long timeToLive = bucket.remainTimeToLive();
-		if (timeToLive == -1 || timeToLive == -2) {
-			return true;
+		if (timeToLive == -1 || timeToLive == -2) {//cache存在但已過期 or cache已不存在
+			return false;
 		}
 		bucket.set(value, Duration.of(timeToLive, ChronoUnit.MILLIS));
 
-		return false;
+		return true;
 	}
 
 	@Override

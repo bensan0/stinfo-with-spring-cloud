@@ -465,11 +465,24 @@
             t1.price_gap as priceGap,
             t1.price_gap_percent as priceGapPercent,
             t1.today_trading_volume_piece as todayTradingVolumePiece,
-            t1.yesterday_trading_volume_piece as yesterdayTradingVolumePiece,
+            t3.today_trading_volume_piece as yesterdayTradingVolumePiece,
             t1.market as market,
             t2.tags
         from
             daily_stock_info t1
+        left join
+            (
+                select
+                    stock_id,
+                    today_trading_volume_piece,
+                    ROW_NUMBER() OVER (PARTITION BY stock_id ORDER BY date DESC) as sequence
+                from
+                    daily_stock_info
+                where
+                    date &lt; #{date} and today_closing_price is not null
+            ) t3
+        on
+            t3.stock_id = t1. stock_id and t3.sequence = 1
         left join
             daily_stock_info_detail t2
         on

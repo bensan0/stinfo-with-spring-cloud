@@ -38,48 +38,53 @@ public class VisitLimitGlobalFilter implements GlobalFilter, Ordered {
 
 	private static final String BAN_FLAG_CACHE_KEY = "banned:";
 
-	private static final Integer VISIT_LIMIT = 10;
+	private static final Integer VISIT_LIMIT = 100;
 
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-//		ServerHttpRequest request = exchange.getRequest();
-//		if (skipFilterConfig.getVisit().contains(request.getURI().getPath())) {
-//
-//			return chain.filter(exchange);
-//		}
-//
-//		String ip = IPUtil.getIp(exchange.getRequest());
-//
-//		Object banFlag = cacheService.getCache(BAN_FLAG_CACHE_KEY + ip);
-//		if (banFlag != null) {
-//			try {
-//				return visitedFrequently(exchange.getResponse());
-//			} catch (JsonProcessingException e) {
-//				throw new RuntimeException(e);
-//			}
-//		}
-//
-//		Object cache = cacheService.getCache(VISIT_LIMIT_CACHE_KEY + ip);
-//
-//		if (cache == null) {
-//			cacheService.setCache(VISIT_LIMIT_CACHE_KEY + ip, "1", Duration.of(15, ChronoUnit.MINUTES));
-//			return chain.filter(exchange);
-//		}
-//
-//		int nowVisitTimes = Integer.parseInt(cache.toString());
-//		nowVisitTimes += 1;
-//		boolean expiredOrNotExisted = cacheService.setCacheWithChangingTTL(VISIT_LIMIT_CACHE_KEY + ip, String.valueOf(nowVisitTimes));
-//
-//		if (nowVisitTimes > VISIT_LIMIT) {
-//			//ban ip
-//			cacheService.setCache(BAN_FLAG_CACHE_KEY + ip, "1", Duration.of(30, ChronoUnit.MINUTES));
-//
-//			try {
-//				return visitedFrequently(exchange.getResponse());
-//			} catch (JsonProcessingException e) {
-//				throw new RuntimeException(e);
-//			}
-//		}
+		ServerHttpRequest request = exchange.getRequest();
+		if (skipFilterConfig.getVisit().contains(request.getURI().getPath())) {
+
+			return chain.filter(exchange);
+		}
+
+		String ip = IPUtil.getIp(exchange.getRequest());
+
+		Object banFlag = cacheService.getCache(BAN_FLAG_CACHE_KEY + ip);
+		if (banFlag != null) {
+			try {
+				return visitedFrequently(exchange.getResponse());
+			} catch (JsonProcessingException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		Object cache = cacheService.getCache(VISIT_LIMIT_CACHE_KEY + ip);
+
+		if (cache == null) {
+			cacheService.setCache(VISIT_LIMIT_CACHE_KEY + ip, "1", Duration.of(15, ChronoUnit.MINUTES));
+			return chain.filter(exchange);
+		}
+
+		int nowVisitTimes = Integer.parseInt(cache.toString());
+		nowVisitTimes += 1;
+		boolean set = cacheService.setCacheWithChangingTTL(VISIT_LIMIT_CACHE_KEY + ip, String.valueOf(nowVisitTimes));
+
+		if(!set){
+			cacheService.setCache(VISIT_LIMIT_CACHE_KEY + ip, "1", Duration.of(15, ChronoUnit.MINUTES));
+			return chain.filter(exchange);
+		}
+
+		if (nowVisitTimes > VISIT_LIMIT) {
+			//ban ip
+			cacheService.setCache(BAN_FLAG_CACHE_KEY + ip, "1", Duration.of(30, ChronoUnit.MINUTES));
+
+			try {
+				return visitedFrequently(exchange.getResponse());
+			} catch (JsonProcessingException e) {
+				throw new RuntimeException(e);
+			}
+		}
 
 		return chain.filter(exchange);
 	}
