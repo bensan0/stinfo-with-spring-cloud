@@ -467,6 +467,9 @@
             t1.today_trading_volume_piece as todayTradingVolumePiece,
             t3.today_trading_volume_piece as yesterdayTradingVolumePiece,
             t1.market as market,
+            t2.upper_shadow as upperShadow,
+            t2.real_body as realBody,
+            t2.lower_shadow as lower_shadow,
             t2.tags
         from
             daily_stock_info t1

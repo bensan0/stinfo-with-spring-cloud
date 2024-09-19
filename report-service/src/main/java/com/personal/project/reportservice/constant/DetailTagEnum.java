@@ -25,6 +25,9 @@ public enum DetailTagEnum {
     PRICE_OVER_MA5("價格5日線之上"),
     PRICE_OVER_MA20("價格月線之上"),
     PRICE_OVER_MA60("價格季線之上"),
+    PRICE_RISE("價漲(對比昨日)"),
+    PRICE_FALL("價跌(對比昨日)"),
+
 
     //cross
     JUMP_UP_LIMIT("一字跳空"),
@@ -68,6 +71,9 @@ public enum DetailTagEnum {
     GREEN_COVER("綠吞噬"),
     RED_COVER("紅吞噬"),
     PREGNANT("抱孕"),
+
+    //Volume
+    PLENTY_PIECE("大量")
     ;
 
 

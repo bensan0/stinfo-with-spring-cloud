@@ -1,6 +1,5 @@
 package com.personal.project.reportservice.util;
 
-import cn.hutool.core.util.StrUtil;
 import com.personal.project.commoncore.constants.CommonTerm;
 import com.personal.project.reportservice.constant.DetailTagEnum;
 import com.personal.project.reportservice.model.dto.DailyStockInfoDTO;
@@ -64,12 +63,13 @@ public class DailyDetailCalculator {
 
 	private void calExtraTags(DailyStockInfoDetailDTO result, DailyStockInfoDetailDTO.TagsDTO todayTags, DailyStockInfoDTO todayInfo, DailyStockInfoDTO yesterdayInfo, DailyStockMetricsDTO todayMetrics, DailyStockMetricsDTO yesterdayMetrics) {
 		List<String> tags = new ArrayList<>();
-		generatePriceTags(tags, todayInfo, todayMetrics);
+		generatePriceTags(tags, todayInfo, yesterdayInfo, todayMetrics);
 		generateMATags(tags, todayMetrics, yesterdayMetrics);
 		generateCrossTags(tags, todayInfo);
 		generateLowerShadowTags(tags, todayInfo, todayMetrics, result);
 		generateUpperShadowTags(tags, todayInfo, todayMetrics, result);
 		generateKStickTags(tags, todayInfo, yesterdayInfo, result);
+		generatePieceTags(tags, todayInfo, yesterdayInfo);
 
 		todayTags.setExtraTags(tags);
 	}
@@ -119,7 +119,7 @@ public class DailyDetailCalculator {
 		}
 	}
 
-	private void generatePriceTags(List<String> tags, DailyStockInfoDTO todayInfo, DailyStockMetricsDTO todayMetrics) {
+	private void generatePriceTags(List<String> tags, DailyStockInfoDTO todayInfo, DailyStockInfoDTO yesterdayInfo, DailyStockMetricsDTO todayMetrics) {
 		BigDecimal todayClosingPrice = todayInfo.getTodayClosingPrice();
 		BigDecimal ma5 = todayMetrics.getMa5();
 		BigDecimal ma20 = todayMetrics.getMa20();
@@ -135,6 +135,14 @@ public class DailyDetailCalculator {
 
 		if (ma60 != null && todayClosingPrice.compareTo(ma60) > 0) {
 			tags.add(DetailTagEnum.PRICE_OVER_MA60.getTag());
+		}
+
+		if (todayClosingPrice != null && yesterdayInfo.getTodayClosingPrice() != null) {
+			if (todayClosingPrice.compareTo(yesterdayInfo.getTodayClosingPrice()) > 0) {
+				tags.add(DetailTagEnum.PRICE_RISE.getTag());
+			} else if (todayClosingPrice.compareTo(yesterdayInfo.getTodayClosingPrice()) < 0) {
+				tags.add(DetailTagEnum.PRICE_FALL.getTag());
+			}
 		}
 	}
 
@@ -401,6 +409,15 @@ public class DailyDetailCalculator {
 				) {
 					tags.add(DetailTagEnum.PREGNANT.getTag());
 				}
+			}
+		}
+	}
+
+	private void generatePieceTags(List<String> tags, DailyStockInfoDTO todayInfo, DailyStockInfoDTO yesterdayInfo) {
+		if (todayInfo.getTodayTradingVolumePiece() != null && yesterdayInfo.getTodayTradingVolumePiece() != null
+				&& todayInfo.getTodayTradingVolumePiece() != 0 && yesterdayInfo.getTodayTradingVolumePiece() != 0) {
+			if (todayInfo.getTodayTradingVolumePiece() / yesterdayInfo.getTodayTradingVolumePiece() >= 2) {
+				tags.add(DetailTagEnum.PLENTY_PIECE.getTag());
 			}
 		}
 	}
