@@ -137,7 +137,7 @@ public class DailyDetailCalculator {
 			tags.add(DetailTagEnum.PRICE_OVER_MA60.getTag());
 		}
 
-		if (todayClosingPrice != null && yesterdayInfo.getTodayClosingPrice() != null) {
+		if (todayClosingPrice != null && yesterdayInfo != null && yesterdayInfo.getTodayClosingPrice() != null) {
 			if (todayClosingPrice.compareTo(yesterdayInfo.getTodayClosingPrice()) > 0) {
 				tags.add(DetailTagEnum.PRICE_RISE.getTag());
 			} else if (todayClosingPrice.compareTo(yesterdayInfo.getTodayClosingPrice()) < 0) {
@@ -414,7 +414,7 @@ public class DailyDetailCalculator {
 	}
 
 	private void generatePieceTags(List<String> tags, DailyStockInfoDTO todayInfo, DailyStockInfoDTO yesterdayInfo) {
-		if (todayInfo.getTodayTradingVolumePiece() != null && yesterdayInfo.getTodayTradingVolumePiece() != null
+		if (todayInfo.getTodayTradingVolumePiece() != null && yesterdayInfo != null && yesterdayInfo.getTodayTradingVolumePiece() != null
 				&& todayInfo.getTodayTradingVolumePiece() != 0 && yesterdayInfo.getTodayTradingVolumePiece() != 0) {
 			if (todayInfo.getTodayTradingVolumePiece() / yesterdayInfo.getTodayTradingVolumePiece() >= 2) {
 				tags.add(DetailTagEnum.PLENTY_PIECE.getTag());
