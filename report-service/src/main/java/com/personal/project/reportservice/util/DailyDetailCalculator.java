@@ -419,6 +419,10 @@ public class DailyDetailCalculator {
 			if (todayInfo.getTodayTradingVolumePiece() / yesterdayInfo.getTodayTradingVolumePiece() >= 2) {
 				tags.add(DetailTagEnum.PLENTY_PIECE.getTag());
 			}
+
+			if(todayInfo.getTodayTradingVolumePiece() >= yesterdayInfo.getTodayTradingVolumePiece()){
+				tags.add(DetailTagEnum.HAVE_PIECE.getTag());
+			}
 		}
 	}
 

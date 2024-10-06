@@ -73,7 +73,8 @@ public enum DetailTagEnum {
     PREGNANT("抱孕"),
 
     //Volume
-    PLENTY_PIECE("大量")
+    PLENTY_PIECE("大量"),
+    HAVE_PIECE("有量")
     ;
 
 
