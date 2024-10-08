@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 public class MybatisPlusConfig {
 
     /**
-     * 添加分页插件
+     * 分頁插件
      */
     @Bean
     public MybatisPlusInterceptor mybatisPlusInterceptor() {

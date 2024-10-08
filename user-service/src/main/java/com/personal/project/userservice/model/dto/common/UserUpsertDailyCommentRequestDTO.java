@@ -3,9 +3,9 @@ package com.personal.project.userservice.model.dto.common;
 import lombok.Data;
 
 @Data
-public class UserUpsertDailyCommentRequestDTO extends UserRequestDTO {
+public class UserUpsertDailyCommentRequestDTO {
 
-    private String username;
+	private String username;
 
-    private String password;
+	private String password;
 }

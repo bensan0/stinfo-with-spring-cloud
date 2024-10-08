@@ -6,31 +6,44 @@ import com.personal.project.reportservice.model.dto.*;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @FeignClient(contextId = "remoteStockService", value = ServiceNameConstants.STOCK_SERVICE, fallbackFactory = RemoteStockFallbackFactory.class)
 public interface RemoteStockService {
 
     @PostMapping(value = "/feign/stock/query-4-cal-metrics", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    InnerResponse<CalMetricsUnionDTO> getCalMetricsInfo(@RequestBody Query4CalMetricsDTO query4CalMetricsDto, @RequestHeader(name = "token") String token);
-
-    @PostMapping(value = "/feign/stock/manual/query-4-cal-metrics", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    InnerResponse<CalMetricsUnionDTO> getCalMetricsInfo(@RequestBody Query4ManualCalDTO query4ManualCalDTO, @RequestHeader(name = "token") String token);
+    InnerResponse<CalMetricsUnionDTO> getCalMetricsInfo(@RequestBody Query4CalMetricsDTO query4CalMetricsDTO);
 
     @PostMapping(value = "/feign/stock/save-metrics", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    InnerResponse<ObjectUtils.Null> saveMetrics(@RequestBody List<DailyStockMetricsDTO> metrics, @RequestHeader(name = "token") String token);
+    InnerResponse<ObjectUtils.Null> saveMetrics(@RequestBody List<DailyStockMetricsDTO> metrics);
 
     @PostMapping(value = "/feign/stock/query-4-cal-detail", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    InnerResponse<CalDetailUnionDTO> getCalDetailInfo(@RequestBody Query4CalMetricsDTO query4CalMetricsDTO, @RequestHeader(name = "token") String token);
-
-    @PostMapping(value = "/feign/stock/manual/query-4-cal-detail", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    InnerResponse<CalDetailUnionDTO> getCalDetailInfo(@RequestBody Query4ManualCalDTO Query4ManualCalDTO, @RequestHeader(name = "token") String token);
-
+    InnerResponse<CalDetailUnionDTO> getCalDetailInfo(@RequestBody Query4CalMetricsDTO query4CalDetailDTO);
 
     @PostMapping(value = "/feign/stock/save-detail", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    InnerResponse<ObjectUtils.Null> saveDetail(@RequestBody List<DailyStockInfoDetailDTO> details, @RequestHeader(name = "token") String token);
+    InnerResponse<ObjectUtils.Null> saveDetail(@RequestBody List<DailyStockInfoDetailDTO> details);
+
+    @GetMapping(value = "/feign/stock/query-4-init-yesterday-metrics", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    InnerResponse<Map<String, List<StockInfo4InitMetricsDTO>>> get4CalInitYesterdayMetrics();
+
+    @GetMapping(value = "/feign/stock/query-4-init-yesterday-detail", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    InnerResponse<Map<String, List<StockInfo4InitDetailDTO>>> get4CalInitYesterdayDetail();
+
+    @GetMapping(value = "/feign/stock/query-4-init-today-metrics", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    InnerResponse<Query4CalInitTodayMetricsDTO> get4CalInitTodayMetrics();
+
+    @GetMapping(value = "/feign/stock/query-4-init-today-detail", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    InnerResponse<Query4CalInitTodayDetailDTO> get4CalInitTodayDetail();
+
+    @GetMapping(value = "/feign/stock/query-info-by-cond")
+    InnerResponse<List<DailyStockInfoDTO>> getInfosByCond(@RequestParam Long date, @RequestParam String stockId);
+
+    @GetMapping(value = "/feign/stock/query-4-cal-real-time-metrics")
+    InnerResponse<CalMetricsUnionDTO> get4CalRealTimeMetrics(@RequestParam Long date);
+
+    @GetMapping(value = "/feign/stock/query-4-cal-real-time-detail")
+    InnerResponse<CalDetailUnionDTO> get4CalRealTimeDetailInfo(@RequestParam Long date);
 }

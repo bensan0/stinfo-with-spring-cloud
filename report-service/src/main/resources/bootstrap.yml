@@ -5,7 +5,7 @@ spring:
     virtual:
       enabled: true
   profiles:
-    active: dev
+    active: docker
   cloud:
     nacos:
       config:

@@ -1,12 +1,16 @@
 package com.personal.project.reportservice.model.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
 @Builder
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class DailyStockMetricsDTO {
 
     private Long id;
@@ -18,15 +22,7 @@ public class DailyStockMetricsDTO {
     // yyyyMMdd
     private Long date;
 
-    private BigDecimal rsi3;
-
-    private BigDecimal rsi5;
-
-    private BigDecimal rsi6;
-
-    private BigDecimal rsi10;
-
-    private BigDecimal rsi12;
+    private BigDecimal todayClosingPrice;
 
     // 5日均
     private BigDecimal ma5;

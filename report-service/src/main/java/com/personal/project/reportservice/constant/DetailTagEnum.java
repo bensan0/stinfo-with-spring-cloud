@@ -13,9 +13,11 @@ public enum DetailTagEnum {
 
     //MA
     MA5_UP_THROUGH_MA20("5日線上穿月線"),
+    MA20_DOWN_THROUGH_MA5("月線下穿5日線"),
+    MA5_DOWN_THROUGH_MA20("5日線下穿月線"),
     MA20_UP_THROUGH_MA5("月線上穿5日線"),
     MA20_UP_THROUGH_MA60("月線上穿季線"),
-    MA5_DOWN_THROUGH_MA20("5日線下穿月線"),
+    MA60_DOWN_THROUGH_MA20("季線下穿月線"),
     MA20_DOWN_THROUGH_MA60("月線下穿季線"),
     MA_QUEUED_UP("均線多頭排列"),
 
@@ -23,6 +25,9 @@ public enum DetailTagEnum {
     PRICE_OVER_MA5("價格5日線之上"),
     PRICE_OVER_MA20("價格月線之上"),
     PRICE_OVER_MA60("價格季線之上"),
+    PRICE_RISE("價漲(對比昨日)"),
+    PRICE_FALL("價跌(對比昨日)"),
+
 
     //cross
     JUMP_UP_LIMIT("一字跳空"),
@@ -63,6 +68,13 @@ public enum DetailTagEnum {
     LONG_GREEN("長綠"),
     RED_INVERTED_HAMMER("紅倒錘子"),
     GREEN_INVERTED_HAMMER("綠倒錘子"),
+    GREEN_COVER("綠吞噬"),
+    RED_COVER("紅吞噬"),
+    PREGNANT("抱孕"),
+
+    //Volume
+    PLENTY_PIECE("大量"),
+    HAVE_PIECE("有量")
     ;
 
 

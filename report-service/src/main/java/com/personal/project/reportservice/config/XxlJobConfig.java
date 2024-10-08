@@ -26,7 +26,7 @@ public class XxlJobConfig {
     private String logPath;
 
     @Value("${xxl.job.executor.logretentiondays}")
-    private int logRetentionDays;
+    private Integer logRetentionDays;
 
 
     @Bean

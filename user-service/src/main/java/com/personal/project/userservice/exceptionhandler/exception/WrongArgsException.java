@@ -1,6 +1,5 @@
 package com.personal.project.userservice.exceptionhandler.exception;
 
-import com.personal.project.commoncore.exception.CustomException;
 
 public class WrongArgsException extends CustomException {
 

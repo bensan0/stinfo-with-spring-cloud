@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.personal.project.gateway.mapper.ConnectionInfoMapper">
+    <resultMap id="BaseResultMap" type="com.personal.project.gateway.model.entity.ConnectionInfoDO">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="ip" column="ip" jdbcType="VARCHAR"/>
+        <result property="path" column="path" jdbcType="VARCHAR"/>
+        <result property="date" column="date" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,ip,path,date
+    </sql>
+</mapper>

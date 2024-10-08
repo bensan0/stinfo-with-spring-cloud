@@ -3,15 +3,14 @@ package com.personal.project.reportservice.model.dto;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 public class CalDetailUnionDTO {
 
-    private List<StockInfo4CalDetailDTO> stockInfo4CalDetailDTOS;
+    private Map<String, List<DailyStockInfoDTO>> stockIdToInfos;
 
-    private List<DailyStockMetricsDTO> dailyStockMetricsDTOs;
+    private Map<String, List<DailyStockMetricsDTO>> stockIdToMetrics;
 
-    private List<SimpleDetailDTO> todayExistedDetailDTOs;
-
-    private List<DailyStockInfoDetailDTO> dailyStockInfoDetailDTOs;
+    private Map<String, List<DailyStockInfoDetailDTO>> stockIdToDetails;
 }

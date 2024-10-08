@@ -1,8 +1,6 @@
 package com.personal.project.stockservice.model.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -11,36 +9,40 @@ import java.math.BigDecimal;
 @TableName("daily_stock_info")
 public class DailyStockInfoDO {
 
-    @TableId(type = IdType.AUTO)
-    private Long id;
+	@TableId(type = IdType.AUTO)
+	private Long id;
 
-    private String stockId;
+	private String stockId;
 
-    private String stockName;
+	private String stockName;
 
-    // yyyyMMdd
-    private Long date;
+	private String market;
 
-    private BigDecimal todayClosingPrice;
+	// yyyyMMdd
+	private Long date;
 
-    private BigDecimal yesterdayClosingPrice;
+	private BigDecimal todayClosingPrice;
 
-    private BigDecimal priceGap;
+	private BigDecimal yesterdayClosingPrice;
 
-    private BigDecimal priceGapPercent;
+	private BigDecimal priceGap;
 
-    private BigDecimal openingPrice;
+	private BigDecimal priceGapPercent;
 
-    private BigDecimal highestPrice;
+	private BigDecimal openingPrice;
 
-    private BigDecimal lowestPrice;
+	private BigDecimal highestPrice;
 
-    private Long todayTradingVolumePiece;
+	private BigDecimal lowestPrice;
 
-    private BigDecimal todayTradingVolumeMoney;
+	private Long todayTradingVolumePiece;
 
-    private Long yesterdayTradingVolumePiece;
+	private BigDecimal todayTradingVolumeMoney;
 
-    private BigDecimal yesterdayTradingVolumeMoney;
+	private Long yesterdayTradingVolumePiece;
 
+	private BigDecimal yesterdayTradingVolumeMoney;
+
+	@TableField(fill = FieldFill.INSERT_UPDATE)
+	private Long updatedAt;
 }

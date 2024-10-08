@@ -1,5 +1,5 @@
-CREATE database if NOT EXISTS `report_servie` default character set utf8mb4 collate utf8mb4_unicode_ci;
-use `stock_servie`;
+CREATE database if NOT EXISTS `report_service` default character set utf8mb4 collate utf8mb4_unicode_ci;
+use `report_service`;
 
 SET NAMES utf8mb4;
 

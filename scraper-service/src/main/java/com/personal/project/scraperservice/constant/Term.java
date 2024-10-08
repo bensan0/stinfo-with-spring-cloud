@@ -27,6 +27,9 @@ public enum Term {
     YESTERDAY_TRADING_VOLUME_PIECE("yesterdayTradingVolumePiece"),
     //昨日成交金額
     YESTERDAY_TRADING_VOLUME_MONEY("yesterdayTradingVolumeMoney"),
+    //市場
+    OTC("櫃"),
+    LISTED("市"),
     ;
 
     private final String fieldName;

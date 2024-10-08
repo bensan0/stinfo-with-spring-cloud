@@ -24,6 +24,11 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-bootstrap</artifactId>
+        </dependency>
+
         <!--        nacos服務註冊-->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
@@ -48,9 +53,8 @@
         </dependency>
 
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>runtime</scope>
+            <groupId>com.github.pagehelper</groupId>
+            <artifactId>pagehelper-spring-boot-starter</artifactId>
         </dependency>
 
         <dependency>
@@ -64,7 +68,7 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
-
+        
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
@@ -96,9 +100,18 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                    <mainClass>com.personal.project.stockservice.StockServiceApplication</mainClass>
                 </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
+        <finalName>stock-service</finalName>
     </build>
 
 </project>

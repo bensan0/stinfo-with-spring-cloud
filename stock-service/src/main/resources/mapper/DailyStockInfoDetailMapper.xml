@@ -9,38 +9,54 @@
         <result property="upperShadow" column="upper_shadow" jdbcType="DECIMAL"/>
         <result property="lowerShadow" column="lower_shadow" jdbcType="DECIMAL"/>
         <result property="realBody" column="real_body" jdbcType="DECIMAL"/>
-        <result property="tags" column="tags" jdbcType="VARCHAR" typeHandler="com.personal.project.stockservice.typehandler.TagsHandler"/>
+        <result property="tags" column="tags" typeHandler="com.personal.project.stockservice.typehandler.TagsHandler"/>
+        <result property="updatedAt" column="updated_at" jdbcType="BIGINT"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,stock_id,date,today_closing_price,upper_shadow,lower_shadow,real_body,tags
+        id,stock_id,date,today_closing_price,upper_shadow,lower_shadow,real_body,tags,updated_at
     </sql>
 
-    <select id="query4CalDetail" parameterType="com.personal.project.stockservice.model.dto.Query4CalDTO" resultType="com.personal.project.stockservice.model.dto.DailyStockInfoDetailDTO">
+    <select id="query4CalDetail" parameterType="com.personal.project.stockservice.model.dto.request.Query4CalDTO" resultType="com.personal.project.stockservice.model.dto.response.DailyStockInfoDetailDTO">
         select
+            t.id as id,
+            t.stock_id as stockId,
+            t.date as 'date',
+            t.today_closing_price as todayClosingPrice,
+            t.upper_shadow as upperShadow,
+            t.lower_shadow as lowerShadow,
+            t.real_body as realBody,
+            t.tags as tags
+        from
+            daily_stock_info_detail t
+        where
+            t.date = #{date}
+        union
+        select
+            T.id as id,
             T.stock_id as stockId,
             T.date as 'date',
             T.today_closing_price as todayClosingPrice,
             T.upper_shadow as upperShadow,
             T.lower_shadow as lowerShadow,
             T.real_body as realBody,
-            T.tags as tags;
+            T.tags as tags
         from (
-                select
-                    tt.*,
-                    row_number() over (partition by stock_id order by 'date' desc) as sequence
-                from
-                    (
-                        select *
-                        from daily_stock_info_detail
-                        where 'date' is not #{date}
-                    ) tt
+            select
+                tt.*,
+                row_number() over (partition by stock_id order by date desc) as sequence
+            from
+                (
+                     SELECT s.*
+                     from daily_stock_info_detail s
+                     WHERE s.date &lt; #{date} and today_closing_price IS not null
+                ) tt
 
-             ) T
+        ) T
         where T.sequence = 1
     </select>
 
-    <select id="query4CalDetailManual" parameterType="com.personal.project.stockservice.model.dto.ManualCalDTO" resultType="com.personal.project.stockservice.model.dto.DailyStockInfoDetailDTO">
+    <select id="query4CalDetailManual" parameterType="com.personal.project.stockservice.model.dto.ManualCalDTO" resultType="com.personal.project.stockservice.model.dto.response.DailyStockInfoDetailDTO">
         select
             T.stock_id as stockId,
             T.date as 'date',
@@ -52,7 +68,7 @@
         from (
                 select
                     tt.*,
-                    row_number() over (partition by stock_id order by 'date' desc) as sequence
+                    row_number() over (partition by stock_id order by date desc) as sequence
                 from
                     (
                         select *
@@ -64,85 +80,108 @@
         where T.sequence = 1
     </select>
 
-    <select id="queryCondition" resultType="com.personal.project.stockservice.model.dto.ConditionQueryUnionInfoDTO">
+    <select id="queryCondition" resultType="com.personal.project.stockservice.model.dto.request.ConditionQueryUnionInfoDTO">
         select
-        i.stock_id as stockId,
-        i.stock_name as stockName,
-        i.date as date,
-        i.today_closing_price as todayClosingPrice,
-        i.yesterday_closing_price as yesterdayClosingPrice,
-        i.price_gap as priceGap,
-        i.price_gap_percent as priceGapPercent,
-        i.today_trading_volume_piece as todayTradingVolumePiece,
-        i.today_trading_volume_money as todayTradingVolumeMoney,
-        i.yesterday_trading_volume_piece as yesterdayTradingVolumePiece,
-        i.yesterday_trading_volume_money as yesterdayTradingVolumeMoney,
-        m.ma_5 as ma5,
-        m.ma_10 as ma10,
-        m.ma_20 as ma20,
-        m.ma_60 as ma60,
-        d.upper_shadow as upperShadow,
-        d.real_body as real_body,
-        d.lower_shadow as lowerShadow,
-        d.tags as tags
+            i.stock_id as stockId,
+            i.stock_name as stockName,
+            i.date as date,
+            i.today_closing_price as todayClosingPrice,
+            i.yesterday_closing_price as yesterdayClosingPrice,
+            i.price_gap as priceGap,
+            i.price_gap_percent as priceGapPercent,
+            i.today_trading_volume_piece as todayTradingVolumePiece,
+            i.today_trading_volume_money as todayTradingVolumeMoney,
+            i.yesterday_trading_volume_piece as yesterdayTradingVolumePiece,
+            i.yesterday_trading_volume_money as yesterdayTradingVolumeMoney,
+            m.ma_5 as ma5,
+            m.ma_10 as ma10,
+            m.ma_20 as ma20,
+            m.ma_60 as ma60,
+            d.upper_shadow as upperShadow,
+            d.real_body as real_body,
+            d.lower_shadow as lowerShadow,
+            d.tags as tags
         from
-        daily_stock_info i
+            daily_stock_info i
         left join
-        daily_stock_info_detail d
+            daily_stock_info_detail d
         on
-        i.date = #{date} and d.date = #{date} and i.stock_id = d.stock_id
+            i.date = d.date and i.stock_id = d.stock_id
         left join
-        daily_stock_metrics m
+            daily_stock_metrics m
         on
-        m.date = #{date} and i.stock_id = m.stock_id
+            m.date = i.date and i.stock_id = m.stock_id
         where
-        i.today_closing_price is not null
-        <if test="dto.priceStart != null">
-            and i.today_closing_price &gt;= #{dto.priceStart}
-        </if>
+            i.date = #{date} and
+            i.today_closing_price is not null
+            <if test="dto.priceStart != null">
+                and i.today_closing_price &gt;= #{dto.priceStart}
+            </if>
 
-        <if test="dto.priceEnd != null">
-            and i.today_closing_price &lt;= #{dto.priceEnd}
-        </if>
+            <if test="dto.priceEnd != null">
+                and i.today_closing_price &lt;= #{dto.priceEnd}
+            </if>
 
-        <if test="dto.tradingVolumePieceStart != null">
-            and i.today_trading_volume_piece &gt;= #{dto.tradingVolumePieceStart}
-        </if>
+            <if test="dto.tradingVolumePieceStart != null">
+                and i.today_trading_volume_piece &gt;= #{dto.tradingVolumePieceStart}
+            </if>
 
-        <if test="dto.tradingVolumePieceEnd != null">
-            and i.today_trading_volume_piece &lt;= #{dto.tradingVolumePieceStart}
-        </if>
+            <if test="dto.tradingVolumePieceEnd != null">
+                and i.today_trading_volume_piece &lt;= #{dto.tradingVolumePieceStart}
+            </if>
 
-        <if test="dto.priceSelection != null and dto.priceSelection != ''">
-            and JSON_EXTRACT(d.tags, '$.consecutivePrice[1]') = #{dto.priceSelection}
-            and JSON_EXTRACT(d.tags, '$.consecutivePrice[0]') &gt; 1
-        </if>
+            <if test="dto.priceSelection != null and dto.priceSelection != ''">
+                and JSON_EXTRACT(d.tags, '$.consecutivePrice[1]') = #{dto.priceSelection}
+                and JSON_EXTRACT(d.tags, '$.consecutivePrice[0]') &gt; 1
+            </if>
 
-        <if test="dto.tradingVolumeSelection != null and dto.tradingVolumeSelection != ''">
-            and JSON_EXTRACT(d.tags, '$.consecutiveTradingVolume[1]') = #{dto.tradingVolumeSelection}
-            and JSON_EXTRACT(d.tags, '$.consecutiveTradingVolume[0]') &gt; 1
-        </if>
+            <if test="dto.tradingVolumeSelection != null and dto.tradingVolumeSelection != ''">
+                and JSON_EXTRACT(d.tags, '$.consecutiveTradingVolume[1]') = #{dto.tradingVolumeSelection}
+                and JSON_EXTRACT(d.tags, '$.consecutiveTradingVolume[0]') &gt; 1
+            </if>
 
-        <if test="dto.tradingAmountSelection != null and dto.tradingAmountSelection != ''">
-            and JSON_EXTRACT(d.tags, '$.consecutiveTradingAmount[1]') = #{dto.tradingAmountSelection}
-            and JSON_EXTRACT(d.tags, '$.consecutiveTradingAmount[0]') &gt; 1
-        </if>
+            <if test="dto.tradingAmountSelection != null and dto.tradingAmountSelection != ''">
+                and JSON_EXTRACT(d.tags, '$.consecutiveTradingAmount[1]') = #{dto.tradingAmountSelection}
+                and JSON_EXTRACT(d.tags, '$.consecutiveTradingAmount[0]') &gt; 1
+            </if>
 
-        <if test="dto.priceStatusSelection != null and dto.priceStatusSelection != ''">
-            and JSON_EXTRACT(d.tags, '$.priceStatus') = #{dto.priceStatusSelection}
-        </if>
+            <if test="dto.priceStatusSelection != null and dto.priceStatusSelection != ''">
+                and JSON_EXTRACT(d.tags, '$.priceStatus') = #{dto.priceStatusSelection}
+            </if>
 
-        <if test="dto.extraTagsSelections != null and dto.extraTagsSelections.size() != 0">
-            and JSON_CONTAINS(
-                d.tags->'$.extraTags',
-                JSON_ARRAY(
-                    <foreach collection="dto.extraTagsSelections" item="item" index="index" separator=",">
-                        #{item}
-                    </foreach>
+            <if test="dto.extraTagsSelections != null and dto.extraTagsSelections.size() != 0">
+                and JSON_CONTAINS(
+                    d.tags->'$.extraTags',
+                    JSON_ARRAY(
+                        <foreach collection="dto.extraTagsSelections" item="item" index="index" separator=",">
+                            #{item}
+                        </foreach>
+                    )
                 )
-            )
-        </if>
+            </if>
 
         order by stock_id
+    </select>
+
+    <select id="query4InitTodayDetail" resultType="com.personal.project.stockservice.model.dto.response.DailyStockInfoDetailDTO">
+        select
+            T.stock_id as stockId,
+            T.date as date,
+            T.today_closing_price as todayClosingPrice,
+            T.upper_shadow as upperShadow,
+            T.lower_shadow as lowerShadow,
+            T.real_body as realBody,
+            T.tags as tags
+        from(
+                select
+                    tt.*,
+                    row_number() over (partition by stock_id order by date desc) as sequence
+                from(
+                    select *
+                    from daily_stock_info_detail
+                    where today_closing_price is not null
+                    ) tt
+            ) T
+        where T.sequence = 1;
     </select>
 </mapper>
